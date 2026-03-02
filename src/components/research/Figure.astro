@@ -1,0 +1,18 @@
+---
+interface Props {
+  id?: string;
+  number: number;
+  caption: string;
+  class?: string;
+}
+
+const { id, number, caption, class: className = '' } = Astro.props;
+---
+<figure id={id} class:list={['my-8 mx-auto', className]}>
+  <div class="flex justify-center">
+    <slot />
+  </div>
+  <figcaption class="mt-3 text-center font-mono text-xs tracking-wide text-text-muted">
+    <span class="text-amber">Figure {number}.</span> {caption}
+  </figcaption>
+</figure>

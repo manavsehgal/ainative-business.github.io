@@ -1,0 +1,87 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const tiers = [
+  { label: 'WORKING', y: 20, width: 120, opacity: 1, dashed: true },
+  { label: 'EPISODIC', y: 85, width: 170, opacity: 0.7, dashed: false },
+  { label: 'SEMANTIC', y: 150, width: 220, opacity: 0.45, dashed: false },
+  { label: 'PROCEDURAL', y: 215, width: 270, opacity: 0.25, dashed: false },
+];
+---
+<svg
+  viewBox="0 0 320 280"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  class={className}
+  aria-hidden="true"
+>
+  {tiers.map((tier) => {
+    const x = (320 - tier.width) / 2;
+    return (
+      <g>
+        <rect
+          x={x}
+          y={tier.y}
+          width={tier.width}
+          height="45"
+          rx="4"
+          stroke={tier.dashed ? 'var(--color-amber)' : 'currentColor'}
+          stroke-width={tier.dashed ? 1.5 : 0.75}
+          stroke-dasharray={tier.dashed ? '6 4' : 'none'}
+          fill={tier.dashed ? 'var(--color-amber-dim)' : 'none'}
+          opacity={tier.opacity}
+        />
+        <text
+          x="160"
+          y={tier.y + 27}
+          text-anchor="middle"
+          fill={tier.dashed ? 'var(--color-amber)' : 'currentColor'}
+          font-family="var(--font-mono)"
+          font-size="13"
+          letter-spacing="0.1em"
+          opacity={tier.opacity}
+        >
+          {tier.label}
+        </text>
+      </g>
+    );
+  })}
+
+  <!-- Left axis label -->
+  <text
+    x="12"
+    y="145"
+    text-anchor="middle"
+    fill="currentColor"
+    font-family="var(--font-mono)"
+    font-size="11"
+    letter-spacing="0.08em"
+    opacity="0.3"
+    transform="rotate(-90 12 145)"
+  >
+    STABILITY
+  </text>
+  <line x1="12" y1="175" x2="12" y2="240" stroke="currentColor" stroke-width="0.5" opacity="0.2" />
+  <polygon points="12,245 9,238 15,238" fill="currentColor" opacity="0.2" />
+
+  <!-- Right axis label -->
+  <text
+    x="308"
+    y="145"
+    text-anchor="middle"
+    fill="currentColor"
+    font-family="var(--font-mono)"
+    font-size="11"
+    letter-spacing="0.08em"
+    opacity="0.3"
+    transform="rotate(90 308 145)"
+  >
+    VOLATILITY
+  </text>
+  <line x1="308" y1="175" x2="308" y2="240" stroke="currentColor" stroke-width="0.5" opacity="0.2" />
+  <polygon points="308,245 305,238 311,238" fill="currentColor" opacity="0.2" />
+</svg>

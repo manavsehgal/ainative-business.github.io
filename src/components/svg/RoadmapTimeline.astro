@@ -1,0 +1,84 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const phases = [
+  { label: 'PHASE 1: FOUNDATION', start: 0, end: 3, y: 55, opacity: 1 },
+  { label: 'PHASE 2: DISTRIBUTION', start: 3, end: 6, y: 95, opacity: 0.6 },
+  { label: 'PHASE 3: MATURITY', start: 6, end: 12, y: 135, opacity: 0.4 },
+  { label: 'PHASE 4: ECOSYSTEM', start: 9, end: 13, y: 175, opacity: 0.25 },
+];
+
+const monthScale = (month: number) => 50 + (month / 13) * 420;
+---
+<svg
+  viewBox="0 0 510 220"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  class={className}
+  aria-hidden="true"
+>
+  <!-- Month markers -->
+  {[0, 3, 6, 9, 12].map((month) => (
+    <g>
+      <line
+        x1={monthScale(month)}
+        y1="35"
+        x2={monthScale(month)}
+        y2="210"
+        stroke="currentColor"
+        stroke-width="0.5"
+        stroke-dasharray="3 3"
+        opacity="0.15"
+      />
+      <text
+        x={monthScale(month)}
+        y="28"
+        text-anchor="middle"
+        fill="currentColor"
+        font-family="var(--font-mono)"
+        font-size="11"
+        opacity="0.4"
+      >
+        {month === 0 ? 'M0' : `M${month}`}
+      </text>
+    </g>
+  ))}
+
+  <!-- Phase bars -->
+  {phases.map((phase) => {
+    const x = monthScale(phase.start);
+    const width = monthScale(phase.end) - x;
+    const isLast = phase.opacity === 0.25;
+    return (
+      <g>
+        <rect
+          x={x}
+          y={phase.y}
+          width={width}
+          height="30"
+          rx="3"
+          fill="var(--color-amber-dim)"
+          stroke="var(--color-amber)"
+          stroke-width={isLast ? 0.75 : 1}
+          stroke-dasharray={isLast ? '6 3' : 'none'}
+          opacity={phase.opacity}
+        />
+        <text
+          x={x + 10}
+          y={phase.y + 20}
+          fill="var(--color-amber)"
+          font-family="var(--font-mono)"
+          font-size="10"
+          letter-spacing="0.06em"
+          opacity={phase.opacity}
+        >
+          {phase.label}
+        </text>
+      </g>
+    );
+  })}
+</svg>

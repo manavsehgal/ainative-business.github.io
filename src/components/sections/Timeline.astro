@@ -4,29 +4,33 @@ import WaveLine from '../svg/WaveLine.astro';
 import { timeline } from '../../data/timeline';
 
 const metrics = [
-  { value: '45K+', label: 'Lines of Code' },
-  { value: '27+', label: 'AI Agents Built' },
-  { value: '5', label: 'Production Systems' },
-  { value: '18+', label: 'Projects Shipped' },
+  { value: '45K+', label: 'Lines of Code', countValue: 45, suffix: 'K+' },
+  { value: '27+', label: 'AI Agents Built', countValue: 27, suffix: '+' },
+  { value: '5', label: 'Production Systems', countValue: 5, suffix: '' },
+  { value: '18+', label: 'Projects Shipped', countValue: 18, suffix: '+' },
 ];
 ---
-<section class="relative py-32 px-6 overflow-hidden">
+<section class="relative py-32 px-6 overflow-hidden bg-surface-raised">
   <!-- Wave background -->
   <div class="absolute inset-0 flex items-center pointer-events-none opacity-50">
     <WaveLine class="w-full text-text" />
   </div>
 
   <div class="relative z-10 max-w-6xl mx-auto">
-    <div data-animate class="mb-16">
+    <div data-animate class="mb-12">
       <SectionLabel text="Portfolio" />
       <h2 class="mt-4">Built across three technology waves.</h2>
     </div>
 
     <!-- Metrics bar -->
-    <div data-animate class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
+    <div data-animate class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20" id="metrics-bar">
       {metrics.map((m) => (
         <div class="text-center">
-          <div class="font-display text-3xl text-amber mb-1">{m.value}</div>
+          <div
+            class="font-display text-3xl text-amber mb-1"
+            data-count-to={m.countValue}
+            data-count-suffix={m.suffix}
+          >0{m.suffix}</div>
           <div class="font-mono text-[0.625rem] tracking-widest uppercase text-text-muted">
             {m.label}
           </div>
@@ -61,7 +65,7 @@ const metrics = [
             class:list={[
               'p-5',
               item.isCurrent
-                ? 'border border-amber/30 bg-amber/[0.03]'
+                ? 'border border-amber/40 bg-amber/[0.03]'
                 : 'border border-transparent',
             ]}
           >
@@ -73,15 +77,63 @@ const metrics = [
               ]}>
                 {item.project}
               </h3>
-              <span class="font-mono text-[0.6rem] tracking-widest uppercase text-text-dim">
+              <span class="font-mono text-[0.6rem] tracking-widest uppercase text-text-muted">
                 {item.techWave}
               </span>
             </div>
             <p class="text-text-muted text-sm">{item.role}</p>
-            <p class="font-mono text-xs text-text-dim mt-1">{item.stats}</p>
+            <p class="font-mono text-xs text-text-muted mt-1">{item.stats}</p>
           </div>
         </div>
       ))}
     </div>
   </div>
 </section>
+
+<script>
+  function initCounterAnimation() {
+    const metricsBar = document.getElementById('metrics-bar');
+    if (!metricsBar) return;
+
+    const counters = metricsBar.querySelectorAll('[data-count-to]');
+    let animated = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !animated) {
+            animated = true;
+            counters.forEach((el) => {
+              const target = parseInt(el.getAttribute('data-count-to') || '0', 10);
+              const suffix = el.getAttribute('data-count-suffix') || '';
+              const duration = 1200;
+              const start = performance.now();
+
+              function update(now: number) {
+                const elapsed = now - start;
+                const t = Math.min(elapsed / duration, 1);
+                // Ease-out cubic
+                const eased = 1 - Math.pow(1 - t, 3);
+                const current = Math.round(eased * target);
+                el.textContent = current + suffix;
+
+                if (t < 1) {
+                  requestAnimationFrame(update);
+                }
+              }
+
+              requestAnimationFrame(update);
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(metricsBar);
+  }
+
+  initCounterAnimation();
+  document.addEventListener('astro:after-swap', initCounterAnimation);
+</script>

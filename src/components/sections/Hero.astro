@@ -2,8 +2,9 @@
 import DagSymbol from '../svg/DagSymbol.astro';
 ---
 <section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-  <!-- DAG background -->
+  <!-- Atmospheric glow -->
   <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-amber/[0.04] blur-[120px]"></div>
     <DagSymbol class="w-[600px] h-[600px] text-amber opacity-[0.04]" />
   </div>
 
@@ -18,7 +19,7 @@ import DagSymbol from '../svg/DagSymbol.astro';
 
     <p
       data-animate
-      class="font-display text-[clamp(1.25rem,3vw,2rem)] text-text-muted leading-relaxed mb-12"
+      class="font-display text-[clamp(1.25rem,3vw,2rem)] text-text leading-relaxed mb-12"
       style="transition-delay: 120ms"
     >
       The world of agents is your stage.
@@ -37,7 +38,7 @@ import DagSymbol from '../svg/DagSymbol.astro';
     <div data-animate style="transition-delay: 360ms">
       <a
         href="/research"
-        class="inline-block font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/30 px-8 py-3 hover:bg-amber/10 transition-colors"
+        class="inline-block font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/40 px-8 py-3 hover:bg-amber/10 transition-colors"
       >
         Read the Research Paper
       </a>
