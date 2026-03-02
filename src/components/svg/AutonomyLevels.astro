@@ -1,36 +1,135 @@
 ---
+import IsoDefs from './IsoDefs.astro';
+
 interface Props {
   class?: string;
 }
 
 const { class: className = '' } = Astro.props;
+
+// Three zones, increasing in height left-to-right
+const zones = [
+  { label: 'SUPERVISED', x: 20, w: 130, h: 60, isCore: false, color: 'var(--color-teal)', fill: 'var(--color-teal-dim)', delay: 1 },
+  { label: 'SEMI-AUTO', x: 175, w: 130, h: 95, isCore: false, color: 'var(--color-teal)', fill: 'var(--color-teal-dim)', delay: 2 },
+  { label: 'AUTONOMOUS', x: 330, w: 130, h: 135, isCore: true, color: 'var(--color-amber)', fill: 'var(--color-amber-dim)', delay: 3 },
+];
+
+const BASE_Y = 170; // bottom alignment line
+const ARROW_Y = BASE_Y + 30;
 ---
 <svg
-  viewBox="0 0 420 180"
+  viewBox="0 0 480 220"
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
   class={className}
   aria-hidden="true"
+  data-svg-animate
 >
-  <!-- Three zones -->
-  <rect x="20" y="30" width="120" height="70" rx="4" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.75" />
-  <rect x="150" y="30" width="120" height="70" rx="4" fill="currentColor" opacity="0.06" stroke="currentColor" stroke-width="0.75" stroke-dasharray="4 3" />
-  <rect x="280" y="30" width="120" height="70" rx="4" fill="var(--color-amber-dim)" stroke="var(--color-amber)" stroke-width="1.5" />
+  <IsoDefs />
 
-  <!-- Zone labels -->
-  <text x="80" y="69" text-anchor="middle" fill="currentColor" font-family="var(--font-mono)" font-size="12" letter-spacing="0.08em" opacity="0.7">SUPERVISED</text>
-  <text x="210" y="62" text-anchor="middle" fill="currentColor" font-family="var(--font-mono)" font-size="11" letter-spacing="0.08em" opacity="0.6">SEMI-</text>
-  <text x="210" y="76" text-anchor="middle" fill="currentColor" font-family="var(--font-mono)" font-size="11" letter-spacing="0.08em" opacity="0.6">AUTONOMOUS</text>
-  <text x="340" y="69" text-anchor="middle" fill="var(--color-amber)" font-family="var(--font-mono)" font-size="12" letter-spacing="0.08em">AUTONOMOUS</text>
+  <style>
+    .zone-box { transition: filter 0.2s ease, opacity 0.2s ease; }
+    .zone-box:hover { filter: drop-shadow(0 0 8px var(--glow-color)); opacity: 1 !important; }
+  </style>
 
-  <!-- Vertical dashed dividers -->
-  <line x1="145" y1="25" x2="145" y2="105" stroke="currentColor" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.25" />
-  <line x1="275" y1="25" x2="275" y2="105" stroke="currentColor" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.25" />
+  <!-- Zone rectangles -->
+  {zones.map((z) => (
+    <g
+      class={`zone-box bar-grow svg-reveal-d${z.delay}`}
+      style={`--glow-color: ${z.color}; transform-origin: ${z.x + z.w / 2}px ${BASE_Y}px`}
+    >
+      <rect
+        x={z.x}
+        y={BASE_Y - z.h}
+        width={z.w}
+        height={z.h}
+        rx="4"
+        fill={z.fill}
+        stroke={z.color}
+        stroke-width={z.isCore ? 1.5 : 0.8}
+        stroke-opacity="0.6"
+      />
 
-  <!-- Arrow below -->
-  <line x1="40" y1="130" x2="380" y2="130" stroke="currentColor" stroke-width="0.75" opacity="0.3" />
-  <polygon points="385,130 378,127 378,133" fill="currentColor" opacity="0.3" />
-  <text x="210" y="155" text-anchor="middle" fill="currentColor" font-family="var(--font-mono)" font-size="10" letter-spacing="0.06em" opacity="0.55">
-    TRUST INCREASES WITH DEMONSTRATED COMPETENCE
-  </text>
+      <!-- Zone label centered inside -->
+      <text
+        x={z.x + z.w / 2}
+        y={BASE_Y - z.h / 2 + 4}
+        text-anchor="middle"
+        fill={z.color}
+        font-family="var(--font-mono)"
+        font-size="12"
+        letter-spacing="0.1em"
+        font-weight={z.isCore ? 'bold' : 'normal'}
+      >
+        {z.label}
+      </text>
+    </g>
+  ))}
+
+  <!-- Amber glow on AUTONOMOUS -->
+  <rect
+    x={zones[2].x}
+    y={BASE_Y - zones[2].h}
+    width={zones[2].w}
+    height={zones[2].h}
+    rx="4"
+    fill="none"
+    filter="url(#amber-glow)"
+    stroke="var(--color-amber)"
+    stroke-width="0.5"
+    opacity="0.2"
+  />
+
+  <!-- Right-pointing arrows between zones -->
+  {[0, 1].map((i) => {
+    const fromX = zones[i].x + zones[i].w + 4;
+    const toX = zones[i + 1].x - 4;
+    const arrowMid = BASE_Y - Math.min(zones[i].h, zones[i + 1].h) / 2;
+    return (
+      <g class={`svg-reveal svg-reveal-d${i + 2}`}>
+        <line
+          x1={fromX}
+          y1={arrowMid}
+          x2={toX - 6}
+          y2={arrowMid}
+          stroke="currentColor"
+          stroke-width="1"
+          opacity="0.25"
+        />
+        <polygon
+          points={`${toX},${arrowMid} ${toX - 7},${arrowMid - 4} ${toX - 7},${arrowMid + 4}`}
+          fill="currentColor"
+          opacity="0.25"
+        />
+      </g>
+    );
+  })}
+
+  <!-- Trust arrow below -->
+  <g class="svg-reveal svg-reveal-d4">
+    <line
+      x1={zones[0].x}
+      y1={ARROW_Y}
+      x2={zones[2].x + zones[2].w - 8}
+      y2={ARROW_Y}
+      stroke="currentColor"
+      stroke-width="0.75"
+      opacity="0.25"
+    />
+    <polygon
+      points={`${zones[2].x + zones[2].w},${ARROW_Y} ${zones[2].x + zones[2].w - 8},${ARROW_Y - 3} ${zones[2].x + zones[2].w - 8},${ARROW_Y + 3}`}
+      fill="currentColor"
+      opacity="0.25"
+    />
+    <text
+      x={(zones[0].x + zones[2].x + zones[2].w) / 2}
+      y={ARROW_Y + 16}
+      text-anchor="middle"
+      fill="currentColor"
+      font-family="var(--font-mono)"
+      font-size="9"
+      letter-spacing="0.06em"
+      opacity="0.4"
+    >TRUST INCREASES WITH DEMONSTRATED COMPETENCE</text>
+  </g>
 </svg>

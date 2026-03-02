@@ -13,18 +13,40 @@ const { class: className = '' } = Astro.props;
   aria-hidden="true"
   preserveAspectRatio="none"
 >
+  <!-- Shadow/depth path offset below -->
+  <path
+    d="M0 44 Q100 14 200 44 Q300 74 400 44 Q500 14 600 44 Q700 74 800 44"
+    stroke="currentColor"
+    stroke-width="0.5"
+    opacity="0.06"
+    fill="none"
+  />
+
+  <!-- Primary wave with flowing dash animation -->
   <path
     d="M0 40 Q100 10 200 40 Q300 70 400 40 Q500 10 600 40 Q700 70 800 40"
     stroke="currentColor"
     stroke-width="0.75"
     opacity="0.15"
     fill="none"
+    stroke-dasharray="8 4"
+    class="iso-dash"
   />
+
+  <!-- Secondary wave with dash animation -->
   <path
     d="M0 50 Q100 25 200 50 Q300 75 400 50 Q500 25 600 50 Q700 75 800 50"
     stroke="currentColor"
     stroke-width="0.5"
     opacity="0.08"
     fill="none"
+    stroke-dasharray="6 6"
+    class="iso-dash"
   />
+
+  <!-- Accent dots at wave peaks -->
+  <circle cx="100" cy="10" r="1.5" fill="var(--color-amber)" opacity="0.3" />
+  <circle cx="300" cy="70" r="1.5" fill="var(--color-amber)" opacity="0.2" />
+  <circle cx="500" cy="10" r="1.5" fill="var(--color-amber)" opacity="0.3" />
+  <circle cx="700" cy="70" r="1.5" fill="var(--color-amber)" opacity="0.2" />
 </svg>

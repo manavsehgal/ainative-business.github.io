@@ -69,6 +69,26 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         document.querySelectorAll('[data-animate]').forEach((el) => {
           observer.observe(el);
         });
+
+        // SVG child element reveals — toggles .visible on children
+        // when a parent [data-svg-animate] enters the viewport
+        const svgObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.querySelectorAll('.svg-reveal, .line-draw, .bar-grow, .ring-expand, .bar-grow-x, .dot-pop').forEach((child) => {
+                  child.classList.add('visible');
+                });
+                svgObserver.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -20px 0px' }
+        );
+
+        document.querySelectorAll('[data-svg-animate]').forEach((el) => {
+          svgObserver.observe(el);
+        });
       }
 
       initScrollReveal();

@@ -39,7 +39,7 @@ The agent ecosystem has matured rapidly but unevenly. Products cluster within ar
 ### 1.1 The Four-Layer Agent Stack
 
 <Figure number={1} caption="Four-layer agent stack — each layer solves its own problems but leaves gaps at the layer above. The harness layer (dashed) is where Stagent operates.">
-  <LayerStack class="w-full max-w-[280px] text-text-muted" />
+  <LayerStack class="w-full max-w-[640px] text-text-muted" />
 </Figure>
 
 **Infrastructure** provides browser pools, compute sandboxes, and LLM APIs. Browserbase, E2B, and model providers deliver reliable primitives. What they lack is task awareness — infrastructure does not know what the agent is trying to accomplish.
@@ -72,7 +72,7 @@ Stagent is the harness layer — the system that consumes infrastructure, adopts
 The harness does not replace infrastructure (browser pools, LLM APIs) or application patterns (gateway routing, plugin architectures). Instead, it consumes them as commodity inputs and composes them into something new: goal-oriented, persistent, memory-native multi-agent execution.
 
 <Figure number={2} caption="Concentric consumption model — Stagent at center consumes infrastructure, application, and orchestration layers as commodity inputs.">
-  <HarnessOrbit class="w-full max-w-[400px] text-text-muted" />
+  <HarnessOrbit class="w-full max-w-[840px] text-text-muted" />
 </Figure>
 
 ### 2.1 Design Principles
@@ -129,7 +129,7 @@ Memory in Stagent is a core primitive, not a subsystem bolted onto chat. The arc
 Agents actively curate their own memory — creating, updating, and reorganizing memories rather than passively accumulating context. Hybrid retrieval (BM25 full-text + vector similarity + Max Marginal Relevance reranking) ensures relevant recall across all tiers.
 
 <Figure number={3} caption="Four-tier memory architecture — working memory (amber, volatile) narrows at the top; procedural memory (stable, accumulated) broadens at the base.">
-  <MemoryTiers class="w-full max-w-[320px] text-text-muted" />
+  <MemoryTiers class="w-full max-w-[500px] text-text-muted" />
 </Figure>
 
 ### 3.4 Graduated Autonomy
@@ -147,7 +147,7 @@ New or risky tasks run in supervised mode with plan-and-review cycles. As agents
 Hard boundaries remain regardless of trust level. No agent can access credentials, perform destructive operations, or exceed resource budgets without explicit human confirmation.
 
 <Figure number={4} caption="Graduated autonomy gauge — trust increases from supervised to autonomous as agents demonstrate competence on specific task types.">
-  <AutonomyLevels class="w-full max-w-[420px] text-text-muted" />
+  <AutonomyLevels class="w-full max-w-[480px] text-text-muted" />
 </Figure>
 
 ### 3.5 Desktop-Native with Hybrid Execution
@@ -191,7 +191,7 @@ Six protocols form the communication backbone:
 The protocol stack implements graceful degradation: WebMCP is preferred for web interaction, falling back to MCP servers, then CDP browser automation.
 
 <Figure number={5} caption="Protocol hierarchy — core protocols (amber) form the communication backbone; non-core protocols provide fallback and integration.">
-  <ProtocolStack protocols={protocols} class="w-full max-w-[340px] text-text-muted" />
+  <ProtocolStack protocols={protocols} class="w-full max-w-[640px] text-text-muted" />
 </Figure>
 
 ### 4.3 Sandboxing
@@ -222,7 +222,7 @@ Four tool categories were studied to inform Stagent's architecture. Each validat
 ### 5.1 Positioning
 
 <Figure number={6} caption="Tool category positioning on Cloud-Desktop and Reactive-Autonomous axes. Stagent (amber) occupies the desktop-autonomous quadrant uniquely.">
-  <PositioningGrid class="w-full max-w-[440px] text-text-muted" />
+  <PositioningGrid class="w-full max-w-[540px] text-text-muted" />
 </Figure>
 
 Stagent occupies a unique position on two key axes:
@@ -347,7 +347,7 @@ Tier 2 features including live agent inspector, browser fleet manager, and conne
 Hybrid execution with cloud sandbox integration. A2A protocol support for cross-framework agent collaboration. Community-driven template and connector ecosystem.
 
 <Figure number={7} caption="Gantt-style roadmap — four staggered phases from foundation (weeks 1–2) through ecosystem (weeks 6+). Decreasing opacity reflects increasing speculativeness.">
-  <RoadmapTimeline class="w-full max-w-[510px] text-text-muted" />
+  <RoadmapTimeline class="w-full max-w-[520px] text-text-muted" />
 </Figure>
 
 The long-term vision: an open ecosystem where the harness layer is infrastructure — as foundational to agent systems as operating systems are to applications. The orchestration, memory, and autonomy capabilities that Stagent provides should become the expected baseline for any serious agent deployment.

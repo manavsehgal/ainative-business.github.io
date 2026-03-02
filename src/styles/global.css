@@ -18,6 +18,9 @@
   --color-amber: #d4a843;
   --color-amber-dim: #d4a84320;
   --color-amber-glow: #d4a84340;
+  --color-teal: #4db8a4;
+  --color-teal-dim: #4db8a420;
+  --color-teal-glow: #4db8a440;
   --color-border: #2a2725;
 
   --font-display: "DM Serif Display", Georgia, serif;
@@ -110,6 +113,119 @@ section {
   animation: amber-pulse 3s ease-in-out infinite;
 }
 
+/* ── Isometric SVG animations ── */
+@keyframes iso-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes iso-float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes iso-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes iso-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--color-amber)); }
+  50% { filter: drop-shadow(0 0 12px var(--color-amber)); }
+}
+
+@keyframes iso-dash {
+  to { stroke-dashoffset: -20; }
+}
+
+.iso-float { animation: iso-float 4s ease-in-out infinite; }
+.iso-float-slow { animation: iso-float-slow 6s ease-in-out infinite; }
+.iso-breathe { animation: iso-breathe 3s ease-in-out infinite; }
+.iso-glow { animation: iso-glow 3s ease-in-out infinite; }
+.iso-dash { animation: iso-dash 2s linear infinite; }
+
+/* Stagger float animations for satellite variety */
+.iso-float-d1 { animation-delay: 0.5s; }
+.iso-float-d2 { animation-delay: 1s; }
+.iso-float-d3 { animation-delay: 1.5s; }
+.iso-float-d4 { animation-delay: 2s; }
+
+/* ── SVG scroll-reveal animations ── */
+.svg-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.svg-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.svg-reveal-d1 { transition-delay: 0.1s; }
+.svg-reveal-d2 { transition-delay: 0.2s; }
+.svg-reveal-d3 { transition-delay: 0.3s; }
+.svg-reveal-d4 { transition-delay: 0.4s; }
+.svg-reveal-d5 { transition-delay: 0.5s; }
+.svg-reveal-d6 { transition-delay: 0.6s; }
+
+/* Hover lift for interactive SVG elements */
+.svg-hover-lift {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.svg-hover-lift:hover {
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+/* Line draw animation (stroke-dasharray driven) */
+.line-draw {
+  stroke-dasharray: var(--path-length);
+  stroke-dashoffset: var(--path-length);
+  transition: stroke-dashoffset 1s ease;
+}
+.line-draw.visible {
+  stroke-dashoffset: 0;
+}
+
+/* Bar/element grow animation */
+.bar-grow {
+  transform-origin: bottom;
+  transform: scaleY(0);
+  transition: transform 0.6s ease;
+}
+.bar-grow.visible {
+  transform: scaleY(1);
+}
+
+/* Ring expand from center */
+.ring-expand {
+  transform-origin: center;
+  transform: scale(0);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ring-expand.visible {
+  transform: scale(1);
+}
+
+/* Bar grow from left (width-based) */
+.bar-grow-x {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.6s ease;
+}
+.bar-grow-x.visible {
+  transform: scaleX(1);
+}
+
+/* Dot pop-in */
+.dot-pop {
+  transform-origin: center;
+  transform: scale(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dot-pop.visible {
+  transform: scale(1);
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-animate] {
@@ -118,8 +234,29 @@ section {
     transition: none;
   }
 
-  .amber-pulse {
+  .amber-pulse,
+  .iso-float,
+  .iso-float-slow,
+  .iso-breathe,
+  .iso-glow,
+  .iso-dash {
     animation: none;
+  }
+
+  .svg-reveal,
+  .line-draw,
+  .bar-grow,
+  .ring-expand,
+  .bar-grow-x,
+  .dot-pop {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    stroke-dashoffset: 0;
+  }
+
+  .svg-hover-lift {
+    transition: none;
   }
 
   html {
