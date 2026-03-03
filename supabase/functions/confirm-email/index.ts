@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 function successPage(email: string, alreadyConfirmed: boolean): string {
   const heading = alreadyConfirmed
     ? "Already confirmed"
-    : "You're on the list";
+    : "Thank you";
   const message = alreadyConfirmed
     ? `<strong style="color:#e8e4df;">${email}</strong> is already confirmed on the Stagent waitlist.`
     : `<strong style="color:#e8e4df;">${email}</strong> is confirmed. We'll notify you when Stagent is ready to launch.`;
@@ -86,10 +86,16 @@ function successPage(email: string, alreadyConfirmed: boolean): string {
     </div>
     <h1 style="font-family:monospace;font-size:20px;letter-spacing:0.15em;color:#e8e4df;margin:0 0 16px;text-transform:uppercase;">${heading}</h1>
     <p style="color:#b0aaa4;font-size:15px;line-height:1.7;margin:0 0 32px;">${message}</p>
-    <a href="https://stagent.io"
-       style="display:inline-block;font-family:monospace;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#d4a843;border:1px solid rgba(212,168,67,0.4);padding:12px 28px;text-decoration:none;">
-      Back to Stagent
-    </a>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+      <a href="https://stagent.io"
+         style="display:inline-block;font-family:monospace;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#0a0a0a;background:#d4a843;padding:12px 28px;text-decoration:none;">
+        Back to Stagent
+      </a>
+      <a href="https://stagent.io/research"
+         style="display:inline-block;font-family:monospace;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#d4a843;border:1px solid rgba(212,168,67,0.4);padding:12px 28px;text-decoration:none;">
+        Read the Research Paper
+      </a>
+    </div>
   `);
 }
 
