@@ -1,5 +1,6 @@
 ---
 import AmberRule from '../ui/AmberRule.astro';
+import WaitlistForm from '../ui/WaitlistForm.astro';
 ---
 <section class="py-32 px-6">
   <AmberRule />
@@ -9,16 +10,19 @@ import AmberRule from '../ui/AmberRule.astro';
       The harness layer is open.
     </h2>
 
-    <p data-animate class="text-text-muted mb-16 max-w-lg mx-auto" style="transition-delay: 100ms">
-      Read the research. Explore the code. Join the community building
-      the orchestration layer for autonomous agents.
+    <p data-animate class="text-text-muted mb-10 max-w-lg mx-auto" style="transition-delay: 100ms">
+      Join the waitlist to be first in line when Stagent launches.
     </p>
+
+    <div data-animate class="mb-16" style="transition-delay: 200ms">
+      <WaitlistForm variant="cta" id="cta-waitlist" />
+    </div>
 
     <div data-animate-stagger class="flex flex-col sm:flex-row items-center justify-center gap-4">
       <a
         data-animate
         href="/research"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-surface bg-amber px-8 py-3 hover:bg-amber/90 transition-colors"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/40 px-8 py-3 hover:bg-amber/10 transition-colors"
       >
         Research Paper
       </a>
@@ -27,18 +31,9 @@ import AmberRule from '../ui/AmberRule.astro';
         href="https://github.com/stagent"
         target="_blank"
         rel="noopener noreferrer"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/40 px-8 py-3 hover:bg-amber/10 transition-colors"
-      >
-        GitHub
-      </a>
-      <a
-        data-animate
-        href="https://github.com/stagent/discussions"
-        target="_blank"
-        rel="noopener noreferrer"
         class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors"
       >
-        Community
+        GitHub
       </a>
     </div>
   </div>

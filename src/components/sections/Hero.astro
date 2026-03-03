@@ -1,5 +1,6 @@
 ---
 import DagSymbol from '../svg/DagSymbol.astro';
+import WaitlistForm from '../ui/WaitlistForm.astro';
 ---
 <section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
   <!-- Atmospheric glow -->
@@ -37,6 +38,11 @@ import DagSymbol from '../svg/DagSymbol.astro';
     </p>
 
     <div data-animate style="transition-delay: 360ms">
+      <p class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted mb-4">Get early access</p>
+      <WaitlistForm variant="hero" id="hero-waitlist" />
+    </div>
+
+    <div data-animate style="transition-delay: 480ms" class="mt-10">
       <a
         href="/research"
         class="inline-block font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/40 px-8 py-3 hover:bg-amber/10 transition-colors"

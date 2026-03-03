@@ -1,0 +1,147 @@
+---
+interface Props {
+  variant?: 'hero' | 'cta';
+  id?: string;
+}
+
+const { variant = 'hero', id = 'waitlist' } = Astro.props;
+const formId = `form-${id}`;
+const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist-signup';
+---
+
+<form
+  id={formId}
+  data-endpoint={endpoint}
+  class="w-full max-w-md mx-auto"
+  novalidate
+>
+  <div class:list={[
+    "flex gap-2",
+    variant === 'hero' ? 'flex-col sm:flex-row' : 'flex-col sm:flex-row'
+  ]}>
+    <label for={`${formId}-email`} class="sr-only">Email address</label>
+    <input
+      id={`${formId}-email`}
+      type="email"
+      name="email"
+      placeholder="you@example.com"
+      required
+      autocomplete="email"
+      class="flex-1 bg-transparent border border-border font-mono text-xs tracking-wide px-4 py-3 text-text placeholder:text-text-dim focus:border-amber focus:outline-none transition-colors"
+    />
+    <!-- Honeypot — hidden from real users -->
+    <input
+      type="text"
+      name="website"
+      tabindex="-1"
+      autocomplete="off"
+      aria-hidden="true"
+      style="position:absolute;left:-9999px;opacity:0;height:0;width:0;"
+    />
+    <button
+      type="submit"
+      class="font-mono text-xs tracking-[0.2em] uppercase bg-amber text-surface px-6 py-3 hover:bg-amber/90 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Get Early Access
+    </button>
+  </div>
+
+  <!-- Error message -->
+  <p
+    id={`${formId}-error`}
+    role="alert"
+    class="hidden mt-3 font-mono text-xs text-red-400"
+  ></p>
+
+  <!-- Success message -->
+  <div
+    id={`${formId}-success`}
+    class="hidden mt-4 flex items-center gap-2 justify-center"
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id={`${formId}-success-text`} class="font-mono text-xs text-teal"></span>
+  </div>
+</form>
+
+<script define:vars={{ formId }}>
+  (function () {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    const endpoint = form.getAttribute('data-endpoint');
+    const emailInput = form.querySelector('input[name="email"]');
+    const honeypot = form.querySelector('input[name="website"]');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const errorEl = document.getElementById(`${formId}-error`);
+    const successEl = document.getElementById(`${formId}-success`);
+    const successText = document.getElementById(`${formId}-success-text`);
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove('hidden');
+      successEl.classList.add('hidden');
+    }
+
+    function showSuccess(msg) {
+      successText.textContent = msg;
+      successEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+      // Hide the form inputs
+      form.querySelector('div').classList.add('hidden');
+    }
+
+    function clearMessages() {
+      errorEl.classList.add('hidden');
+      successEl.classList.add('hidden');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMessages();
+
+      const email = emailInput.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('Please enter a valid email address.');
+        emailInput.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'SENDING...';
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            website: honeypot.value,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Something went wrong. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'GET EARLY ACCESS';
+          return;
+        }
+
+        if (data.already_confirmed) {
+          showSuccess("You're already on the list!");
+        } else if (data.message) {
+          showSuccess(data.message);
+        } else {
+          showSuccess('Check your inbox to confirm your spot.');
+        }
+      } catch {
+        showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'GET EARLY ACCESS';
+      }
+    });
+  })();
+</script>

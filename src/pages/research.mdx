@@ -12,6 +12,7 @@ import PositioningGrid from '../components/svg/PositioningGrid.astro'
 import MemoryTiers from '../components/svg/MemoryTiers.astro'
 import AutonomyLevels from '../components/svg/AutonomyLevels.astro'
 import RoadmapTimeline from '../components/svg/RoadmapTimeline.astro'
+import WaitlistForm from '../components/ui/WaitlistForm.astro'
 import { protocols } from '../data/protocols'
 
 # The Harness Layer
@@ -233,6 +234,13 @@ On the **Reactive ↔ Autonomous** axis, reactive systems wait for each instruct
 
 ---
 
+<div class="my-16 py-12 border-y border-border/50">
+  <p class="text-center text-text-muted text-sm mb-6">
+    Stagent is under active development. Join the waitlist to be notified when it's ready for download.
+  </p>
+  <WaitlistForm variant="cta" id="research-mid-waitlist" />
+</div>
+
 ## 6. Market Opportunity
 
 | Metric | Value |
@@ -353,6 +361,13 @@ Hybrid execution with cloud sandbox integration. A2A protocol support for cross-
 The long-term vision: an open ecosystem where the harness layer is infrastructure — as foundational to agent systems as operating systems are to applications. The orchestration, memory, and autonomy capabilities that Stagent provides should become the expected baseline for any serious agent deployment.
 
 ---
+
+<div class="my-16 py-12 border-y border-border/50">
+  <p class="text-center text-text-muted text-sm mb-6">
+    Be the first to know when Stagent is ready for download.
+  </p>
+  <WaitlistForm variant="cta" id="research-end-waitlist" />
+</div>
 
 ## References
 
