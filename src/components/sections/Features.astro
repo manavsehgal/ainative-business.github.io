@@ -18,6 +18,13 @@ const features = [
     alt: 'Kanban board with tasks organized across planned, running, and completed columns',
   },
   {
+    title: 'AI-Assisted Task Creation',
+    description: 'Describe a goal in natural language and Claude breaks it down into actionable subtasks with priority, complexity, and agent assignments.',
+    bullets: ['Natural language to structured tasks', 'Automatic priority & complexity', 'Batch subtask generation'],
+    screenshot: '/screenshots/task-ai-assist.png',
+    alt: 'AI-assisted task creation showing natural language input with generated subtasks',
+  },
+  {
     title: 'Agent Monitoring',
     description: 'Watch Claude agents work in real-time. SSE-powered log streaming shows every tool call, decision, and result as it happens.',
     bullets: ['Real-time SSE log streaming', 'Tool call visibility', 'Session-level filtering'],
@@ -32,6 +39,13 @@ const features = [
     alt: 'Documents table view showing uploaded files with metadata',
   },
   {
+    title: 'Document Processing',
+    description: 'View extracted content from PDFs, Office documents, and spreadsheets. Full text extraction pipeline prepares documents for agent consumption.',
+    bullets: ['PDF text extraction & preview', 'Office document parsing', 'Agent-ready context preparation'],
+    screenshot: '/screenshots/document-detail-pdf.png',
+    alt: 'Document detail view showing PDF preview with extracted text and metadata',
+  },
+  {
     title: 'Workflow Engine',
     description: 'Chain tasks into automated workflows. Sequential, parallel, and conditional patterns with checkpoint/resume support.',
     bullets: ['3 workflow patterns', 'Checkpoint & resume', 'Status-driven transitions'],
@@ -39,11 +53,25 @@ const features = [
     alt: 'Workflows list showing configured automation pipelines',
   },
   {
+    title: 'Workflow Builder',
+    description: 'Configure multi-step workflows with visual step management. Define sequences, checkpoints, and planner-executor patterns.',
+    bullets: ['Visual step configuration', 'Pattern-based templates', 'Checkpoint placement'],
+    screenshot: '/screenshots/workflow-detail.png',
+    alt: 'Workflow detail view showing step configuration and execution status',
+  },
+  {
     title: 'Project Management',
     description: 'Organize work into projects with task boards, document attachments, and progress tracking across the full lifecycle.',
     bullets: ['Project-scoped task boards', 'Document attachments', 'Progress analytics'],
     screenshot: '/screenshots/projects-list.png',
     alt: 'Projects list showing active projects with task statistics',
+  },
+  {
+    title: 'Project Detail',
+    description: 'Drill into any project for its full task board, document attachments, and progress analytics across the complete lifecycle.',
+    bullets: ['Scoped task board view', 'Attached documents', 'Progress breakdown by status'],
+    screenshot: '/screenshots/project-detail.png',
+    alt: 'Project detail view showing task board and document attachments',
   },
 ];
 ---

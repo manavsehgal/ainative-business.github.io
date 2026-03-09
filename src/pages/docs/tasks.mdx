@@ -19,6 +19,8 @@ The Kanban board is the primary interface for managing agent tasks. Tasks flow t
 - **AI-Assisted Task Creation** — Describe a goal in natural language; Claude breaks it down into actionable subtasks with appropriate priority and complexity ratings
 - **Side Panel Detail** — Click any task to see full details, execution logs, and status history without leaving the board
 
+<BrowserFrame src="/screenshots/task-ai-assist.png" alt="AI-assisted task creation breaking down goals into subtasks" />
+
 ## Task Lifecycle
 
 | Status | Description |
@@ -30,11 +32,15 @@ The Kanban board is the primary interface for managing agent tasks. Tasks flow t
 | **Failed** | Agent encountered an error |
 | **Cancelled** | Manually stopped by the user |
 
+<BrowserFrame src="/screenshots/task-detail-panel.png" alt="Task detail panel showing full task information, status history, and execution logs" />
+
 ## How It Works
 
 Tasks are stored in the `tasks` table with a status field governed by valid transitions defined in `task-status.ts`. The execution manager picks up queued tasks and creates Agent SDK sessions. Status transitions are atomic and logged.
 
 The fire-and-forget pattern means `POST /api/tasks/[id]/execute` returns HTTP 202 immediately — the agent runs asynchronously while you continue working.
+
+<BrowserFrame src="/screenshots/task-create-panel.png" alt="Task creation panel with fields for title, description, priority, and complexity" />
 
 ## Related Features
 

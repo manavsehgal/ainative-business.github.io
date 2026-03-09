@@ -9,6 +9,7 @@ readingTime: "20 min read"
 ---
 
 import Figure from '../components/research/Figure.astro'
+import BrowserFrame from '../components/ui/BrowserFrame.astro'
 import SystemArchitecture from '../components/svg/SystemArchitecture.astro'
 import GovernanceFlow from '../components/svg/GovernanceFlow.astro'
 import MarketGrowth from '../components/svg/MarketGrowth.astro'
@@ -76,7 +77,7 @@ The AI agent market is undergoing explosive growth. Multiple analyst firms conve
 | Organizations reporting productivity gains from AI | 66% | Deloitte |
 | Organizations converting AI gains to financial ROI | 20–30% | IDC |
 
-<Figure caption="AI Agent Market Growth Trajectory (2025–2030)">
+<Figure number={1} caption="AI Agent Market Growth Trajectory (2025–2030)">
   <MarketGrowth />
 </Figure>
 
@@ -127,16 +128,24 @@ Stagent's architecture follows three principles drawn from Anthropic's "Building
 
 ### System Architecture
 
-<Figure caption="Stagent System Architecture — Four-Layer Stack">
+<Figure number={2} caption="Stagent System Architecture — Four-Layer Stack">
   <SystemArchitecture />
+</Figure>
+
+<Figure number={3} caption="Stagent Dashboard — Project Overview with Task Statistics">
+  <BrowserFrame src="/screenshots/home-dashboard.png" alt="Stagent dashboard showing project cards with task statistics and recent activity" />
 </Figure>
 
 ### The canUseTool Governance Pattern
 
 The centerpiece of Stagent's architecture is the `canUseTool` polling pattern — the mechanism that transforms autonomous agent execution into governed agent execution.
 
-<Figure caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
+<Figure number={4} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
   <GovernanceFlow />
+</Figure>
+
+<Figure number={5} caption="Inbox Notifications — Human-in-the-Loop Approval Interface">
+  <BrowserFrame src="/screenshots/inbox-notifications.png" alt="Inbox showing agent permission requests awaiting human approval" />
 </Figure>
 
 1. **Agent requests permission** — When the Claude agent wants to use a tool, the SDK calls the `canUseTool` callback.
@@ -175,7 +184,7 @@ Stagent ships three workflow patterns:
 
 The agent platform market can be mapped along two axes: **agent autonomy** and **human governance**. Most platforms optimize for one at the expense of the other.
 
-<Figure caption="Competitive Positioning — Governance vs. Autonomy">
+<Figure number={6} caption="Competitive Positioning — Governance vs. Autonomy">
   <GovernanceMatrix />
 </Figure>
 
@@ -188,6 +197,10 @@ Stagent occupies the **high-governance, high-autonomy** quadrant — the quadran
 **2. Task Management UX** — Stagent maps to work management paradigms that billions of knowledge workers already understand. The Kanban board, the Inbox, the Monitor — all familiar patterns. No CLI, no developer console, no friction.
 
 **3. Local-First Data Sovereignty** — Stagent's database lives at `~/.stagent/stagent.db` — a local SQLite file. No data transits to external servers. This is a regulatory strategy, not a philosophical preference.
+
+<Figure number={7} caption="Task Management UX — Kanban Board with Status Columns">
+  <BrowserFrame src="/screenshots/kanban-board.png" alt="Kanban board with tasks organized across planned, running, and completed columns" />
+</Figure>
 
 ---
 
@@ -207,7 +220,11 @@ Stagent has shipped 18 features across 7 sprints:
 | S6 | Doc Foundation | File Attachments, Preprocessing, Agent Context | 17 |
 | S7 | Doc UI | Document Manager (table/grid, upload, bulk ops) | 18 |
 
-<Figure caption="Feature Velocity by Sprint">
+<Figure number={8} caption="Workflow Detail — Step Configuration and Execution Status">
+  <BrowserFrame src="/screenshots/workflow-detail.png" alt="Workflow detail view showing step configuration and execution status" />
+</Figure>
+
+<Figure number={9} caption="Feature Velocity by Sprint">
   <FeatureVelocity />
 </Figure>
 

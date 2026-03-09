@@ -12,6 +12,8 @@ The document manager provides a dedicated interface for uploading, organizing, a
 
 <BrowserFrame src="/screenshots/documents-table.png" alt="Documents table view showing uploaded files with metadata and status" />
 
+<BrowserFrame src="/screenshots/document-upload-dialog.png" alt="Document upload dialog supporting multiple file formats" />
+
 ## Key Concepts
 
 - **Multi-Format Upload** — Support for text, PDF, images, Office documents (Word, PowerPoint), and spreadsheets (Excel, CSV)
@@ -20,6 +22,8 @@ The document manager provides a dedicated interface for uploading, organizing, a
 - **Bulk Operations** — Select multiple documents for bulk delete or status updates
 - **Agent Context Building** — Documents are automatically prepared as context for agent tasks
 
+<BrowserFrame src="/screenshots/documents-grid.png" alt="Documents grid view showing visual card layout" />
+
 ## Document Pipeline
 
 1. **Upload** — User uploads a file through the upload dialog
@@ -27,6 +31,8 @@ The document manager provides a dedicated interface for uploading, organizing, a
 3. **Preprocess** — Text extraction runs for supported formats (PDF, Office, text)
 4. **Index** — Extracted text stored in `extractedText` column for fast retrieval
 5. **Serve** — Agent receives document context when executing related tasks
+
+<BrowserFrame src="/screenshots/document-detail-pdf.png" alt="Document detail view showing PDF preview with extracted text and metadata" />
 
 ## Supported Formats
 

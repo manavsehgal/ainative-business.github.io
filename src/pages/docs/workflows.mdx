@@ -32,6 +32,8 @@ Agent executes autonomously until it reaches a defined checkpoint, then pauses f
 
 **Example**: Draft client email → **human approves** → send email → log to CRM
 
+<BrowserFrame src="/screenshots/workflow-detail.png" alt="Workflow detail view showing step configuration and execution status" />
+
 ## Key Concepts
 
 - **JSON Workflow Definitions** — Workflows are defined declaratively with steps, dependencies, and gate conditions
@@ -44,6 +46,8 @@ Agent executes autonomously until it reaches a defined checkpoint, then pauses f
 Workflow definitions are stored in the `workflows` table as JSON. The workflow engine (`src/lib/workflows/engine.ts`) interprets these definitions and orchestrates task execution through the execution manager.
 
 Each workflow step creates a task in the `tasks` table. Step transitions are triggered by status changes — when a task completes, the engine checks the workflow definition for the next step and creates it.
+
+<BrowserFrame src="/screenshots/workflow-create-dialog.png" alt="Workflow creation dialog with pattern selection and step configuration" />
 
 ## Related Features
 
