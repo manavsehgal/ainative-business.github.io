@@ -23,7 +23,7 @@ const cards = [
   },
 ];
 ---
-<section class="py-24 px-6">
+<section class="py-24 px-6 bg-surface-raised">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
       <SectionLabel text="Product" />
@@ -33,7 +33,7 @@ const cards = [
     <div data-animate-stagger class="grid md:grid-cols-3 gap-8">
       {cards.map(({ title, description, screenshot, alt }) => (
         <div data-animate class="group">
-          <div class="mb-6 overflow-hidden rounded-lg border border-border">
+          <div class="img-reveal mb-6 overflow-hidden rounded-lg border border-border">
             <img
               src={screenshot}
               alt={alt}

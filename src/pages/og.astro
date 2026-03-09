@@ -33,7 +33,7 @@ import "@fontsource-variable/geist-mono";
     .glow {
       position: absolute;
       top: 50%;
-      right: 200px;
+      right: 180px;
       transform: translateY(-50%);
       width: 500px;
       height: 500px;
@@ -45,11 +45,11 @@ import "@fontsource-variable/geist-mono";
     /* ── Wordmark ── */
     .wordmark {
       position: absolute;
-      top: 90px;
+      top: 72px;
       left: 72px;
       z-index: 3;
       font-family: "Geist Mono Variable", monospace;
-      font-size: 136px;
+      font-size: 120px;
       font-weight: 400;
       letter-spacing: 0.18em;
       color: oklch(0.65 0.18 250);
@@ -60,19 +60,19 @@ import "@fontsource-variable/geist-mono";
     .center-content {
       position: absolute;
       left: 72px;
-      top: 320px;
+      top: 240px;
       z-index: 2;
       text-align: left;
     }
 
     .tagline {
       font-family: "Geist Sans", system-ui, sans-serif;
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 700;
       line-height: 1.3;
       color: oklch(0.85 0.01 250);
-      margin-bottom: 28px;
-      max-width: 700px;
+      margin-bottom: 32px;
+      max-width: 540px;
     }
 
     .pills {
@@ -83,13 +83,27 @@ import "@fontsource-variable/geist-mono";
 
     .pill {
       font-family: "Geist Mono Variable", monospace;
-      font-size: 16px;
+      font-size: 15px;
       letter-spacing: 0.04em;
       color: oklch(0.65 0.18 250);
       border: 1.5px solid oklch(0.65 0.18 250 / 0.4);
       border-radius: 8px;
-      padding: 8px 24px;
+      padding: 8px 20px;
       background: oklch(0.65 0.18 250 / 0.06);
+    }
+
+    .pill.success {
+      color: oklch(0.65 0.15 170);
+      border-color: oklch(0.65 0.15 170 / 0.4);
+      background: oklch(0.65 0.15 170 / 0.06);
+    }
+
+    /* ── Governance Flow SVG ── */
+    .governance-flow {
+      position: absolute;
+      right: 48px;
+      top: 220px;
+      z-index: 1;
     }
 
     /* ── URL ── */
@@ -114,15 +128,6 @@ import "@fontsource-variable/geist-mono";
       background: linear-gradient(90deg, transparent 5%, oklch(0.65 0.18 250 / 0.25) 30%, oklch(0.65 0.18 250 / 0.5) 50%, oklch(0.65 0.18 250 / 0.25) 70%, transparent 95%);
       z-index: 3;
     }
-
-    /* ── Architecture lines ── */
-    .arch-lines {
-      position: absolute;
-      right: 60px;
-      top: 100px;
-      z-index: 1;
-      opacity: 0.6;
-    }
   </style>
 </head>
 <body>
@@ -131,33 +136,73 @@ import "@fontsource-variable/geist-mono";
 
     <div class="wordmark">STAGENT</div>
 
-    <!-- Architecture layers as visual element -->
-    <div class="arch-lines">
-      <svg width="400" height="380" viewBox="0 0 400 380" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="20" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
-        <text x="40" y="60" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">HUMAN LAYER</text>
+    <!-- Governance flow — simplified 5-step loop -->
+    <div class="governance-flow">
+      <svg width="520" height="320" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Step 1: Agent -->
+        <rect x="10" y="10" width="140" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="80" y="38" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" text-anchor="middle" font-weight="600">1. AGENT</text>
+        <text x="80" y="58" fill="oklch(0.6 0.02 250)" font-family="'Geist Sans', sans-serif" font-size="13" text-anchor="middle">Requests tool</text>
 
-        <rect x="20" y="110" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
-        <text x="40" y="150" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">COORDINATION</text>
+        <!-- Arrow 1→2 -->
+        <line x1="150" y1="45" x2="185" y2="45" stroke="oklch(0.65 0.18 250)" stroke-width="1.5" stroke-dasharray="6 4" />
+        <circle cx="185" cy="45" r="3" fill="oklch(0.65 0.18 250)" />
 
-        <rect x="20" y="200" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
-        <text x="40" y="240" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">AGENT LAYER</text>
+        <!-- Step 2: canUseTool -->
+        <rect x="190" y="10" width="140" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.65 0.18 250)" stroke-width="1.5" />
+        <text x="260" y="38" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" text-anchor="middle" font-weight="600">2. canUseTool</text>
+        <text x="260" y="58" fill="oklch(0.6 0.02 250)" font-family="'Geist Sans', sans-serif" font-size="13" text-anchor="middle">Polls approval</text>
 
-        <rect x="20" y="290" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
-        <text x="40" y="330" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">DATA LAYER</text>
+        <!-- Arrow 2→3 -->
+        <line x1="330" y1="45" x2="365" y2="45" stroke="oklch(0.65 0.18 250)" stroke-width="1.5" stroke-dasharray="6 4" />
+        <circle cx="365" cy="45" r="3" fill="oklch(0.65 0.18 250)" />
 
-        <!-- Connecting dots -->
-        <circle cx="200" cy="97" r="3" fill="oklch(0.65 0.18 250)" />
-        <circle cx="200" cy="187" r="3" fill="oklch(0.65 0.18 250)" />
-        <circle cx="200" cy="277" r="3" fill="oklch(0.65 0.18 250)" />
+        <!-- Step 3: Notify -->
+        <rect x="370" y="10" width="140" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="440" y="38" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" text-anchor="middle" font-weight="600">3. NOTIFY</text>
+        <text x="440" y="58" fill="oklch(0.6 0.02 250)" font-family="'Geist Sans', sans-serif" font-size="13" text-anchor="middle">Inbox alert</text>
+
+        <!-- Arrow 3→4 (downward) -->
+        <line x1="440" y1="80" x2="440" y2="115" stroke="oklch(0.65 0.15 170)" stroke-width="1.5" stroke-dasharray="6 4" />
+        <circle cx="440" cy="115" r="3" fill="oklch(0.65 0.15 170)" />
+
+        <!-- Step 4: Human (success color) -->
+        <rect x="370" y="120" width="140" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.65 0.15 170)" stroke-width="1.5" />
+        <text x="440" y="148" fill="oklch(0.65 0.15 170)" font-family="'Geist Mono Variable', monospace" font-size="14" text-anchor="middle" font-weight="600">4. HUMAN ✓</text>
+        <text x="440" y="168" fill="oklch(0.6 0.02 250)" font-family="'Geist Sans', sans-serif" font-size="13" text-anchor="middle">Reviews &amp; decides</text>
+
+        <!-- Arrow 4→5 (leftward) -->
+        <line x1="370" y1="155" x2="335" y2="155" stroke="oklch(0.65 0.18 250)" stroke-width="1.5" stroke-dasharray="6 4" />
+        <circle cx="335" cy="155" r="3" fill="oklch(0.65 0.18 250)" />
+
+        <!-- Step 5: Execute -->
+        <rect x="190" y="120" width="140" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="260" y="148" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" text-anchor="middle" font-weight="600">5. EXECUTE</text>
+        <text x="260" y="168" fill="oklch(0.6 0.02 250)" font-family="'Geist Sans', sans-serif" font-size="13" text-anchor="middle">Tool runs</text>
+
+        <!-- Loop-back arrow (Execute → Agent) -->
+        <path d="M190 155 L80 155 L80 80" stroke="oklch(0.65 0.18 250 / 0.4)" stroke-width="1" stroke-dasharray="4 4" fill="none" />
+        <circle cx="80" cy="80" r="3" fill="oklch(0.65 0.18 250 / 0.4)" />
+
+        <!-- Caption -->
+        <text x="260" y="230" fill="oklch(0.5 0.02 250)" font-family="'Geist Mono Variable', monospace" font-size="12" text-anchor="middle">
+          Human-in-the-loop governance cycle
+        </text>
+
+        <!-- Arrowhead defs -->
+        <defs>
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="oklch(0.65 0.18 250)" />
+          </marker>
+        </defs>
       </svg>
     </div>
 
     <div class="center-content">
-      <div class="tagline">AI-powered task management with human-in-the-loop oversight</div>
+      <div class="tagline">The coordination layer for the agentic enterprise</div>
       <div class="pills">
-        <span class="pill">18 Features</span>
-        <span class="pill">7 Sprints</span>
+        <span class="pill success">Human-in-the-Loop</span>
+        <span class="pill">Local-First</span>
         <span class="pill">Open Source</span>
       </div>
     </div>

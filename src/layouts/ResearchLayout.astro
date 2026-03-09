@@ -1,5 +1,7 @@
 ---
 import Layout from './Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 import '../styles/prose.css';
 import { SITE, PUBLISHER } from '../data/seo';
 
@@ -85,24 +87,16 @@ const jsonLd = [
     style="width: 0%"
   ></div>
 
-  <!-- Sticky minimal nav -->
-  <nav aria-label="Research paper navigation" class="fixed top-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
-    <div class="max-w-[72ch] mx-auto px-6 py-3 flex items-center justify-between">
-      <a href="/" class="font-mono text-sm tracking-[0.3em] text-text-muted hover:text-primary transition-colors">
-        STAGENT
-      </a>
-      <a href="/" class="font-mono text-xs text-text-muted hover:text-primary transition-colors">
-        &larr; Back to Home
-      </a>
-    </div>
-  </nav>
+  <Nav />
 
   <!-- Content -->
-  <main class="max-w-[72ch] mx-auto px-6 pt-24 pb-32">
+  <main class="max-w-[72ch] mx-auto px-6 pt-28 pb-32">
     <article class="prose">
       <slot />
     </article>
   </main>
+
+  <Footer />
 
   <!-- Reading progress script -->
   <script>

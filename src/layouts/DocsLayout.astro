@@ -1,5 +1,7 @@
 ---
 import Layout from './Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 import '../styles/prose.css';
 import DocsSidebar from '../components/DocsSidebar.astro';
 import { SITE, PUBLISHER } from '../data/seo';
@@ -39,27 +41,9 @@ const jsonLd = [
 ];
 ---
 <Layout title={pageTitle} description={description} jsonLd={jsonLd}>
-  <!-- Sticky nav for docs -->
-  <nav aria-label="Docs navigation" class="fixed top-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
-    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <a href="/" class="font-mono text-sm tracking-[0.3em] text-text-muted hover:text-primary transition-colors">
-          STAGENT
-        </a>
-        <span class="text-border">/</span>
-        <a href="/docs" class="font-mono text-xs text-text-muted hover:text-primary transition-colors">
-          Docs
-        </a>
-        <span class="text-border">/</span>
-        <span class="font-mono text-xs text-text">{title}</span>
-      </div>
-      <a href="/" class="font-mono text-xs text-text-muted hover:text-primary transition-colors hidden sm:block">
-        &larr; Home
-      </a>
-    </div>
-  </nav>
+  <Nav />
 
-  <div class="max-w-7xl mx-auto px-6 pt-20 pb-32 flex gap-8">
+  <div class="max-w-7xl mx-auto px-6 pt-28 pb-32 flex gap-8">
     <!-- Sidebar -->
     <DocsSidebar currentPath={Astro.url.pathname} />
 
@@ -70,4 +54,6 @@ const jsonLd = [
       </article>
     </main>
   </div>
+
+  <Footer />
 </Layout>

@@ -116,7 +116,7 @@ const jsonLdSchemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
           { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
         );
 
-        document.querySelectorAll('[data-animate]').forEach((el) => {
+        document.querySelectorAll('[data-animate], .img-reveal').forEach((el) => {
           observer.observe(el);
         });
 

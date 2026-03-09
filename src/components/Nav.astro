@@ -11,7 +11,7 @@ const docsPages = [
   { href: '/docs/settings', label: 'Settings' },
 ];
 ---
-<nav id="main-nav" aria-label="Main navigation" class="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
+<nav id="main-nav" aria-label="Main navigation" class="fixed top-0 left-0 right-0 z-40 transition-[background-color,backdrop-filter,border-color] duration-300">
   <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
     <a href="/" class="font-mono text-sm tracking-[0.35em] text-text hover:text-primary transition-colors">
       S T A G E N T
@@ -39,7 +39,7 @@ const docsPages = [
           Docs
         </a>
         <!-- Dropdown -->
-        <div class="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+        <div class="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-[opacity,visibility] duration-200">
           <div class="bg-surface-raised border border-border rounded-lg shadow-xl py-2 min-w-[200px]">
             {docsPages.map(({ href, label }) => (
               <a

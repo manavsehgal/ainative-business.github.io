@@ -3,10 +3,19 @@ import WaitlistForm from '../ui/WaitlistForm.astro';
 import BrowserFrame from '../ui/BrowserFrame.astro';
 ---
 <section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden pt-24 pb-16">
-  <!-- Atmospheric glow -->
-  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-    <div class="absolute w-[600px] h-[600px] rounded-full bg-primary/[0.06] blur-[150px]"></div>
+  <!-- Perspective grid -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="hero-grid"></div>
   </div>
+
+  <!-- Dual atmospheric glow -->
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="absolute w-[800px] h-[800px] rounded-full bg-primary/[0.10] blur-[180px]"></div>
+    <div class="absolute w-[400px] h-[400px] rounded-full bg-primary/[0.15] blur-[100px]"></div>
+  </div>
+
+  <!-- Bottom gradient fade into next section (bg-surface-raised) -->
+  <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style="background: linear-gradient(to bottom, transparent, var(--color-surface-raised));"></div>
 
   <!-- Content -->
   <div class="relative z-10 text-center max-w-4xl">
@@ -69,3 +78,32 @@ import BrowserFrame from '../ui/BrowserFrame.astro';
     </svg>
   </div>
 </section>
+
+<style>
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        var(--color-border) 0 1px,
+        transparent 1px 60px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        var(--color-border) 0 1px,
+        transparent 1px 60px
+      );
+    opacity: 0.2;
+    transform: perspective(600px) rotateX(55deg);
+    transform-origin: center top;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-grid {
+      transform: none;
+    }
+  }
+</style>
