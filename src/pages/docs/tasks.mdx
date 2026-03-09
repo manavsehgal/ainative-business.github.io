@@ -1,0 +1,43 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Task Management"
+description: "Kanban boards, AI-assisted task creation, drag-and-drop workflows, and task execution lifecycle."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Task Management
+
+The Kanban board is the primary interface for managing agent tasks. Tasks flow through columns representing execution states: **Planned → Queued → Running → Completed/Failed**.
+
+<BrowserFrame src="/screenshots/kanban-board.png" alt="Kanban board with tasks organized across status columns" />
+
+## Key Concepts
+
+- **Status Columns** — Visual workflow columns mirror the task execution lifecycle. Drag-and-drop between Planned and Queued to control when agents pick up work
+- **Task Cards** — Each card shows title, priority, complexity, assigned agent, and progress indicators
+- **AI-Assisted Task Creation** — Describe a goal in natural language; Claude breaks it down into actionable subtasks with appropriate priority and complexity ratings
+- **Side Panel Detail** — Click any task to see full details, execution logs, and status history without leaving the board
+
+## Task Lifecycle
+
+| Status | Description |
+|--------|-------------|
+| **Planned** | Task defined but not yet queued for execution |
+| **Queued** | Ready for agent pickup |
+| **Running** | Agent actively executing the task |
+| **Completed** | Successfully finished |
+| **Failed** | Agent encountered an error |
+| **Cancelled** | Manually stopped by the user |
+
+## How It Works
+
+Tasks are stored in the `tasks` table with a status field governed by valid transitions defined in `task-status.ts`. The execution manager picks up queued tasks and creates Agent SDK sessions. Status transitions are atomic and logged.
+
+The fire-and-forget pattern means `POST /api/tasks/[id]/execute` returns HTTP 202 immediately — the agent runs asynchronously while you continue working.
+
+## Related Features
+
+- [Agent Integration](/docs/agents) — How agents execute tasks
+- [Human-in-the-Loop](/docs/inbox) — Permission requests during execution
+- [Workflows](/docs/workflows) — Chaining tasks into multi-step workflows

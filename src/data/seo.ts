@@ -2,10 +2,10 @@ export const SITE = {
   name: 'Stagent',
   url: 'https://stagent.io',
   description:
-    'Desktop-native, open-source harness that turns high-level goals into observable, long-running agent workflows — across any model, any tool, any timeline.',
+    'AI-powered task management where Claude agents execute tasks with human-in-the-loop oversight. Local-first, open source.',
   logo: 'https://stagent.io/favicon.svg',
   ogImage: 'https://stagent.io/og-image.png',
-  themeColor: '#0a0a0a',
+  themeColor: '#1a1a2e',
   license: 'Apache-2.0',
 };
 

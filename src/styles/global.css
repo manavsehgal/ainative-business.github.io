@@ -1,31 +1,30 @@
 @import "tailwindcss";
 
 /* ── Fontsource imports ── */
-@import "@fontsource/dm-serif-display/400.css";
-@import "@fontsource/dm-sans/400.css";
-@import "@fontsource/dm-sans/500.css";
-@import "@fontsource/dm-sans/700.css";
-@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/geist-sans/400.css";
+@import "@fontsource/geist-sans/500.css";
+@import "@fontsource/geist-sans/700.css";
+@import "@fontsource-variable/geist-mono";
 
-/* ── Design Tokens ── */
+/* ── Design Tokens (OKLCH hue 250 blue-indigo) ── */
 @theme {
-  --color-surface: #0a0a0a;
-  --color-surface-raised: #111110;
-  --color-surface-overlay: #1a1918;
-  --color-text: #e8e4df;
-  --color-text-muted: #b0aaa4;
-  --color-text-dim: #9a948e;
-  --color-amber: #d4a843;
-  --color-amber-dim: #d4a84320;
-  --color-amber-glow: #d4a84340;
-  --color-teal: #4db8a4;
-  --color-teal-dim: #4db8a420;
-  --color-teal-glow: #4db8a440;
-  --color-border: #2a2725;
+  --color-surface: oklch(0.13 0.02 250);
+  --color-surface-raised: oklch(0.16 0.02 250);
+  --color-surface-overlay: oklch(0.19 0.02 250);
+  --color-text: oklch(0.93 0.01 250);
+  --color-text-muted: oklch(0.6 0.02 250);
+  --color-text-dim: oklch(0.5 0.02 250);
+  --color-primary: oklch(0.65 0.18 250);
+  --color-primary-dim: oklch(0.65 0.18 250 / 0.12);
+  --color-primary-glow: oklch(0.65 0.18 250 / 0.25);
+  --color-success: oklch(0.65 0.15 170);
+  --color-success-dim: oklch(0.65 0.15 170 / 0.12);
+  --color-success-glow: oklch(0.65 0.15 170 / 0.25);
+  --color-border: oklch(0.25 0.02 250);
 
-  --font-display: "DM Serif Display", Georgia, serif;
-  --font-body: "DM Sans", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Geist Sans", system-ui, sans-serif;
+  --font-body: "Geist Sans", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
 
 /* ── Base ── */
@@ -64,7 +63,7 @@ body::before {
 @layer base {
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: 700;
     line-height: 1.15;
     color: var(--color-text);
   }
@@ -103,52 +102,15 @@ section {
 [data-animate-stagger] > [data-animate]:nth-child(6) { transition-delay: 400ms; }
 [data-animate-stagger] > [data-animate]:nth-child(7) { transition-delay: 480ms; }
 
-/* ── Amber glow pulse ── */
-@keyframes amber-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--color-amber-dim); }
-  50% { box-shadow: 0 0 24px 4px var(--color-amber-glow); }
+/* ── Primary glow pulse ── */
+@keyframes primary-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-primary-dim); }
+  50% { box-shadow: 0 0 24px 4px var(--color-primary-glow); }
 }
 
-.amber-pulse {
-  animation: amber-pulse 3s ease-in-out infinite;
+.primary-pulse {
+  animation: primary-pulse 3s ease-in-out infinite;
 }
-
-/* ── Isometric SVG animations ── */
-@keyframes iso-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes iso-float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes iso-breathe {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-}
-
-@keyframes iso-glow {
-  0%, 100% { filter: drop-shadow(0 0 2px var(--color-amber)); }
-  50% { filter: drop-shadow(0 0 12px var(--color-amber)); }
-}
-
-@keyframes iso-dash {
-  to { stroke-dashoffset: -20; }
-}
-
-.iso-float { animation: iso-float 4s ease-in-out infinite; }
-.iso-float-slow { animation: iso-float-slow 6s ease-in-out infinite; }
-.iso-breathe { animation: iso-breathe 3s ease-in-out infinite; }
-.iso-glow { animation: iso-glow 3s ease-in-out infinite; }
-.iso-dash { animation: iso-dash 2s linear infinite; }
-
-/* Stagger float animations for satellite variety */
-.iso-float-d1 { animation-delay: 0.5s; }
-.iso-float-d2 { animation-delay: 1s; }
-.iso-float-d3 { animation-delay: 1.5s; }
-.iso-float-d4 { animation-delay: 2s; }
 
 /* ── SVG scroll-reveal animations ── */
 .svg-reveal {
@@ -234,12 +196,7 @@ section {
     transition: none;
   }
 
-  .amber-pulse,
-  .iso-float,
-  .iso-float-slow,
-  .iso-breathe,
-  .iso-glow,
-  .iso-dash {
+  .primary-pulse {
     animation: none;
   }
 
@@ -266,13 +223,13 @@ section {
 
 /* ── Focus accessibility ── */
 :focus-visible {
-  outline: 2px solid var(--color-amber);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: var(--color-amber-glow);
+  background: var(--color-primary-glow);
   color: var(--color-text);
 }
 

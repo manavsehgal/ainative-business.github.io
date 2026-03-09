@@ -1,0 +1,41 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Human-in-the-Loop"
+description: "Permission requests, agent questions, approval workflows, and the notification inbox."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Human-in-the-Loop
+
+The Inbox is the agent-to-human communication hub — an email-style interface where permission requests, agent questions, task completions, and failures surface for human review and action.
+
+<BrowserFrame src="/screenshots/inbox-notifications.png" alt="Inbox showing agent permission requests awaiting approval" />
+
+## Key Concepts
+
+- **Permission Requests** — When an agent wants to use a tool (read a file, execute code, send data), a notification appears in the Inbox with full context. Click Allow or Deny
+- **Agent Questions** — The `AskUserQuestion` tool surfaces clarifying questions as conversational messages. Respond directly in the inbox
+- **Task Completions** — Get notified when agents finish work, with links to results
+- **Task Failures** — Error notifications with full context for debugging
+
+## Notification Types
+
+| Type | Action Required | Description |
+|------|:---:|-------------|
+| `permission_required` | Yes | Agent wants to use a tool — review and decide |
+| `agent_message` | Yes | Agent is asking a clarifying question |
+| `task_completed` | No | Informational — task finished successfully |
+| `task_failed` | No | Informational — task encountered an error |
+
+## How It Works
+
+The notification table acts as a message queue. When `canUseTool` fires, a row is written to the `notifications` table with the tool name, parameters, and context. The agent enters a polling loop, checking for a response every few seconds.
+
+When the user clicks Allow or Deny, their response is written via `POST /api/tasks/[id]/respond`. The polling loop detects the response and returns it to the Agent SDK.
+
+## Related Features
+
+- [Agent Integration](/docs/agents) — The canUseTool pattern that generates notifications
+- [Monitoring](/docs/monitoring) — See agent activity in real time
+- [Task Management](/docs/tasks) — Where tasks originate

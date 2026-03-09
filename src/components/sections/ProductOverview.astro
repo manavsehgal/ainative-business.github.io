@@ -1,0 +1,51 @@
+---
+import SectionLabel from '../ui/SectionLabel.astro';
+import BrowserFrame from '../ui/BrowserFrame.astro';
+
+const cards = [
+  {
+    title: 'Familiar UX',
+    description: 'Kanban boards, not chat interfaces. Manage AI tasks the way you manage everything else.',
+    screenshot: '/screenshots/kanban-board.png',
+    alt: 'Kanban board with task cards organized by status columns',
+  },
+  {
+    title: 'Local-first',
+    description: 'SQLite database. Nothing leaves your machine. Your data, your control.',
+    screenshot: '/screenshots/settings-page.png',
+    alt: 'Settings page showing local configuration options',
+  },
+  {
+    title: 'Human-in-the-loop',
+    description: 'Approve every agent action. Full visibility into what AI agents do on your behalf.',
+    screenshot: '/screenshots/inbox-notifications.png',
+    alt: 'Inbox showing agent permission requests awaiting approval',
+  },
+];
+---
+<section class="py-24 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <SectionLabel text="Product" />
+      <h2 data-animate class="mt-4">Everything you need to manage AI agents</h2>
+    </div>
+
+    <div data-animate-stagger class="grid md:grid-cols-3 gap-8">
+      {cards.map(({ title, description, screenshot, alt }) => (
+        <div data-animate class="group">
+          <div class="mb-6 overflow-hidden rounded-lg border border-border">
+            <img
+              src={screenshot}
+              alt={alt}
+              loading="lazy"
+              decoding="async"
+              class="w-full block group-hover:scale-[1.02] transition-transform duration-300"
+            />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">{title}</h3>
+          <p class="text-text-muted text-sm leading-relaxed">{description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

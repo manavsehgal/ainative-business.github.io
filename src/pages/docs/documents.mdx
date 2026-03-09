@@ -1,0 +1,46 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Document Management"
+description: "Upload, preprocess, and organize documents for agent consumption with table and grid views."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Document Management
+
+The document manager provides a dedicated interface for uploading, organizing, and preprocessing documents that agents can use as context during task execution.
+
+<BrowserFrame src="/screenshots/documents-table.png" alt="Documents table view showing uploaded files with metadata and status" />
+
+## Key Concepts
+
+- **Multi-Format Upload** — Support for text, PDF, images, Office documents (Word, PowerPoint), and spreadsheets (Excel, CSV)
+- **Text Extraction** — Automatic preprocessing extracts text content from uploaded files for agent consumption
+- **Table & Grid Views** — Switch between detailed table view and visual grid view for browsing documents
+- **Bulk Operations** — Select multiple documents for bulk delete or status updates
+- **Agent Context Building** — Documents are automatically prepared as context for agent tasks
+
+## Document Pipeline
+
+1. **Upload** — User uploads a file through the upload dialog
+2. **Store** — File saved to `~/.stagent/uploads/` with metadata in the `documents` table
+3. **Preprocess** — Text extraction runs for supported formats (PDF, Office, text)
+4. **Index** — Extracted text stored in `extractedText` column for fast retrieval
+5. **Serve** — Agent receives document context when executing related tasks
+
+## Supported Formats
+
+| Format | Processor | Extraction |
+|--------|-----------|------------|
+| Text (`.txt`, `.md`, `.csv`) | Direct read | Full text |
+| PDF (`.pdf`) | pdf-parse v2 | Full text + metadata |
+| Images (`.png`, `.jpg`) | image-size | Dimensions + metadata |
+| Word (`.docx`) | mammoth | Full text |
+| PowerPoint (`.pptx`) | jszip | Slide text |
+| Excel (`.xlsx`) | xlsx | Cell data |
+
+## Related Features
+
+- [Agent Integration](/docs/agents) — How agents consume document context
+- [Project Management](/docs/projects) — Documents linked to projects
+- [Settings](/docs/settings) — Upload and storage configuration

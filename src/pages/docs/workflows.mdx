@@ -1,0 +1,52 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Workflow Engine"
+description: "Sequential, planner-executor, and checkpoint workflow patterns for multi-step agent automation."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Workflow Engine
+
+The workflow engine chains tasks into automated multi-step workflows. Three patterns cover the most common enterprise agent use cases.
+
+<BrowserFrame src="/screenshots/workflows-list.png" alt="Workflows list showing configured automation pipelines" />
+
+## Workflow Patterns
+
+### 1. Sequence (Prompt Chaining)
+
+Tasks execute in strict order. Each step's output feeds the next. Gate checks between steps ensure quality before proceeding.
+
+**Example**: Research → Draft → Legal Review → Publish
+
+### 2. Planner → Executor (Orchestrator-Workers)
+
+A planning agent breaks down a goal into steps. Executor agents handle each step independently. Results roll up to the planner for synthesis.
+
+**Example**: "Analyze Q1 financials" → identify data sources → extract metrics → generate report
+
+### 3. Human-in-the-Loop Checkpoint
+
+Agent executes autonomously until it reaches a defined checkpoint, then pauses for human approval before continuing.
+
+**Example**: Draft client email → **human approves** → send email → log to CRM
+
+## Key Concepts
+
+- **JSON Workflow Definitions** — Workflows are defined declaratively with steps, dependencies, and gate conditions
+- **Composable Patterns** — A Sequence workflow can include Checkpoint steps. A Planner-Executor can require human approval at critical junctures
+- **Status-Driven Transitions** — The workflow engine uses task status changes to trigger the next step
+- **Checkpoint & Resume** — Workflows pause at checkpoints and resume when the human responds
+
+## How It Works
+
+Workflow definitions are stored in the `workflows` table as JSON. The workflow engine (`src/lib/workflows/engine.ts`) interprets these definitions and orchestrates task execution through the execution manager.
+
+Each workflow step creates a task in the `tasks` table. Step transitions are triggered by status changes — when a task completes, the engine checks the workflow definition for the next step and creates it.
+
+## Related Features
+
+- [Task Management](/docs/tasks) — Individual tasks within workflows
+- [Agent Integration](/docs/agents) — How agents execute workflow steps
+- [Human-in-the-Loop](/docs/inbox) — Checkpoint approval requests

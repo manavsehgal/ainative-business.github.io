@@ -1,0 +1,40 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Real-time Monitoring"
+description: "SSE-powered log streaming, agent activity tracking, and real-time visibility into task execution."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Real-time Monitoring
+
+The monitoring dashboard provides real-time visibility into agent activity — showing active agents, task assignments, streaming logs, and an activity timeline.
+
+<BrowserFrame src="/screenshots/monitor-logs.png" alt="Monitor view showing real-time agent execution logs with tool calls" />
+
+## Key Concepts
+
+- **Server-Sent Events (SSE)** — Real-time log streaming from the server to the browser. No WebSockets needed — SSE is simpler, more reliable, and works through proxies
+- **Agent Logs** — Every tool invocation, reasoning step, and result is logged to the `agent_logs` table and streamed live
+- **Task Filtering** — Filter logs by task, by agent session, or view all activity across the system
+- **Activity Timeline** — Chronological view of all agent actions with timestamps and durations
+
+## Log Entry Types
+
+Each log entry includes:
+- **Timestamp** — When the action occurred
+- **Task ID** — Which task the agent is working on
+- **Event Type** — Tool call, reasoning, result, error, or status change
+- **Content** — The full detail of what happened
+
+## How It Works
+
+The monitoring endpoint (`/api/logs/stream`) uses a `ReadableStream` with a polling loop. The server checks the `agent_logs` table for new entries at regular intervals and pushes them to connected clients via SSE.
+
+The browser receives these events and appends them to the log view in real time. Each entry is rendered with syntax highlighting for tool calls and code blocks.
+
+## Related Features
+
+- [Agent Integration](/docs/agents) — Where logs are generated
+- [Human-in-the-Loop](/docs/inbox) — Permission requests that appear during monitoring
+- [Task Management](/docs/tasks) — Task context for filtered views

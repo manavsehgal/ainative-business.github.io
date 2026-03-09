@@ -1,19 +1,18 @@
 ---
-import DagSymbol from '../svg/DagSymbol.astro';
 import WaitlistForm from '../ui/WaitlistForm.astro';
+import BrowserFrame from '../ui/BrowserFrame.astro';
 ---
-<section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+<section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden pt-24 pb-16">
   <!-- Atmospheric glow -->
   <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-    <div class="absolute w-[500px] h-[500px] rounded-full bg-amber/[0.04] blur-[120px]"></div>
-    <DagSymbol class="w-[600px] h-[600px] text-amber opacity-[0.04]" />
+    <div class="absolute w-[600px] h-[600px] rounded-full bg-primary/[0.06] blur-[150px]"></div>
   </div>
 
   <!-- Content -->
   <div class="relative z-10 text-center max-w-4xl">
     <h1
       data-animate
-      class="font-mono text-[clamp(4rem,10vw,7rem)] tracking-[0.5em] font-normal mb-8 text-text whitespace-nowrap text-center"
+      class="font-mono text-[clamp(4rem,10vw,7rem)] tracking-[0.5em] font-normal mb-6 text-text whitespace-nowrap text-center"
       style="padding-left: 0.5em;"
     >
       STAGENT
@@ -21,34 +20,45 @@ import WaitlistForm from '../ui/WaitlistForm.astro';
 
     <p
       data-animate
-      class="font-mono text-[clamp(1.25rem,3vw,2rem)] text-text leading-relaxed mb-12"
+      class="text-[clamp(1.1rem,2.5vw,1.5rem)] text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto"
       style="transition-delay: 120ms"
     >
-      The world of agents is your stage
+      AI-powered task management where Claude agents execute tasks with human-in-the-loop oversight
     </p>
 
-    <p
+    <!-- Stats bar -->
+    <div
       data-animate
-      class="text-text-muted text-sm max-w-lg mx-auto leading-relaxed mb-14"
-      style="transition-delay: 240ms"
+      class="flex items-center justify-center gap-4 sm:gap-8 mb-10 font-mono text-xs tracking-widest text-text-muted"
+      style="transition-delay: 200ms"
     >
-      A desktop-native, open-source harness that turns high-level goals into
-      observable, long-running agent workflows — across any model, any tool,
-      any timeline.
-    </p>
-
-    <div data-animate style="transition-delay: 360ms">
-      <p class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted mb-4">Get early access</p>
-      <WaitlistForm variant="hero" id="hero-waitlist" />
+      <span>18 Features Shipped</span>
+      <span class="text-border">·</span>
+      <span>7 Sprints</span>
+      <span class="text-border">·</span>
+      <span>Open Source</span>
     </div>
 
-    <div data-animate style="transition-delay: 480ms" class="mt-10">
+    <!-- CTAs -->
+    <div data-animate class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16" style="transition-delay: 300ms">
+      <div class="w-full sm:w-auto">
+        <WaitlistForm variant="hero" id="hero-waitlist" />
+      </div>
       <a
-        href="/research"
-        class="inline-block font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/40 px-8 py-3 hover:bg-amber/10 transition-colors"
+        href="/docs"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-primary hover:text-primary transition-colors rounded-md"
       >
-        Read the Research Paper
+        View Docs
       </a>
+    </div>
+
+    <!-- Hero screenshot -->
+    <div data-animate style="transition-delay: 400ms" class="max-w-4xl mx-auto">
+      <BrowserFrame
+        src="/screenshots/home-dashboard.png"
+        alt="Stagent dashboard showing project overview with task statistics"
+        perspective={true}
+      />
     </div>
   </div>
 

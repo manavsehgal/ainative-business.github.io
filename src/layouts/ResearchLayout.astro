@@ -14,9 +14,9 @@ interface Props {
 
 const {
   title = 'Research — Stagent',
-  description = 'The Harness Layer: A research paper on multi-agent autonomous orchestration for long-horizon task completion.',
+  description = 'AI-powered task management: Architecture, governance, and the coordination layer for the agentic enterprise.',
   datePublished = '2026-03-01',
-  dateModified = '2026-03-02',
+  dateModified = '2026-03-09',
   author = 'Manav',
   readingTime,
 } = Astro.props;
@@ -39,25 +39,10 @@ const jsonLd = [
     url: `${SITE.url}/research/`,
     image: `${SITE.url}/og-image.png`,
     about: [
-      { '@type': 'Thing', name: 'Multi-agent systems' },
-      { '@type': 'Thing', name: 'AI orchestration' },
-      { '@type': 'Thing', name: 'Desktop autonomous agents' },
-      { '@type': 'Thing', name: 'Model Context Protocol (MCP)' },
-      { '@type': 'Thing', name: 'Agent-to-Agent Protocol (A2A)' },
-    ],
-    citation: [
-      {
-        '@type': 'CreativeWork',
-        name: 'Model Context Protocol Specification',
-        url: 'https://modelcontextprotocol.io',
-        author: { '@type': 'Organization', name: 'Anthropic' },
-      },
-      {
-        '@type': 'CreativeWork',
-        name: 'Agent-to-Agent Protocol (A2A) Specification',
-        url: 'https://google.github.io/A2A/',
-        author: { '@type': 'Organization', name: 'Google' },
-      },
+      { '@type': 'Thing', name: 'AI task management' },
+      { '@type': 'Thing', name: 'Human-in-the-loop AI' },
+      { '@type': 'Thing', name: 'Claude Agent SDK' },
+      { '@type': 'Thing', name: 'Agent governance' },
     ],
   },
   {
@@ -96,17 +81,17 @@ const jsonLd = [
   <!-- Reading progress bar -->
   <div
     id="reading-progress"
-    class="fixed top-0 left-0 h-[2px] bg-amber z-50 transition-none"
+    class="fixed top-0 left-0 h-[2px] bg-primary z-50 transition-none"
     style="width: 0%"
   ></div>
 
   <!-- Sticky minimal nav -->
   <nav aria-label="Research paper navigation" class="fixed top-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
     <div class="max-w-[72ch] mx-auto px-6 py-3 flex items-center justify-between">
-      <a href="/" class="font-mono text-sm tracking-[0.3em] text-text-muted hover:text-amber transition-colors">
+      <a href="/" class="font-mono text-sm tracking-[0.3em] text-text-muted hover:text-primary transition-colors">
         STAGENT
       </a>
-      <a href="/" class="font-mono text-xs text-text-muted hover:text-amber transition-colors">
+      <a href="/" class="font-mono text-xs text-text-muted hover:text-primary transition-colors">
         &larr; Back to Home
       </a>
     </div>

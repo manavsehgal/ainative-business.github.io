@@ -1,0 +1,44 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Settings & Configuration"
+description: "Authentication, API keys, data management, and application preferences."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Settings & Configuration
+
+The settings page provides centralized configuration for authentication, API credentials, data management, and application preferences.
+
+<BrowserFrame src="/screenshots/settings-page.png" alt="Settings page showing authentication and configuration options" />
+
+## Key Concepts
+
+- **Authentication** — Configure how you connect to the Anthropic API. OAuth (default) or API key authentication methods
+- **API Configuration** — Set your Anthropic API key for Agent SDK connectivity
+- **Data Management** — Clear all data to reset the database, or seed sample data for testing
+- **Local-First** — All settings stored locally in the SQLite database at `~/.stagent/stagent.db`
+
+## Authentication Methods
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| **OAuth** (default) | Browser-based authentication flow | Individual users |
+| **API Key** | Direct API key configuration | Development & testing |
+
+## Data Management
+
+- **Clear All Data** — Removes all projects, tasks, workflows, documents, logs, and notifications. Database schema is preserved
+- **Seed Sample Data** — Populates the database with example projects and tasks for testing and exploration
+
+## How It Works
+
+Settings are stored in a `settings` table in the SQLite database. The settings page uses Server Components for initial reads and API routes for mutations.
+
+The Anthropic API key is stored in `.env.local` as `ANTHROPIC_API_KEY` and is never transmitted to external services — all agent communication goes directly from your machine to the Anthropic API.
+
+## Related Features
+
+- [Agent Integration](/docs/agents) — Uses the configured API key
+- [Dashboard](/docs/dashboard) — Reflects data state from settings
+- [Documents](/docs/documents) — Upload storage configuration

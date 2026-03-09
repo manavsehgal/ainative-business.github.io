@@ -1,0 +1,64 @@
+---
+/**
+ * Market growth bar chart: $7.63B (2025) → $52.62B (2030)
+ */
+const bars = [
+  { year: '2025', value: 7.63, height: 30 },
+  { year: '2026', value: 12.4, height: 50 },
+  { year: '2027', value: 19.8, height: 75 },
+  { year: '2028', value: 28.5, height: 100 },
+  { year: '2029', value: 39.1, height: 135 },
+  { year: '2030', value: 52.62, height: 170 },
+];
+---
+<svg viewBox="0 0 460 260" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-sm mx-auto" data-svg-animate>
+  <!-- Grid lines -->
+  <g class="svg-reveal">
+    <line x1="40" y1="200" x2="440" y2="200" stroke="oklch(0.25 0.02 250)" stroke-width="0.5" />
+  </g>
+
+  <!-- Bars -->
+  {bars.map(({ year, value, height }, i) => {
+    const x = 50 + i * 65;
+    const y = 200 - height;
+    return (
+      <g class={`bar-grow svg-reveal-d${i + 1}`} style={`transform-origin: ${x + 22}px 200px`}>
+        <rect
+          x={x}
+          y={y}
+          width="44"
+          height={height}
+          rx="4"
+          fill="oklch(0.65 0.18 250)"
+          fill-opacity={0.4 + (i * 0.1)}
+        />
+        <text
+          x={x + 22}
+          y={y - 8}
+          fill="oklch(0.65 0.18 250)"
+          font-family="var(--font-mono)"
+          font-size="15"
+          font-weight="600"
+          text-anchor="middle"
+        >
+          ${value}B
+        </text>
+        <text
+          x={x + 22}
+          y="218"
+          fill="oklch(0.5 0.02 250)"
+          font-family="var(--font-mono)"
+          font-size="14"
+          text-anchor="middle"
+        >
+          {year}
+        </text>
+      </g>
+    );
+  })}
+
+  <!-- Title -->
+  <text x="240" y="250" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="14" text-anchor="middle">
+    AI Agent Market Size (USD)
+  </text>
+</svg>

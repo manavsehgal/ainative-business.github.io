@@ -6,23 +6,34 @@ import WaitlistForm from '../ui/WaitlistForm.astro';
   <AmberRule />
 
   <div class="max-w-3xl mx-auto text-center">
-    <h2 data-animate class="font-display text-[clamp(1.75rem,4vw,3rem)] mb-6">
-      The harness layer is open.
+    <p data-animate class="font-mono text-xs tracking-widest text-text-muted uppercase mb-6">
+      The coordination layer for the agentic enterprise
+    </p>
+
+    <h2 data-animate class="mb-6" style="transition-delay: 80ms">
+      Ready to manage your AI agents?
     </h2>
 
-    <p data-animate class="text-text-muted mb-10 max-w-lg mx-auto" style="transition-delay: 100ms">
+    <p data-animate class="text-text-muted mb-10 max-w-lg mx-auto" style="transition-delay: 160ms">
       Join the waitlist to be first in line when Stagent launches.
     </p>
 
-    <div data-animate class="mb-16" style="transition-delay: 200ms">
+    <div data-animate class="mb-16" style="transition-delay: 240ms">
       <WaitlistForm variant="cta" id="cta-waitlist" />
     </div>
 
     <div data-animate-stagger class="flex flex-col sm:flex-row items-center justify-center gap-4">
       <a
         data-animate
+        href="/docs"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-primary border border-primary/40 px-8 py-3 hover:bg-primary/10 transition-colors rounded-md"
+      >
+        Documentation
+      </a>
+      <a
+        data-animate
         href="/research"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-amber border border-amber/40 px-8 py-3 hover:bg-amber/10 transition-colors"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors rounded-md"
       >
         Research Paper
       </a>
@@ -31,7 +42,7 @@ import WaitlistForm from '../ui/WaitlistForm.astro';
         href="https://github.com/stagent"
         target="_blank"
         rel="noopener noreferrer"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors rounded-md"
       >
         GitHub
       </a>

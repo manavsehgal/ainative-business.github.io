@@ -1,0 +1,32 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Project Management"
+description: "Create, organize, and track projects as top-level organizational units in Stagent."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Project Management
+
+Projects are the top-level organizational unit in Stagent. Each project contains tasks, documents, and configuration — everything needed for a complete body of work.
+
+<BrowserFrame src="/screenshots/projects-list.png" alt="Projects list showing active projects with task counts" />
+
+## Key Concepts
+
+- **Project Cards** — Card-based overview showing status indicators, task counts, and descriptions
+- **Project Detail** — Drill into any project for its full task board, document attachments, and settings
+- **Status Tracking** — Projects track aggregate progress across all contained tasks
+- **REST API** — Full CRUD via `/api/projects/[id]` for programmatic access
+
+## How It Works
+
+Projects use Server Components for read operations — the project list page queries the database directly with Drizzle ORM. Mutations (create, update, delete) go through API routes for proper validation.
+
+Each project has a unique ID generated via `crypto.randomUUID()`. Task counts are computed via left joins with the tasks table, grouped by status.
+
+## Related Features
+
+- [Dashboard](/docs/dashboard) — Project cards on the homepage
+- [Task Management](/docs/tasks) — Task board scoped to a project
+- [Documents](/docs/documents) — Documents linked to projects

@@ -1,0 +1,76 @@
+---
+/**
+ * Feature velocity bar chart — features shipped per sprint
+ * Data: Sprint 1-7 → 3,2,1,2,6,3,1
+ */
+const sprints = [
+  { label: 'S1', value: 3 },
+  { label: 'S2', value: 2 },
+  { label: 'S3', value: 1 },
+  { label: 'S4', value: 2 },
+  { label: 'S5', value: 6 },
+  { label: 'S6', value: 3 },
+  { label: 'S7', value: 1 },
+];
+
+const maxValue = 6;
+const barWidth = 50;
+const gap = 20;
+const chartHeight = 180;
+const chartTop = 20;
+---
+<svg viewBox="0 0 520 260" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-md mx-auto" data-svg-animate>
+  <!-- Y-axis labels -->
+  <g class="svg-reveal">
+    {[0, 2, 4, 6].map((v) => {
+      const y = chartTop + chartHeight - (v / maxValue) * chartHeight;
+      return (
+        <>
+          <text x="20" y={y + 4} fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="15" text-anchor="end">{v}</text>
+          <line x1="30" y1={y} x2="510" y2={y} stroke="oklch(0.25 0.02 250)" stroke-width="0.5" stroke-dasharray="4 4" />
+        </>
+      );
+    })}
+  </g>
+
+  <!-- Bars -->
+  {sprints.map(({ label, value }, i) => {
+    const x = 40 + i * (barWidth + gap);
+    const barHeight = (value / maxValue) * chartHeight;
+    const y = chartTop + chartHeight - barHeight;
+    return (
+      <g class={`bar-grow svg-reveal-d${i + 1}`} style={`transform-origin: ${x + barWidth / 2}px ${chartTop + chartHeight}px`}>
+        <rect
+          x={x}
+          y={y}
+          width={barWidth}
+          height={barHeight}
+          rx="4"
+          fill="oklch(0.65 0.18 250)"
+          fill-opacity="0.8"
+        />
+        <text
+          x={x + barWidth / 2}
+          y={y - 8}
+          fill="oklch(0.65 0.18 250)"
+          font-family="var(--font-mono)"
+          font-size="18"
+          font-weight="700"
+          text-anchor="middle"
+        >
+          {value}
+        </text>
+        <text
+          x={x + barWidth / 2}
+          y={chartTop + chartHeight + 20}
+          fill="oklch(0.5 0.02 250)"
+          font-family="var(--font-mono)"
+          font-size="15"
+          text-anchor="middle"
+        >
+          {label}
+        </text>
+      </g>
+    );
+  })}
+</svg>

@@ -1,0 +1,32 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Dashboard & Homepage"
+description: "Project overview, task statistics, recent activity, and quick actions on the Stagent homepage."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Dashboard & Homepage
+
+The homepage provides a bird's-eye view of your entire Stagent workspace — surfacing key metrics, priority tasks, recent activity, and quick actions.
+
+<BrowserFrame src="/screenshots/home-dashboard.png" alt="Stagent dashboard showing project overview with task statistics" />
+
+## Key Concepts
+
+- **Contextual Greeting** — Time-based salutation with live database counts (running tasks, awaiting review, failed tasks)
+- **Project Cards** — Each project shows task counts by status, with quick-access links to the Kanban board
+- **Recent Activity** — Real-time feed of the latest agent actions, task completions, and notifications
+- **Quick Actions** — One-click buttons for common operations: create project, add task, view inbox
+
+## How It Works
+
+The dashboard uses React Server Components to query the SQLite database directly — no API calls needed for reads. This means the page loads with real data immediately, no loading spinners.
+
+Each project card aggregates task counts from the `tasks` table, grouped by status. Running task counts update on page refresh as agents complete work.
+
+## Related Features
+
+- [Task Management](/docs/tasks) — Kanban board linked from project cards
+- [Project Management](/docs/projects) — Full project CRUD operations
+- [Monitoring](/docs/monitoring) — Real-time agent activity detail

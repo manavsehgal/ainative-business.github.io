@@ -1,0 +1,39 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+const pages = [
+  { href: '/docs/dashboard', title: 'Dashboard & Homepage', description: 'Project overview, task statistics, and activity feed.', screenshot: '/screenshots/home-dashboard.png' },
+  { href: '/docs/tasks', title: 'Task Management', description: 'Kanban boards, AI-assisted task creation, and status workflows.', screenshot: '/screenshots/kanban-board.png' },
+  { href: '/docs/projects', title: 'Project Management', description: 'Organize work into projects with task boards and documents.', screenshot: '/screenshots/projects-list.png' },
+  { href: '/docs/agents', title: 'Agent Integration', description: 'Claude Agent SDK integration, execution manager, and session handling.', screenshot: '/screenshots/monitor-logs.png' },
+  { href: '/docs/inbox', title: 'Human-in-the-Loop', description: 'Permission requests, agent questions, and approval workflows.', screenshot: '/screenshots/inbox-notifications.png' },
+  { href: '/docs/monitoring', title: 'Real-time Monitoring', description: 'SSE-powered log streaming and agent activity tracking.', screenshot: '/screenshots/monitor-logs.png' },
+  { href: '/docs/workflows', title: 'Workflow Engine', description: 'Sequential, planner-executor, and checkpoint workflow patterns.', screenshot: '/screenshots/workflows-list.png' },
+  { href: '/docs/documents', title: 'Document Management', description: 'Upload, preprocess, and organize documents for agent context.', screenshot: '/screenshots/documents-table.png' },
+  { href: '/docs/settings', title: 'Settings & Configuration', description: 'Authentication, API keys, data management, and preferences.', screenshot: '/screenshots/settings-page.png' },
+];
+---
+<DocsLayout title="Overview" description="Comprehensive documentation for Stagent — AI-powered task management with human-in-the-loop oversight.">
+  <h1>Stagent Documentation</h1>
+  <p>Stagent is an AI-powered task management platform where Claude agents execute tasks with human-in-the-loop oversight. Explore each feature area below.</p>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 not-prose">
+    {pages.map(({ href, title, description, screenshot }) => (
+      <a href={href} class="group block border border-border rounded-lg overflow-hidden hover:border-primary/40 transition-colors">
+        <div class="aspect-video overflow-hidden bg-surface-raised">
+          <img
+            src={screenshot}
+            alt={title}
+            loading="lazy"
+            decoding="async"
+            class="w-full h-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-300"
+          />
+        </div>
+        <div class="p-4">
+          <h3 class="font-semibold text-sm text-text mb-1">{title}</h3>
+          <p class="text-xs text-text-muted leading-relaxed">{description}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</DocsLayout>

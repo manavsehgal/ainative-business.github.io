@@ -1,0 +1,85 @@
+---
+import SectionLabel from '../ui/SectionLabel.astro';
+import BrowserFrame from '../ui/BrowserFrame.astro';
+
+const features = [
+  {
+    title: 'Dashboard & Overview',
+    description: 'Get a bird\'s-eye view of all projects and tasks. Track progress across sprints with real-time status updates and task statistics.',
+    bullets: ['Project cards with task counts', 'Recent activity feed', 'Sprint progress tracking'],
+    screenshot: '/screenshots/home-dashboard.png',
+    alt: 'Dashboard showing project overview cards with task statistics',
+  },
+  {
+    title: 'Task Management',
+    description: 'Kanban boards with drag-and-drop. AI-assisted task creation breaks down complex goals into actionable steps.',
+    bullets: ['Kanban board with status columns', 'AI-powered task decomposition', 'Priority and complexity tracking'],
+    screenshot: '/screenshots/kanban-board.png',
+    alt: 'Kanban board with tasks organized across planned, running, and completed columns',
+  },
+  {
+    title: 'Agent Monitoring',
+    description: 'Watch Claude agents work in real-time. SSE-powered log streaming shows every tool call, decision, and result as it happens.',
+    bullets: ['Real-time SSE log streaming', 'Tool call visibility', 'Session-level filtering'],
+    screenshot: '/screenshots/monitor-logs.png',
+    alt: 'Monitor view showing real-time agent execution logs',
+  },
+  {
+    title: 'Document Management',
+    description: 'Upload, organize, and preprocess documents for agent consumption. Table and grid views with bulk operations.',
+    bullets: ['Multi-format upload pipeline', 'Text extraction & preprocessing', 'Agent-ready context building'],
+    screenshot: '/screenshots/documents-table.png',
+    alt: 'Documents table view showing uploaded files with metadata',
+  },
+  {
+    title: 'Workflow Engine',
+    description: 'Chain tasks into automated workflows. Sequential, parallel, and conditional patterns with checkpoint/resume support.',
+    bullets: ['3 workflow patterns', 'Checkpoint & resume', 'Status-driven transitions'],
+    screenshot: '/screenshots/workflows-list.png',
+    alt: 'Workflows list showing configured automation pipelines',
+  },
+  {
+    title: 'Project Management',
+    description: 'Organize work into projects with task boards, document attachments, and progress tracking across the full lifecycle.',
+    bullets: ['Project-scoped task boards', 'Document attachments', 'Progress analytics'],
+    screenshot: '/screenshots/projects-list.png',
+    alt: 'Projects list showing active projects with task statistics',
+  },
+];
+---
+<section id="features" class="py-24 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-20">
+      <SectionLabel text="Features" />
+      <h2 data-animate class="mt-4">Built for real work</h2>
+    </div>
+
+    <div class="flex flex-col gap-24">
+      {features.map(({ title, description, bullets, screenshot, alt }, i) => (
+        <div
+          data-animate
+          class:list={[
+            "grid md:grid-cols-2 gap-12 items-center",
+            i % 2 === 1 && "md:[direction:rtl] md:[&>*]:![direction:ltr]"
+          ]}
+        >
+          <div>
+            <h3 class="text-xl font-semibold mb-4">{title}</h3>
+            <p class="text-text-muted leading-relaxed mb-6">{description}</p>
+            <ul class="space-y-2">
+              {bullets.map((bullet) => (
+                <li class="flex items-start gap-3 text-sm text-text-muted">
+                  <svg class="w-4 h-4 mt-0.5 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <BrowserFrame src={screenshot} alt={alt} />
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

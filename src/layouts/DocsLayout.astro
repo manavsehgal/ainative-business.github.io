@@ -1,0 +1,73 @@
+---
+import Layout from './Layout.astro';
+import '../styles/prose.css';
+import DocsSidebar from '../components/DocsSidebar.astro';
+import { SITE, PUBLISHER } from '../data/seo';
+
+interface Props {
+  title?: string;
+  description?: string;
+  frontmatter?: {
+    title?: string;
+    description?: string;
+  };
+}
+
+// MDX pages pass frontmatter via Astro.props.frontmatter; .astro pages pass directly
+const title = Astro.props.title || Astro.props.frontmatter?.title || 'Docs';
+const description = Astro.props.description || Astro.props.frontmatter?.description || '';
+const pageTitle = `${title} — Stagent Docs`;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: pageTitle,
+    description,
+    publisher: PUBLISHER,
+    url: new URL(Astro.url.pathname, SITE.url).toString(),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Docs', item: `${SITE.url}/docs/` },
+      { '@type': 'ListItem', position: 3, name: title, item: new URL(Astro.url.pathname, SITE.url).toString() },
+    ],
+  },
+];
+---
+<Layout title={pageTitle} description={description} jsonLd={jsonLd}>
+  <!-- Sticky nav for docs -->
+  <nav aria-label="Docs navigation" class="fixed top-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/" class="font-mono text-sm tracking-[0.3em] text-text-muted hover:text-primary transition-colors">
+          STAGENT
+        </a>
+        <span class="text-border">/</span>
+        <a href="/docs" class="font-mono text-xs text-text-muted hover:text-primary transition-colors">
+          Docs
+        </a>
+        <span class="text-border">/</span>
+        <span class="font-mono text-xs text-text">{title}</span>
+      </div>
+      <a href="/" class="font-mono text-xs text-text-muted hover:text-primary transition-colors hidden sm:block">
+        &larr; Home
+      </a>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-6 pt-20 pb-32 flex gap-8">
+    <!-- Sidebar -->
+    <DocsSidebar currentPath={Astro.url.pathname} />
+
+    <!-- Main content -->
+    <main class="flex-1 min-w-0 max-w-[72ch]">
+      <article class="prose">
+        <slot />
+      </article>
+    </main>
+  </div>
+</Layout>

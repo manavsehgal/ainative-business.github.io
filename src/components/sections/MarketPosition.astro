@@ -1,0 +1,30 @@
+---
+import SectionLabel from '../ui/SectionLabel.astro';
+import MarketGrowth from '../svg/MarketGrowth.astro';
+import GovernanceMatrix from '../svg/GovernanceMatrix.astro';
+---
+<section class="py-24 px-6 bg-surface-raised">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <SectionLabel text="Market" />
+      <h2 data-animate class="mt-4">Right problem, right time</h2>
+      <p data-animate class="text-text-muted mt-4 max-w-xl mx-auto" style="transition-delay: 100ms">
+        The AI agent market is projected to grow from $7.63B to $52.62B by 2030. Governance is the missing layer.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-16 items-start">
+      <!-- Market Growth Chart -->
+      <div data-animate>
+        <h3 class="text-center text-lg font-semibold mb-8">Market trajectory</h3>
+        <MarketGrowth />
+      </div>
+
+      <!-- Governance Matrix -->
+      <div data-animate style="transition-delay: 200ms">
+        <h3 class="text-center text-lg font-semibold mb-8">Competitive positioning</h3>
+        <GovernanceMatrix />
+      </div>
+    </div>
+  </div>
+</section>

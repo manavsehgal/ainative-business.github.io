@@ -1,107 +1,76 @@
 ---
 import SectionLabel from '../ui/SectionLabel.astro';
-import ProgressDashboard from '../svg/ProgressDashboard.astro';
-import { stats } from '../../data/progress';
+import FeatureVelocity from '../svg/FeatureVelocity.astro';
 
-const locK = Math.round(stats.loc.total / 100) ; // e.g. 16285 → 163 (displayed as 16.3)
-const metrics = [
-  { value: `${(stats.loc.total / 1000).toFixed(1)}K+`, label: 'Lines of Code', countValue: locK, suffix: 'K+', divisor: 10 },
-  { value: String(stats.tests.total), label: 'Tests Passing', countValue: stats.tests.total, suffix: '', divisor: 1 },
-  { value: `${stats.intents.completed}/${stats.intents.total}`, label: 'Intents Complete', countValue: stats.intents.completed, suffix: `/${stats.intents.total}`, divisor: 1 },
-  { value: String(stats.commits.count), label: 'Commits', countValue: stats.commits.count, suffix: '', divisor: 1 },
-];
-
-const subStats = [
-  { value: stats.ipc, label: 'IPC Commands' },
-  { value: stats.dbTables, label: 'DB Tables' },
-  { value: stats.components, label: 'UI Components' },
+const stats = [
+  { value: 18, label: 'Features' },
+  { value: 7, label: 'Sprints' },
+  { value: 6, label: 'DB Tables' },
+  { value: 3, label: 'Workflow Patterns' },
 ];
 ---
-<section class="py-32 px-6">
+<section class="py-24 px-6">
   <div class="max-w-6xl mx-auto">
-    <div data-animate class="mb-12">
+    <div class="text-center mb-16">
       <SectionLabel text="Progress" />
-      <h2 class="mt-4">Built in days, not months.</h2>
+      <h2 data-animate class="mt-4">Shipped, not slideware</h2>
     </div>
 
-    <!-- Stat cards -->
-    <div data-animate class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16" id="progress-metrics">
-      {metrics.map((m) => (
-        <div class="text-center p-5 border border-border">
+    <!-- Animated counters -->
+    <div data-animate-stagger class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
+      {stats.map(({ value, label }) => (
+        <div data-animate class="text-center">
           <div
-            class="font-display text-3xl text-amber mb-1"
-            data-count-to={m.countValue}
-            data-count-suffix={m.suffix}
-            data-count-divisor={m.divisor}
-          >0{m.suffix}</div>
-          <div class="font-mono text-[0.625rem] tracking-widest uppercase text-text-muted">
-            {m.label}
+            class="text-4xl md:text-5xl font-bold text-primary font-mono counter"
+            data-target={value}
+          >
+            0
           </div>
+          <div class="text-text-muted text-sm mt-2 font-mono tracking-widest uppercase">{label}</div>
         </div>
       ))}
     </div>
 
-    <!-- Dashboard SVG -->
-    <div data-animate class="mb-16" style="transition-delay: 100ms">
-      <ProgressDashboard class="w-full text-text-muted" />
-    </div>
-
-    <!-- Sub-stats row -->
-    <div data-animate class="flex flex-wrap justify-center gap-6" style="transition-delay: 200ms">
-      {subStats.map((s) => (
-        <span class="font-mono text-[0.625rem] tracking-widest uppercase text-text-muted border border-border px-4 py-2">
-          {s.value} {s.label}
-        </span>
-      ))}
+    <!-- Feature Velocity Chart -->
+    <div data-animate>
+      <h3 class="text-center text-lg font-semibold mb-8">Feature velocity by sprint</h3>
+      <FeatureVelocity />
     </div>
   </div>
 </section>
 
 <script>
-  function initProgressCounters() {
-    const metricsBar = document.getElementById('progress-metrics');
-    if (!metricsBar) return;
-
-    const counters = metricsBar.querySelectorAll('[data-count-to]');
-    let animated = false;
-
+  function initCounters() {
+    const counters = document.querySelectorAll('.counter');
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !animated) {
-            animated = true;
-            counters.forEach((el) => {
-              const target = parseInt(el.getAttribute('data-count-to') || '0', 10);
-              const suffix = el.getAttribute('data-count-suffix') || '';
-              const divisor = parseInt(el.getAttribute('data-count-divisor') || '1', 10);
-              const duration = 1200;
-              const start = performance.now();
+          if (!entry.isIntersecting) return;
+          const el = entry.target as HTMLElement;
+          const target = parseInt(el.dataset.target || '0');
+          let current = 0;
+          const duration = 1500;
+          const start = performance.now();
 
-              function update(now: number) {
-                const elapsed = now - start;
-                const t = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - t, 3);
-                const current = Math.round(eased * target);
-                const display = divisor > 1 ? (current / divisor).toFixed(1) : current.toString();
-                el.textContent = display + suffix;
-
-                if (t < 1) {
-                  requestAnimationFrame(update);
-                }
-              }
-
-              requestAnimationFrame(update);
-            });
-            observer.unobserve(entry.target);
+          function update(now: number) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            current = Math.round(eased * target);
+            el.textContent = String(current);
+            if (progress < 1) requestAnimationFrame(update);
           }
+
+          requestAnimationFrame(update);
+          observer.unobserve(el);
         });
       },
-      { threshold: 0.3 }
+      { threshold: 0.5 }
     );
 
-    observer.observe(metricsBar);
+    counters.forEach((c) => observer.observe(c));
   }
 
-  initProgressCounters();
-  document.addEventListener('astro:after-swap', initProgressCounters);
+  initCounters();
+  document.addEventListener('astro:after-swap', initCounters);
 </script>

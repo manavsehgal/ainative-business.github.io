@@ -1,0 +1,42 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Agent Integration"
+description: "Claude Agent SDK integration, execution manager, canUseTool governance, and session management."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Agent Integration
+
+Stagent integrates with the Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`) to execute tasks autonomously while maintaining human oversight at every step.
+
+<BrowserFrame src="/screenshots/monitor-logs.png" alt="Monitor showing real-time agent execution logs" />
+
+## Key Concepts
+
+- **Claude Agent SDK** — TypeScript SDK for running Claude Code as an embedded agent with streaming, tool use, and governance callbacks
+- **canUseTool Callback** — Invoked every time the agent attempts to use a tool. Returns `allow` or `deny` for real-time human oversight
+- **Fire-and-Forget Execution** — `POST /api/tasks/[id]/execute` returns HTTP 202 immediately; the agent runs asynchronously
+- **Session Management** — Each execution creates a session with a unique `sessionId`. Failed or interrupted tasks can be resumed from where they left off
+- **Agent Logs** — Every tool invocation, decision, and result is logged to the `agent_logs` table for complete auditability
+
+## Execution Flow
+
+1. User queues a task from the Kanban board
+2. Execution manager creates an Agent SDK session
+3. Agent processes the task, calling tools as needed
+4. Each tool call triggers `canUseTool` → notification → human review
+5. Agent continues based on human response (allow/deny)
+6. Results and logs are persisted to the database
+
+## How It Works
+
+The execution manager (`src/lib/agents/execution-manager.ts`) wraps the Agent SDK with Stagent-specific concerns: task status updates, log persistence, notification creation, and error recovery.
+
+The `canUseTool` callback writes a notification to the database. A polling loop in the agent checks for a human response. This uses the database as a message queue — simple, reliable, and fully auditable.
+
+## Related Features
+
+- [Human-in-the-Loop](/docs/inbox) — The inbox where permission requests appear
+- [Monitoring](/docs/monitoring) — Real-time visibility into agent activity
+- [Task Management](/docs/tasks) — Where tasks are created and queued

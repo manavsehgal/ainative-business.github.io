@@ -3,42 +3,8 @@
  * OG Image page — rendered at 1200×630 then screenshotted to public/og-image.png
  * Standalone page with no layout wrapper, fixed dimensions, no overflow.
  */
-import "@fontsource/dm-serif-display/400.css";
-import "@fontsource/jetbrains-mono/400.css";
-import { isoProject, isoEllipse, isoPlatform, isoGridLines } from '../utils/isometric';
-
-// Reuse HarnessOrbit geometry — center platform + 3 orbit rings + 7 satellites
-const centerPlatform = isoPlatform(-35, -35, 0, 70, 70, 6);
-const centerTop = isoProject(0, 0, 6);
-const centerGrid = isoGridLines(-35, -35, 6, 70, 70, 5);
-
-const orbits = [
-  { label: 'HARNESS', radius: 75, opacity: 0.85, color: '#d4a843' },
-  { label: 'ORCHESTRATION', radius: 120, opacity: 0.75, color: '#4db8a4' },
-  { label: 'INFRASTRUCTURE', radius: 165, opacity: 0.6, color: '#e8e4df' },
-];
-
-const orbitEllipses = orbits.map((o) => ({
-  ...o,
-  ...isoEllipse(0, 0, 6, o.radius),
-  labelPos: isoProject(0, -o.radius, 6),
-}));
-
-const satellites = [
-  { x: 75, y: 0, z: 15, r: 5.5, orbitIdx: 0 },
-  { x: -75, y: 0, z: 12, r: 5.5, orbitIdx: 0 },
-  { x: 0, y: 75, z: 18, r: 4.5, orbitIdx: 0 },
-  { x: 55, y: -55, z: 10, r: 4.5, orbitIdx: 1 },
-  { x: -55, y: 55, z: 14, r: 4.5, orbitIdx: 1 },
-  { x: 110, y: -70, z: 8, r: 4, orbitIdx: 2 },
-  { x: -110, y: 70, z: 6, r: 4, orbitIdx: 2 },
-].map((s) => ({
-  ...s,
-  p: isoProject(s.x, s.y, s.z),
-  dropTo: isoProject(s.x, s.y, 0),
-}));
-
-const satellitesByOrbit = [0, 1, 2].map((idx) => satellites.filter((s) => s.orbitIdx === idx));
+import "@fontsource/geist-sans/700.css";
+import "@fontsource-variable/geist-mono";
 ---
 
 <html lang="en">
@@ -53,8 +19,8 @@ const satellitesByOrbit = [0, 1, 2].map((idx) => satellites.filter((s) => s.orbi
       width: 1200px;
       height: 630px;
       overflow: hidden;
-      background: #0a0a0a;
-      color: #e8e4df;
+      background: oklch(0.13 0.02 250);
+      color: oklch(0.93 0.01 250);
     }
 
     .og-container {
@@ -63,64 +29,50 @@ const satellitesByOrbit = [0, 1, 2].map((idx) => satellites.filter((s) => s.orbi
       height: 630px;
     }
 
-    /* ── Wordmark: top-left, massive ── */
+    /* ── Background glow ── */
+    .glow {
+      position: absolute;
+      top: 50%;
+      right: 200px;
+      transform: translateY(-50%);
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, oklch(0.65 0.18 250 / 0.15) 0%, transparent 70%);
+      z-index: 0;
+    }
+
+    /* ── Wordmark ── */
     .wordmark {
       position: absolute;
       top: 90px;
       left: 72px;
       z-index: 3;
-      font-family: "JetBrains Mono", monospace;
+      font-family: "Geist Mono Variable", monospace;
       font-size: 136px;
       font-weight: 400;
       letter-spacing: 0.18em;
-      color: #d4a843;
+      color: oklch(0.65 0.18 250);
       line-height: 1;
     }
 
-    /* ── Orbit: background layer, center-right ── */
-    .orbit-bg {
-      position: absolute;
-      right: -20px;
-      top: 55%;
-      transform: translateY(-50%);
-      opacity: 0.85;
-      z-index: 1;
-    }
-
-    .orbit-svg {
-      width: 680px;
-      height: 460px;
-    }
-
-    .glow {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 500px;
-      height: 500px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #d4a84340 0%, transparent 70%);
-      z-index: 0;
-    }
-
-    /* ── Left content: tagline + pills, left-aligned under wordmark ── */
+    /* ── Content ── */
     .center-content {
       position: absolute;
       left: 72px;
-      top: 360px;
+      top: 320px;
       z-index: 2;
       text-align: left;
-      white-space: nowrap;
     }
 
     .tagline {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 31px;
-      line-height: 1.15;
-      color: #d4cfc9;
-      letter-spacing: 0.02em;
+      font-family: "Geist Sans", system-ui, sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: oklch(0.85 0.01 250);
       margin-bottom: 28px;
+      max-width: 700px;
     }
 
     .pills {
@@ -130,185 +82,86 @@ const satellitesByOrbit = [0, 1, 2].map((idx) => satellites.filter((s) => s.orbi
     }
 
     .pill {
-      font-family: "JetBrains Mono", monospace;
+      font-family: "Geist Mono Variable", monospace;
       font-size: 16px;
       letter-spacing: 0.04em;
-      color: #d4a843;
-      border: 1.5px solid #d4a84366;
-      border-radius: 20px;
+      color: oklch(0.65 0.18 250);
+      border: 1.5px solid oklch(0.65 0.18 250 / 0.4);
+      border-radius: 8px;
       padding: 8px 24px;
-      background: #d4a84310;
+      background: oklch(0.65 0.18 250 / 0.06);
     }
 
-    /* ── URL: bottom-right ── */
+    /* ── URL ── */
     .url {
       position: absolute;
       bottom: 36px;
       right: 48px;
       z-index: 3;
-      font-family: "JetBrains Mono", monospace;
+      font-family: "Geist Mono Variable", monospace;
       font-size: 28px;
       letter-spacing: 0.08em;
-      color: #d4a84399;
+      color: oklch(0.65 0.18 250 / 0.6);
     }
 
-    /* ── Bottom accent line ── */
+    /* ── Accent line ── */
     .accent-line {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
       height: 2px;
-      background: linear-gradient(90deg, transparent 5%, #d4a84340 30%, #d4a84380 50%, #d4a84340 70%, transparent 95%);
+      background: linear-gradient(90deg, transparent 5%, oklch(0.65 0.18 250 / 0.25) 30%, oklch(0.65 0.18 250 / 0.5) 50%, oklch(0.65 0.18 250 / 0.25) 70%, transparent 95%);
       z-index: 3;
+    }
+
+    /* ── Architecture lines ── */
+    .arch-lines {
+      position: absolute;
+      right: 60px;
+      top: 100px;
+      z-index: 1;
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
   <div class="og-container">
-    <!-- Wordmark at top-left -->
+    <div class="glow"></div>
+
     <div class="wordmark">STAGENT</div>
 
-    <!-- Orbit as background layer -->
-    <div class="orbit-bg">
-      <div class="glow"></div>
-      <svg
-        class="orbit-svg"
-        viewBox="0 0 500 320"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <filter id="amber-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#d4a843" flood-opacity="0.4" />
-          </filter>
-          <linearGradient id="amber-side-fade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#d4a843" stop-opacity="0.25" />
-            <stop offset="100%" stop-color="#d4a843" stop-opacity="0.08" />
-          </linearGradient>
-          <linearGradient id="amber-side-right" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#d4a843" stop-opacity="0.18" />
-            <stop offset="100%" stop-color="#d4a843" stop-opacity="0.05" />
-          </linearGradient>
-        </defs>
+    <!-- Architecture layers as visual element -->
+    <div class="arch-lines">
+      <svg width="400" height="380" viewBox="0 0 400 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="20" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="40" y="60" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">HUMAN LAYER</text>
 
-        <g transform="translate(250, 150)">
-          {/* Orbit rings + satellites */}
-          {orbitEllipses.map((o, oi) => (
-            <g style={`opacity: ${o.opacity}`}>
-              <ellipse
-                cx={o.cx}
-                cy={o.cy}
-                rx={o.rx}
-                ry={o.ry}
-                stroke={o.color}
-                stroke-width="0.75"
-                fill="none"
-                stroke-dasharray="4 3"
-              />
-              <text
-                x={o.labelPos.x}
-                y={o.labelPos.y - 6}
-                text-anchor="middle"
-                fill={o.color}
-                font-family="'JetBrains Mono', monospace"
-                font-size="13"
-                letter-spacing="0.08em"
-                font-weight="bold"
-                opacity="1"
-              >
-                {o.label}
-              </text>
+        <rect x="20" y="110" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="40" y="150" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">COORDINATION</text>
 
-              {satellitesByOrbit[oi].map((s) => (
-                <g>
-                  <line
-                    x1={s.p.x}
-                    y1={s.p.y}
-                    x2={s.dropTo.x}
-                    y2={s.dropTo.y}
-                    stroke="#e8e4df"
-                    stroke-width="0.3"
-                    stroke-dasharray="2 3"
-                    opacity="0.08"
-                  />
-                  <circle
-                    cx={s.p.x}
-                    cy={s.p.y}
-                    r={s.r}
-                    fill={o.color}
-                    opacity="0.35"
-                  />
-                </g>
-              ))}
-            </g>
-          ))}
+        <rect x="20" y="200" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="40" y="240" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">AGENT LAYER</text>
 
-          {/* Center platform */}
-          <g>
-            <polygon
-              points={centerPlatform.left}
-              fill="url(#amber-side-fade)"
-              stroke="#d4a843"
-              stroke-width="0.75"
-              stroke-opacity="0.5"
-            />
-            <polygon
-              points={centerPlatform.right}
-              fill="url(#amber-side-right)"
-              stroke="#d4a843"
-              stroke-width="0.75"
-              stroke-opacity="0.5"
-            />
-            <polygon
-              points={centerPlatform.top}
-              fill="#d4a84320"
-              stroke="#d4a843"
-              stroke-width="1.5"
-            />
+        <rect x="20" y="290" width="360" height="70" rx="8" fill="oklch(0.19 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+        <text x="40" y="330" fill="oklch(0.65 0.18 250)" font-family="'Geist Mono Variable', monospace" font-size="14" font-weight="600">DATA LAYER</text>
 
-            {/* Grid on center platform */}
-            {centerGrid.map((d) => (
-              <path
-                d={d}
-                stroke="#d4a843"
-                stroke-width="0.3"
-                opacity="0.12"
-              />
-            ))}
-
-            {/* Diamond marker on platform */}
-            <polygon
-              points={`${centerTop.x},${centerTop.y - 8} ${centerTop.x + 6},${centerTop.y} ${centerTop.x},${centerTop.y + 8} ${centerTop.x - 6},${centerTop.y}`}
-              fill="#d4a843"
-              opacity="0.6"
-            />
-
-            {/* Amber glow on center */}
-            <polygon
-              points={centerPlatform.top}
-              fill="none"
-              filter="url(#amber-glow)"
-              stroke="#d4a843"
-              stroke-width="0.5"
-              opacity="0.3"
-            />
-          </g>
-        </g>
+        <!-- Connecting dots -->
+        <circle cx="200" cy="97" r="3" fill="oklch(0.65 0.18 250)" />
+        <circle cx="200" cy="187" r="3" fill="oklch(0.65 0.18 250)" />
+        <circle cx="200" cy="277" r="3" fill="oklch(0.65 0.18 250)" />
       </svg>
     </div>
 
-    <!-- Subtitle + pills centered on orbit -->
     <div class="center-content">
-      <div class="tagline">Multi-Agent Autonomous Harness</div>
+      <div class="tagline">AI-powered task management with human-in-the-loop oversight</div>
       <div class="pills">
-        <span class="pill">Any Model</span>
-        <span class="pill">Any Tool</span>
-        <span class="pill">Any Timeline</span>
+        <span class="pill">18 Features</span>
+        <span class="pill">7 Sprints</span>
+        <span class="pill">Open Source</span>
       </div>
     </div>
 
-    <!-- Domain bottom-right -->
     <div class="url">stagent.io</div>
     <div class="accent-line"></div>
   </div>

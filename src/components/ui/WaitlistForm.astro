@@ -27,7 +27,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
       placeholder="you@example.com"
       required
       autocomplete="email"
-      class="flex-1 bg-transparent border border-border font-mono text-xs tracking-wide px-4 py-3 text-text placeholder:text-text-dim focus:border-amber focus:outline-none transition-colors"
+      class="flex-1 bg-transparent border border-border font-mono text-xs tracking-wide px-4 py-3 text-text placeholder:text-text-dim focus:border-primary focus:outline-none transition-colors rounded-md"
     />
     <!-- Honeypot — hidden from real users -->
     <input
@@ -40,7 +40,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
     />
     <button
       type="submit"
-      class="font-mono text-xs tracking-[0.2em] uppercase bg-amber text-surface px-6 py-3 hover:bg-amber/90 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+      class="font-mono text-xs tracking-[0.2em] uppercase bg-primary text-surface px-6 py-3 hover:bg-primary/90 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed rounded-md font-semibold"
     >
       Get Early Access
     </button>
@@ -58,10 +58,10 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
     id={`${formId}-success`}
     class="hidden mt-4 flex items-center gap-2 justify-center"
   >
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
-    <span id={`${formId}-success-text`} class="font-mono text-xs text-teal"></span>
+    <span id={`${formId}-success-text`} class="font-mono text-xs text-success"></span>
   </div>
 </form>
 
@@ -88,7 +88,6 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
       successText.textContent = msg;
       successEl.classList.remove('hidden');
       errorEl.classList.add('hidden');
-      // Hide the form inputs
       form.querySelector('div').classList.add('hidden');
     }
 

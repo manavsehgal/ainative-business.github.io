@@ -1,392 +1,344 @@
 ---
 layout: ../layouts/ResearchLayout.astro
-title: "The Harness Layer — Stagent Research"
-description: "A research paper on multi-agent autonomous orchestration for long-horizon task completion."
+title: "Stagent: The Coordination Layer for the Agentic Enterprise"
+description: "AI-powered task management: Architecture, governance, and the coordination layer for enterprise AI agent deployment."
 datePublished: "2026-03-01"
-dateModified: "2026-03-02"
+dateModified: "2026-03-09"
 author: "Manav"
-readingTime: "25 min read"
+readingTime: "20 min read"
 ---
 
 import Figure from '../components/research/Figure.astro'
-import LayerStack from '../components/svg/LayerStack.astro'
-import HarnessOrbit from '../components/svg/HarnessOrbit.astro'
-import ProtocolStack from '../components/svg/ProtocolStack.astro'
-import PositioningGrid from '../components/svg/PositioningGrid.astro'
-import MemoryTiers from '../components/svg/MemoryTiers.astro'
-import AutonomyLevels from '../components/svg/AutonomyLevels.astro'
-import RoadmapTimeline from '../components/svg/RoadmapTimeline.astro'
+import SystemArchitecture from '../components/svg/SystemArchitecture.astro'
+import GovernanceFlow from '../components/svg/GovernanceFlow.astro'
+import MarketGrowth from '../components/svg/MarketGrowth.astro'
+import GovernanceMatrix from '../components/svg/GovernanceMatrix.astro'
+import FeatureVelocity from '../components/svg/FeatureVelocity.astro'
 import WaitlistForm from '../components/ui/WaitlistForm.astro'
-import { protocols } from '../data/protocols'
 
-# The Harness Layer
+# Stagent: The Coordination Layer for the Agentic Enterprise
 
-*Multi-Agent Autonomous Orchestration for Long-Horizon Task Completion*
+**A Research Paper for Investors & Enterprise Decision Makers**
 
-**Manav** · March 2026
-
----
-
-## Abstract
-
-The AI agent landscape in 2026 is fragmented across four architectural layers: infrastructure, application, orchestration, and harness. Each layer has produced capable products, yet every product analyzed excels within its layer while leaving critical gaps at the layer above. Gateway control planes remain reactive. Workspace orchestrators are session-scoped. Multi-model routers are cloud-only and opaque. Desktop agents lack memory and persistence.
-
-This paper presents Stagent, a desktop-native, open-source harness designed to bridge these gaps. Stagent introduces five differentiating capabilities: long-horizon task persistence, multi-model orchestration, memory-native architecture, graduated autonomy, and hybrid execution across local and cloud environments. The system is built on a Rust + TypeScript hybrid architecture using Tauri, with MCP and A2A protocols forming the communication backbone.
-
-We analyze the existing tool landscape across four categories through structured case studies, present the architectural decisions informed by these analyses, and outline a research portfolio of 18+ projects spanning AI agents, fintech, social CRM, and infrastructure intelligence that inform the Stagent design.
+*Manav · March 2026*
 
 ---
 
-## 1. The Problem: Agent Fragmentation in 2026
+## Table of Contents
 
-The agent ecosystem has matured rapidly but unevenly. Products cluster within architectural layers, each solving real problems but creating new gaps at their boundaries.
+1. [Executive Summary](#1-executive-summary)
+2. [The Agentic Enterprise — Market Landscape](#2-the-agentic-enterprise--market-landscape)
+3. [The Problem — Why Current Approaches Fail](#3-the-problem--why-current-approaches-fail)
+4. [Product Architecture](#4-product-architecture)
+5. [Competitive Differentiation](#5-competitive-differentiation)
+6. [Progress and Roadmap](#6-progress-and-roadmap)
+7. [Cross-Industry Use Cases](#7-cross-industry-use-cases)
+8. [Risk Analysis](#8-risk-analysis)
+9. [Investment Thesis](#9-investment-thesis)
+10. [Conclusion](#10-conclusion)
+- [Appendix A: Technical Glossary](#appendix-a-technical-glossary)
+- [Appendix B: Feature Inventory](#appendix-b-feature-inventory)
+- [Appendix C: Sources & References](#appendix-c-sources--references)
 
-### 1.1 The Four-Layer Agent Stack
+---
 
-<Figure id="fig-layer-stack" number={1} caption="Four-layer agent stack — each layer solves its own problems but leaves gaps at the layer above. The harness layer (dashed) is where Stagent operates.">
-  <LayerStack class="w-full max-w-[640px] text-text-muted" />
+## 1. Executive Summary
+
+Stagent is the **coordination layer for the agentic enterprise** — an AI-powered task management platform where Claude agents execute tasks with human-in-the-loop oversight. In a market racing toward autonomous AI agents, Stagent occupies a critical gap: the governance and orchestration layer that makes enterprise adoption of agents safe, visible, and productive.
+
+The thesis is simple. Every enterprise will deploy AI agents. Every agent will need a human who can see what it's doing, approve what it plans to do, and course-correct when it goes wrong. No serious enterprise will hand autonomous decision-making to an AI without oversight. Stagent provides that oversight through a UX paradigm every knowledge worker already understands — task boards, inboxes, and notification feeds. It is, in essence, **Jira for AI agents**.
+
+Three value propositions define Stagent's market position:
+
+1. **Familiar UX** — Kanban boards, project management, and notification inboxes map directly to how teams already manage work. The learning curve is near-zero.
+
+2. **Local-first data sovereignty** — Stagent runs on your infrastructure with a local SQLite database. No data leaves your premises. In an era of tightening regulation (EU AI Act effective August 2026), this is not a feature — it is a compliance prerequisite.
+
+3. **Native human-in-the-loop governance** — The Agent SDK's `canUseTool` callback is the central coordination mechanism. Every agent action can be intercepted, reviewed, and approved through a familiar inbox interface. Governance is the product, not a checkbox.
+
+As of March 2026, Stagent has shipped **18 features across 7 development sprints** — from foundational database schema through agent integration, workflow orchestration, document management, and a full-featured browser-based UI.
+
+---
+
+## 2. The Agentic Enterprise — Market Landscape
+
+### Market Size and Growth
+
+The AI agent market is undergoing explosive growth. Multiple analyst firms converge on the same conclusion: enterprise AI agents represent one of the fastest-growing segments in technology.
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| Global AI agent market (2025) | $7.63B | Grand View Research |
+| Projected market size (2030) | $52.62B | Grand View Research |
+| CAGR (2025–2030) | 46.3% | Grand View Research |
+| Enterprise apps with agents by 2026 | 40% | Gartner |
+| Agentic projects canceled by 2027 (governance failures) | >40% | Gartner |
+| Organizations reporting productivity gains from AI | 66% | Deloitte |
+| Organizations converting AI gains to financial ROI | 20–30% | IDC |
+
+<Figure caption="AI Agent Market Growth Trajectory (2025–2030)">
+  <MarketGrowth />
 </Figure>
 
-**Infrastructure** provides browser pools, compute sandboxes, and LLM APIs. Browserbase, E2B, and model providers deliver reliable primitives. What they lack is task awareness — infrastructure does not know what the agent is trying to accomplish.
+### The Governance Imperative
 
-**Application** adds gateway control planes, messaging channels, and tool connectors. Gateway patterns provide routing, policy enforcement, and observability. What they lack is long-horizon persistence — sessions are reactive and ephemeral.
+The numbers tell a paradox. Two-thirds of organizations report productivity gains from AI agents, but fewer than a third convert those gains into measurable financial ROI. Gartner's prediction that over 40% of agentic AI projects will be canceled by 2027 due to governance failures reveals the core constraint: **the bottleneck is not the AI — it is the coordination between AI and humans**.
 
-**Orchestration** introduces workspace managers and multi-model routers. Parallel orchestration and multi-model routing are validated by products in production. What they lack is goal decomposition — orchestrators manage workspaces, not objectives.
+This governance gap is widening precisely as regulatory pressure intensifies. The EU AI Act takes full effect in August 2026, establishing the world's first comprehensive legal framework for AI systems. Organizations deploying agents without governance infrastructure face not just operational risk, but regulatory liability.
 
-**Harness** represents the top layer: coordinator-sub-agent patterns and desktop agents. These prove that multi-agent decomposition works (at roughly 40x token overhead). What they lack is memory-native architecture, cross-session persistence, graduated autonomy, and inter-agent communication.
+### The Anthropic Enterprise Agents Program
 
-### 1.2 The Gap Pattern
-
-Every product analyzed follows the same pattern: excel at the current layer, stumble at the layer above. Gateway control planes work but cannot decompose goals. Workspace orchestrators checkpoint individual sessions but not task graphs. Multi-model routers select models but have no memory of past performance. Desktop agents coordinate sub-agents but forget everything between sessions.
-
-This is not a failure of engineering. It is a consequence of architecture — each product was designed to solve its layer's problems, not the layer above. The harness layer requires all four layers to work in concert, which demands a system designed from the top down.
-
-| Layer | What Exists | What's Missing |
-|-------|------------|----------------|
-| Infrastructure | Browser pools, compute sandboxes, LLM APIs | Task awareness |
-| Application | Gateway routing, policy enforcement, observability | Long-horizon persistence |
-| Orchestration | Workspace managers, multi-model routers | Goal decomposition |
-| Harness | Coordinator-sub-agent patterns, desktop agents | Memory, persistence, autonomy, inter-agent comms |
+In February 2026, Anthropic launched its enterprise agents program, signaling that the largest AI model provider sees enterprise agent deployment as a primary growth vector. The Claude Agent SDK provides the foundational building blocks — tool use, streaming, human-in-the-loop callbacks — but deliberately leaves the coordination and governance layer to the ecosystem. This is the layer Stagent occupies.
 
 ---
 
-## 2. Core Thesis: The Harness Layer
+## 3. The Problem — Why Current Approaches Fail
 
-Stagent is the harness layer — the system that consumes infrastructure, adopts application patterns, orchestrates across them, and adds the capabilities no existing product provides.
+Enterprise teams attempting to deploy AI agents today face a trilemma. They can choose developer frameworks that offer power but no stakeholder visibility. They can choose SaaS platforms that offer visibility but create data sovereignty risks. Or they can choose agent operating systems that offer autonomy but insufficient governance. None of these approaches solve the full problem.
 
-The harness does not replace infrastructure (browser pools, LLM APIs) or application patterns (gateway routing, plugin architectures). Instead, it consumes them as commodity inputs and composes them into something new: goal-oriented, persistent, memory-native multi-agent execution.
+### The Missing Layer
 
-<Figure id="fig-harness-orbit" number={2} caption="Concentric consumption model — Stagent at center consumes infrastructure, application, and orchestration layers as commodity inputs.">
-  <HarnessOrbit class="w-full max-w-[840px] text-text-muted" />
-</Figure>
+| Capability | Dev Frameworks | Agent OS | SaaS Platforms | **Stagent** |
+|------------|:---:|:---:|:---:|:---:|
+| Agent execution | Strong | Strong | Moderate | Strong |
+| Stakeholder visibility | None | Dashboard | Good | **Native** |
+| Human-in-the-loop governance | Manual | Approval gates | Configurable | **Native** |
+| Local-first data sovereignty | Yes | Yes | No | **Yes** |
+| Non-technical user access | No | Limited | Yes | **Yes** |
+| Familiar UX paradigm | No | No | Partial | **Yes** |
+| Audit trail | Logs | Merkle chain | Logs | **DB-native** |
+| Regulatory readiness | DIY | Partial | Vendor-dependent | **Built-in** |
 
-### 2.1 Design Principles
-
-The harness layer is governed by three principles:
-
-| Principle | Description |
-|-----------|-------------|
-| Build what you own; consume what commoditizes | Orchestration is model-independent and owned; infrastructure is consumed via swappable interfaces |
-| Canvas-first interaction | Visual task DAG as primary interface; chat and dashboard as secondary views |
-| Observable by default | Every action visible, every decision auditable, every resource tracked |
-
-**Build what you own; consume what commoditizes.** The orchestration layer — task graphs, memory, graduated autonomy, checkpoint/resume — is model-independent. No model provider can revoke it. Infrastructure (browser instances, LLM APIs, cloud compute) is consumed through swappable provider interfaces.
-
-**Canvas-first interaction.** The primary interface is a visual task DAG (directed acyclic graph) where nodes represent tasks, edges represent dependencies, and node state reflects execution progress. Chat and dashboard views remain available as secondary interfaces into the same underlying data model.
-
-**Observable by default.** Every agent action is visible, every decision is auditable, and every resource expenditure is tracked. Transparency is not a feature — it is the architecture.
+Stagent is the missing layer — the coordination platform that sits between the AI agent and the human organization, providing governance through a UX paradigm that every knowledge worker already understands.
 
 ---
 
-## 3. Five Differentiation Pillars
+## 4. Product Architecture
 
-| # | Pillar | Tagline |
-|---|--------|---------|
-| 3.1 | Long-Horizon Task Persistence | Tasks that survive beyond sessions |
-| 3.2 | Multi-Model Orchestration | Right model for each subtask |
-| 3.3 | Memory-Native Architecture | Memory as a core primitive |
-| 3.4 | Graduated Autonomy | Trust earned through demonstrated competence |
-| 3.5 | Hybrid Execution | Desktop-native with cloud reach |
+### Design Philosophy
 
-### 3.1 Long-Horizon Task Persistence
+Stagent's architecture follows three principles drawn from Anthropic's "Building Effective Agents" guide:
 
-Tasks that span hours, days, or weeks require fundamentally different architecture than chat-based interactions. Stagent makes task persistence the architectural foundation through checkpoint/resume, progress tracking across task graphs, failure recovery with automatic retry and escalation, and per-task resource budgets.
+1. **Simplicity** — Start with simple agent designs; add complexity only when simpler solutions fall short. The database is SQLite, not PostgreSQL. The distribution is `npx stagent`, not a Kubernetes deployment.
 
-No existing product fully supports tasks beyond a single session. Workspace orchestrators checkpoint individual sessions but not task graphs. Cloud platforms claim multi-day execution but acknowledge long-horizon memory as a core engineering challenge.
+2. **Transparency** — Show the agent's work to the user. The monitoring dashboard streams agent reasoning and tool calls in real time.
 
-### 3.2 Multi-Model Orchestration
+3. **Agent-Computer Interface (ACI)** — Stagent's `canUseTool` polling pattern provides a clean, reliable handoff mechanism between agent autonomy and human oversight.
 
-Different models excel at different capabilities. Claude for reasoning, GPT for long-context analysis, Gemini for research synthesis, Grok for speed, and open-source models for cost control and privacy. Stagent routes subtasks to the best available model based on measured performance, not static configuration.
+### System Architecture
 
-The routing is transparent — every model selection decision is logged with reasoning. Local model support via Ollama enables fully offline operation and privacy-sensitive workflows.
-
-### 3.3 Memory-Native Architecture
-
-Memory in Stagent is a core primitive, not a subsystem bolted onto chat. The architecture implements four-tier hierarchical memory:
-
-| Tier | Scope | Contents |
-|------|-------|----------|
-| Working | Active task | Task context, intermediate results, scratchpad |
-| Episodic | Session history | Timestamped records of past actions and outcomes |
-| Semantic | Cross-session | Distilled knowledge, entity relationships, domain facts |
-| Procedural | Accumulated | Learned task strategies and successful approaches |
-
-Agents actively curate their own memory — creating, updating, and reorganizing memories rather than passively accumulating context. Hybrid retrieval (BM25 full-text + vector similarity + Max Marginal Relevance reranking) ensures relevant recall across all tiers.
-
-<Figure id="fig-memory-tiers" number={3} caption="Four-tier memory architecture — working memory (amber, volatile) narrows at the top; procedural memory (stable, accumulated) broadens at the base.">
-  <MemoryTiers class="w-full max-w-[500px] text-text-muted" />
+<Figure caption="Stagent System Architecture — Four-Layer Stack">
+  <SystemArchitecture />
 </Figure>
 
-### 3.4 Graduated Autonomy
+### The canUseTool Governance Pattern
 
-Trust calibration in Stagent is based on observed agent performance per task type. The system implements three trust levels:
+The centerpiece of Stagent's architecture is the `canUseTool` polling pattern — the mechanism that transforms autonomous agent execution into governed agent execution.
 
-| Level | Trigger | Behavior |
-|-------|---------|----------|
-| Supervised | New or risky tasks | Plan-and-review cycles; human approves each step |
-| Semi-autonomous | Demonstrated competence on task type | Agent executes with periodic checkpoints |
-| Autonomous | Proven track record per agent/task/risk | Full execution with post-hoc review |
-
-New or risky tasks run in supervised mode with plan-and-review cycles. As agents demonstrate competence on specific task types, trust levels graduate toward autonomous execution. Trust is scoped per-agent-type, per-task-type, and per-risk-level — not applied globally.
-
-Hard boundaries remain regardless of trust level. No agent can access credentials, perform destructive operations, or exceed resource budgets without explicit human confirmation.
-
-<Figure id="fig-autonomy-levels" number={4} caption="Graduated autonomy gauge — trust increases from supervised to autonomous as agents demonstrate competence on specific task types.">
-  <AutonomyLevels class="w-full max-w-[480px] text-text-muted" />
+<Figure caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
+  <GovernanceFlow />
 </Figure>
 
-### 3.5 Desktop-Native with Hybrid Execution
+1. **Agent requests permission** — When the Claude agent wants to use a tool, the SDK calls the `canUseTool` callback.
+2. **Notification created** — Stagent writes a notification record to the database.
+3. **Human reviews in Inbox** — The notification appears in the user's Inbox — a familiar email-like interface.
+4. **Human responds** — The user clicks Allow or Deny. Their response is written back to the database.
+5. **Agent continues** — The polling loop detects the response and returns it to the Agent SDK.
 
-Stagent is a Tauri-based desktop application providing local-first operation with privacy, low latency, and full filesystem access. Cloud execution is optional — available for background processing, elastic compute, and headless long-horizon tasks.
+This pattern uses the database as a message queue — a deliberately simple architecture that avoids the complexity of WebSockets or external message brokers while providing reliable, auditable human-agent coordination.
 
-The orchestration layer is location-agnostic: the same task graph runs locally or in the cloud. State portability enables tasks to migrate between execution environments based on trust, cost, and capability requirements. No major product occupies this hybrid position — cloud platforms sacrifice local file access while desktop tools lack cloud persistence.
+### Workflow Orchestration
+
+Stagent ships three workflow patterns:
+
+| Pattern | How It Works | Enterprise Example |
+|---------|-------------|-------------------|
+| **Sequence** | Tasks execute in strict order. Each step's output feeds the next. | Research → Draft → Legal Review → Publish |
+| **Planner → Executor** | A planning agent breaks down a goal. Executors handle each step. | "Analyze Q1 financials" → extract → generate report |
+| **HITL Checkpoint** | Agent executes until a checkpoint, then pauses for human approval. | Draft email → **human approves** → send → log to CRM |
+
+### Technology Stack
+
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| Framework | Next.js 16 + React 19 | Server Components for DB-direct queries |
+| Styling | Tailwind CSS v4 + shadcn/ui | Production-quality UI with consistent design |
+| Database | SQLite + Drizzle ORM (WAL mode) | Local-first, zero-config, concurrent reads |
+| Agent SDK | @anthropic-ai/claude-agent-sdk | Native Claude integration with canUseTool |
+| CLI | Commander + tsup | One command to install, migrate, and launch |
 
 ---
 
-## 4. Architecture and Technology Stack
+## 5. Competitive Differentiation
 
-### 4.1 Rust + TypeScript Hybrid
+### Positioning Matrix
 
-The architecture uses a clear boundary between two languages:
+The agent platform market can be mapped along two axes: **agent autonomy** and **human governance**. Most platforms optimize for one at the expense of the other.
 
-| Concern | Language | Responsibilities |
-|---------|----------|-----------------|
-| System integration | Rust (Tauri) | WASM sandboxing, SQLite storage, IPC, memory safety |
-| Agent execution | TypeScript | LLM SDK integration, MCP communication, protocol handling |
-
-**Rust backend** (via Tauri) handles system integration, WASM sandboxing, persistent storage (SQLite via rusqlite), and IPC. Rust's memory safety and performance guarantees are essential for the system-level concerns that agents must never compromise.
-
-**TypeScript agent layer** handles LLM SDK integration, MCP communication, agent execution logic, and protocol handling. TypeScript's ecosystem breadth provides access to every major LLM SDK (Anthropic, OpenAI, Google AI) and the growing MCP connector ecosystem.
-
-Neither language crosses into the other's domain. The boundary is architectural, not arbitrary.
-
-### 4.2 Protocol Stack
-
-Six protocols form the communication backbone:
-
-| Protocol | Role | Purpose |
-|----------|------|---------|
-| MCP | Agent ↔ Tool | Tool invocation, resource access, connector ecosystem |
-| A2A | Agent ↔ Agent | Task delegation, capability discovery, result sharing |
-| CDP | Agent ↔ Browser | DOM interaction, navigation, screenshot capture |
-| WebMCP | Agent ↔ Website | Structured web data access (preferred over CDP) |
-| Tauri IPC | Frontend ↔ Backend | Task graph operations, agent lifecycle, settings |
-| WebSocket | Frontend ↔ Agent | Real-time output streaming, tool call events |
-
-The protocol stack implements graceful degradation: WebMCP is preferred for web interaction, falling back to MCP servers, then CDP browser automation.
-
-<Figure id="fig-protocol-stack" number={5} caption="Protocol hierarchy — core protocols (amber) form the communication backbone; non-core protocols provide fallback and integration.">
-  <ProtocolStack protocols={protocols} class="w-full max-w-[640px] text-text-muted" />
+<Figure caption="Competitive Positioning — Governance vs. Autonomy">
+  <GovernanceMatrix />
 </Figure>
 
-### 4.3 Sandboxing
+Stagent occupies the **high-governance, high-autonomy** quadrant — the quadrant that enterprise buyers actually need.
 
-Tool execution uses WASM sandboxes (Wasmtime) for lightweight, formally isolated execution with microsecond startup and capability-based permissions. Docker and cloud sandboxes (E2B, Firecracker) serve as fallbacks for heavyweight operations requiring full OS capabilities.
+### Three Core Differentiators
+
+**1. Governance-First Architecture** — Security prevents unauthorized access. Governance ensures authorized actions are appropriate, visible, and auditable. Stagent's `canUseTool` pattern provides governance at the interaction level.
+
+**2. Task Management UX** — Stagent maps to work management paradigms that billions of knowledge workers already understand. The Kanban board, the Inbox, the Monitor — all familiar patterns. No CLI, no developer console, no friction.
+
+**3. Local-First Data Sovereignty** — Stagent's database lives at `~/.stagent/stagent.db` — a local SQLite file. No data transits to external servers. This is a regulatory strategy, not a philosophical preference.
 
 ---
 
-## 5. Tool Landscape Analysis
+## 6. Progress and Roadmap
 
-Four tool categories were studied to inform Stagent's architecture. Each validates specific patterns while revealing the gap that Stagent addresses.
+### Sprint Timeline
 
-**Gateway Control Planes** prove that centralized routing, policy enforcement, and observability work at scale. Plugin lifecycle hooks with strategic control points provide extensibility. Hybrid search for memory (BM25 + vector) delivers effective retrieval. The limitation: reactive sessions with no goal awareness.
+Stagent has shipped 18 features across 7 sprints:
 
-**Workspace Orchestrators** validate three-dimensional checkpointing (HEAD + index + worktree), keyboard-first design, and diff-first code review. In-process MCP server injection extends agent capabilities without external processes. The limitation: session-scoped with no persistence beyond the active workspace.
+| Sprint | Theme | Features | Cumulative |
+|--------|-------|----------|-----------|
+| S1 | Foundation | CLI Bootstrap, Database Schema, App Shell | 3 |
+| S2 | Core Data | Project Management, Task Board | 5 |
+| S3 | Agent Core | Agent Integration (canUseTool, fire-and-forget) | 6 |
+| S4 | Human Loop | Inbox Notifications, Monitoring Dashboard | 8 |
+| S5 | Polish | Homepage, UX Fixes, AI Tasks, Workflows, Content, Sessions | 14 |
+| S6 | Doc Foundation | File Attachments, Preprocessing, Agent Context | 17 |
+| S7 | Doc UI | Document Manager (table/grid, upload, bulk ops) | 18 |
 
-**Cloud Multi-Model Orchestrators** validate multi-model routing across 19+ models, ephemeral sandbox execution, and three-tier memory architecture. Risk-classified checkpoints provide nuanced approval workflows. The limitation: cloud-only with zero ownership of infrastructure.
-
-**Desktop Agents** validate coordinator-sub-agent patterns (with ~40x token overhead as the real cost of genuine orchestration), MCP-native tool integration, and deletion escalation for irreversible operations. The limitation: no memory, no persistence, no cross-session continuity.
-
-| Category | Validated Pattern | Limitation |
-|----------|------------------|------------|
-| Gateway Control Planes | Centralized routing, hybrid search, plugin hooks | Reactive sessions, no goal awareness |
-| Workspace Orchestrators | 3D checkpointing, diff-first review, in-process MCP | Session-scoped, no cross-session persistence |
-| Cloud Multi-Model | Multi-model routing (19+), ephemeral sandboxes, 3-tier memory | Cloud-only, zero infrastructure ownership |
-| Desktop Agents | Coordinator-sub-agent (~40x overhead), MCP-native tools | No memory, no persistence, no continuity |
-
-### 5.1 Positioning
-
-<Figure id="fig-positioning-grid" number={6} caption="Tool category positioning on Cloud-Desktop and Reactive-Autonomous axes. Stagent (amber) occupies the desktop-autonomous quadrant uniquely.">
-  <PositioningGrid class="w-full max-w-[540px] text-text-muted" />
+<Figure caption="Feature Velocity by Sprint">
+  <FeatureVelocity />
 </Figure>
 
-Stagent occupies a unique position on two key axes:
+Sprint 5 represents an inflection point — six features shipped in a single sprint, enabled by the foundational work of Sprints 1–4. This acceleration pattern is characteristic of well-layered architectures where early investment pays compound returns.
 
-On the **Cloud ↔ Desktop** axis, cloud-only platforms sacrifice local file access and privacy while desktop-only tools lack cloud persistence for long-horizon tasks. Stagent bridges both with hybrid execution.
+### Three-Horizon Roadmap
 
-On the **Reactive ↔ Autonomous** axis, reactive systems wait for each instruction while supervised systems require approval for everything. Stagent implements graduated autonomy — supervised for new tasks, autonomous for proven workflows.
+| Horizon | Timeline | Focus | Key Features |
+|---------|----------|-------|-------------|
+| **H1** | Q2 2026 | Document Intelligence | Document output generation, parallel workflows |
+| **H2** | Q3 2026 | Agent Intelligence | Multi-agent routing, autonomous loops, swarm |
+| **H3** | Q4 2026 | Platform | Desktop app, agent self-improvement, marketplace |
 
 ---
 
-<div class="my-16 py-12 border-y border-border/50">
-  <p class="text-center text-text-muted text-sm mb-6">
-    Stagent is under active development. Join the waitlist to be notified when it's ready for download.
-  </p>
-  <WaitlistForm variant="cta" id="research-mid-waitlist" />
+## 7. Cross-Industry Use Cases
+
+| Industry | Use Case | Workflow Pattern | HITL Checkpoint |
+|----------|---------|-----------------|-----------------|
+| **Software Engineering** | Code review, bug triage, test generation | Planner → Executor | Approve changes before merge |
+| **Legal** | Contract analysis, due diligence, compliance | Sequence | Approve findings before delivery |
+| **Marketing** | Campaign creation, content generation | Planner → Executor | Approve creative before publication |
+| **Finance** | Financial modeling, audit preparation | Sequence + Checkpoints | Approve calculations before reports |
+| **HR** | Job descriptions, resume screening, policy | Sequence | Approve shortlists before outreach |
+| **Research** | Literature review, data analysis, reports | Planner → Executor | Approve methodology before execution |
+
+---
+
+## 8. Risk Analysis
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|:---:|:---:|------------|
+| Claude SDK vendor dependency | Medium | High | Architecture abstracts agent layer; multi-model routing in roadmap |
+| Regulatory environment shifts | Medium | Medium | Local-first architecture is inherently regulation-friendly |
+| Governance model bypassed | Low | Critical | canUseTool is the execution path — no "skip oversight" mode |
+| Competition from incumbents | High | Medium | Retrofitting governance onto existing task management is harder than building governance-first |
+| Scaling beyond SQLite | Medium | Low | WAL mode handles significant load; Drizzle ORM enables database-agnostic migration |
+| Agent hallucination | High | Medium | HITL checkpoints catch errors; session resume enables recovery |
+
+---
+
+## 9. Investment Thesis
+
+Five pillars support the case for Stagent:
+
+1. **Market Timing** — $7.63B growing at 46.3% CAGR. Governance infrastructure is the chokepoint for enterprise agent adoption.
+
+2. **Governance Moat** — Architecture, not a feature. The `canUseTool` pattern, notification-as-queue design, and DB-native audit trail create a governance model that cannot be replicated by bolting oversight onto existing frameworks.
+
+3. **Category Creation** — "Jira for AI agents" is a new category. First-mover advantage in category creation is well-documented.
+
+4. **Regulatory Readiness** — The EU AI Act (August 2026) is a present tailwind. Compliance drives adoption rather than hindering it.
+
+5. **Execution Velocity** — 18 features across 7 sprints demonstrates both velocity and architectural soundness.
+
+---
+
+## 10. Conclusion
+
+The agentic enterprise is not a prediction — it is a reality already unfolding. Organizations are deploying AI agents, discovering their power, and hitting the governance wall.
+
+Stagent is building the coordination layer — governance-first, local-first, and designed for the people who actually need to supervise AI agents: the knowledge workers, the managers, the compliance officers, and the executives who are accountable for what the agents do.
+
+The coordination layer for the agentic enterprise is not a chatbot interface. It is not a developer framework. It is not a terminal. It is a task board with an inbox and a monitoring dashboard — the same tools humans have used to manage work for decades, rebuilt for a world where the workers are AI agents and the humans are supervisors.
+
+**Stagent is that coordination layer.**
+
+---
+
+<div class="text-center my-16">
+  <p class="font-mono text-xs tracking-widest uppercase text-text-muted mb-6">Get Early Access</p>
+  <WaitlistForm variant="cta" id="research-waitlist" />
 </div>
 
-## 6. Market Opportunity
+---
 
-| Metric | Value |
-|--------|-------|
-| Total AI agent market (2030) | $52.62B |
-| CAGR (2025-2030) | 46.3% |
-| Current market size (2025) | $7.84B |
-| Developer-facing segment | ~$5B |
-| Enterprise experimentation rate | 62% |
-| Price range (existing products) | Free/OSS to $200/mo |
-| Serviceable obtainable market (2030) | $50M-$100M |
+## Appendix A: Technical Glossary
 
-The AI agent market is projected to reach $52.62B by 2030, growing at 46.3% CAGR from $7.84B in 2025. The developer-facing segment represents approximately $5B of this market. 62% of enterprises are actively experimenting with AI agents.
+| Term | Definition |
+|------|-----------|
+| **Agent SDK** | Anthropic's Claude Agent SDK — a TypeScript library for running Claude Code as an embedded agent with programmatic tool permissions. |
+| **canUseTool** | A callback invoked every time the agent attempts to use a tool. Returns `allow` or `deny` for real-time human oversight. |
+| **Drizzle ORM** | TypeScript-first ORM for type-safe database queries with SQLite. |
+| **Fire-and-forget** | API returns HTTP 202 immediately; agent runs asynchronously. |
+| **HITL** | Human-in-the-loop — requiring explicit human approval at defined checkpoints. |
+| **MCP** | Model Context Protocol — open standard for connecting AI to external tools. |
+| **SSE** | Server-Sent Events — real-time streaming for the monitoring dashboard. |
+| **SQLite WAL** | Write-Ahead Logging enabling concurrent reads during agent writes. |
 
-Price points in the market range from free and open source to $200/month for cloud-hosted platforms. Successful closed-source products at these price points validate willingness to pay for autonomous agent capabilities. Open-source distribution eliminates the primary friction barrier while creating ecosystem effects through community templates and connectors.
+## Appendix B: Feature Inventory
 
-The serviceable obtainable market for an open-source desktop agent harness is estimated at $50M-$100M by 2030, comparable to the early trajectory of AI-powered development tools.
+### MVP Features (14) — All Completed
+
+| # | Feature | Sprint | Category |
+|---|---------|--------|----------|
+| 1 | CLI Bootstrap | S1 | Foundation |
+| 2 | Database Schema | S1 | Foundation |
+| 3 | App Shell | S1 | Foundation |
+| 4 | Project Management | S2 | Core |
+| 5 | Task Board (Kanban) | S2 | Core |
+| 6 | Agent Integration (canUseTool) | S3 | Core |
+| 7 | Inbox Notifications (HITL) | S4 | Core |
+| 8 | Monitoring Dashboard (SSE) | S4 | Core |
+| 9 | Homepage Dashboard | S5 | Polish |
+| 10 | UX Gap Fixes | S5 | Polish |
+| 11 | Task Definition AI | S5 | Polish |
+| 12 | Workflow Engine (3 patterns) | S5 | Polish |
+| 13 | Content Handling | S5 | Polish |
+| 14 | Session Management | S5 | Polish |
+
+### Post-MVP Features (4) — Completed
+
+| # | Feature | Sprint | Category |
+|---|---------|--------|----------|
+| 15 | File Attachment Data Layer | S6 | Documents |
+| 16 | Document Preprocessing | S6 | Documents |
+| 17 | Agent Document Context | S6 | Documents |
+| 18 | Document Manager UI | S7 | Documents |
+
+## Appendix C: Sources & References
+
+| Source | Data Point |
+|--------|-----------|
+| Grand View Research | AI agent market $7.63B (2025), $52.62B (2030), 46.3% CAGR |
+| Gartner | 40% enterprise apps embed agents by 2026; >40% agentic projects canceled by 2027 |
+| Forrester | 30% of vendors launch MCP servers by end of 2026 |
+| Deloitte | 66% of organizations report AI productivity gains |
+| IDC | 20–30% convert AI gains to financial ROI |
+| Anthropic | "Building Effective Agents" guide; Claude Agent SDK; Enterprise Agents Program (Feb 2026) |
+| EU AI Act | Effective August 2026 — human oversight requirements for high-risk AI |
 
 ---
 
-## 7. Research Portfolio
-
-Stagent is informed by a research portfolio spanning 18+ projects across AI agents, fintech, social CRM, knowledge systems, and developer tools. Nine key projects demonstrate the progression of capabilities that converge in Stagent:
-
-| Year | Project | Domain | Stack | Scale |
-|------|---------|--------|-------|-------|
-| 2024 | FinEdge | Fintech Intelligence | Python, Anthropic, PostgreSQL, LangGraph | 45K LOC · 11 agents |
-| 2024 | SuperCRM | Agentic Social CRM | Next.js, Claude AI Agents, TypeScript | 35.7K LOC · 10 agents |
-| 2025 | KnowledgeGraph | Strategic Intelligence | Next.js, D3.js, React, MDX | 81.7K LOC · 136 files |
-| 2025 | AgentKit | Visual Agent Testing | React, TypeScript, Tauri, Pydantic | 473 tests · 68 components |
-| 2025 | Canvas OS | Analytics Visualization | React, TypeScript, Zustand, React Flow | 28.4K LOC |
-| 2025 | DeepResearch | Grounded AI Research | Python, LangGraph, Vue, RAG | 36 blueprints · 10+ vendors |
-| 2025 | BrowseAI | AI Browsing Companion | Browser Extension, multi-provider LLM | 21.9K LOC |
-| 2025 | TerminalOS | CLI Workflow Automation | Anthropic, OpenAI, Gemini, Ollama | 15K LOC |
-| 2026 | Stagent | Harness Layer | Tauri, Rust + TypeScript, MCP, A2A | 16.3K+ LOC · 421 tests |
-
-**FinEdge** (2024) — 45K LOC across Python, Anthropic Claude, PostgreSQL, and LangGraph. Built 11 specialized financial agents with 32+ API integrations and streaming workflows. Validated patterns for LangGraph orchestration, intelligent caching, and multi-agent coordination in production fintech.
-
-**SuperCRM** (2024) — 35.7K LOC with 10 AI agents spanning 3 platforms (X, LinkedIn, Gmail). Next.js full-stack with Claude AI agent integration and cross-platform deduplication. Validated agent-driven CRM with local-first architecture and real-time social enrichment.
-
-**KnowledgeGraph** (2025) — 81.7K LOC across 136 files, the largest project in the portfolio. Next.js with D3.js force-directed graphs and three-tier analytics. Validated knowledge graph construction, real-time correlation insights, and strategic benchmarking. Documented in 27 research articles on neosignal.io.
-
-**AgentKit** (2025) — 473 tests across 68 components with React Flow 12.3 visual canvas and Pydantic DSL. Built on Tauri for desktop-native performance. Validated visual-first agent testing and type-safe DSL for agent evaluation pipelines.
-
-**Canvas OS** (2025) — 28.4K LOC for analytics and data visualization. React + TypeScript with Zustand state management and React Flow for visual composition. Validated data-driven dashboards and trend analysis patterns.
-
-**DeepResearch** (2025) — Curated 36 blueprints from 10+ vendors (Anthropic, AWS, NVIDIA, GCP, Meta, Mistral). Python with LangGraph for multi-step reasoning and Vue for interactive exploration. Validated grounded RAG with citations and autonomous research synthesis.
-
-**BrowseAI** (2025) — 21.9K LOC browser extension with multi-provider LLM support (Anthropic, OpenAI, Gemini, Ollama) and YouTube integration. Validated browser-native AI interfaces and privacy-first design for everyday AI interaction.
-
-**TerminalOS** (2025) — 15K LOC CLI platform supporting Anthropic, OpenAI, Gemini, and Ollama with markdown workflow automation and Obsidian integration. Validated terminal-first AI productivity and the CLI form factor for agent interaction.
-
-**Stagent** (2026) represents the convergence — combining persistence, orchestration, memory, autonomy, and hybrid execution into a unified harness informed by every preceding project.
-
-The portfolio encompasses 270,000+ lines of code across 9 projects, 30+ AI agents built and deployed, 8 production systems, and 68+ published articles documenting the research — providing empirical evidence for the architectural decisions in Stagent.
-
-### Technology Breadth
-
-The research portfolio spans the full AI engineering stack, establishing production experience across every major component that Stagent integrates:
-
-| Category | Technologies |
-|----------|-------------|
-| Languages | Rust, TypeScript, Python, JavaScript |
-| Frameworks | Next.js, React, Vue, Tauri, LangGraph |
-| AI Providers | Anthropic Claude, OpenAI, Google Gemini, Ollama, OpenRouter |
-| Data | PostgreSQL, SQLite, D3.js, vector search |
-| Protocols | MCP, A2A |
-| Published Research | 68+ articles across stagent.io and neosignal.io |
-
-This breadth is not incidental — each technology was chosen and validated in production for a specific project's requirements. The result is a founder with hands-on experience across the full stack that Stagent must orchestrate: from Rust systems programming to TypeScript agent execution, from local LLM inference to cloud API routing, from graph visualization to vector search retrieval.
-
----
-
-## 8. Roadmap and Vision
-
-| Phase | Timeline | Focus | Key Deliverables |
-|-------|----------|-------|-----------------|
-| 1. Foundation | Weeks 1–2 | Working MVP | Tauri shell, task canvas, single-model agent, MCP tools, basic memory |
-| 2. Distribution | Weeks 3–4 | Alpha release | Cross-platform (macOS/Win/Linux), community templates, contributor infra |
-| 3. Maturity | Weeks 5–8 | Tier 2 features | Agent inspector, browser fleet, connector marketplace, semantic memory |
-| 4. Ecosystem | Weeks 6+ | Platform growth | Cloud sandbox integration, A2A protocol, community ecosystem |
-
-### Development Velocity
-
-Early development validates the compressed timeline. In 33.5 hours of active development, the project achieved measurable progress across all foundation and early MVP components:
-
-| Metric | Value |
-|--------|-------|
-| Total lines of code | 16,285 (Rust + TypeScript) |
-| Test coverage | 421 tests (Vitest + Playwright + Rust) |
-| Git commits | 27 commits in ~33.5 hours |
-| Intent completion | 10 of 37 intents (Foundation tier 6/7 + MVP tier 4/17) |
-| IPC commands | 31 defined commands across the Rust–TypeScript boundary |
-| Database tables | 11 tables (tasks, agents, memory, checkpoints, tools, metrics) |
-
-This velocity — roughly 486 LOC/hour sustained across two languages and three test frameworks — suggests the week-scale roadmap is achievable. The intent-driven development approach, where each intent maps to a specific capability with acceptance criteria, provides the structure that enables this pace.
-
-### Phase 1: Foundation (Weeks 1–2)
-
-Working MVP with Tauri desktop shell, task canvas (React Flow DAG), single-model agent execution, MCP tool integration, basic memory system (working + episodic), and persistent task store with checkpoint/resume.
-
-### Phase 2: Distribution (Weeks 3–4)
-
-Alpha release across macOS, Windows, and Linux. Community template marketplace, contributor infrastructure, and initial distribution through developer channels.
-
-### Phase 3: Maturity (Weeks 5–8)
-
-Tier 2 features including live agent inspector, browser fleet manager, and connector marketplace. Semantic and procedural memory maturity. Learning loop for trust calibration.
-
-### Phase 4: Ecosystem (Weeks 6+)
-
-Hybrid execution with cloud sandbox integration. A2A protocol support for cross-framework agent collaboration. Community-driven template and connector ecosystem.
-
-<Figure id="fig-roadmap-timeline" number={7} caption="Gantt-style roadmap — four staggered phases from foundation (weeks 1–2) through ecosystem (weeks 6+). Decreasing opacity reflects increasing speculativeness.">
-  <RoadmapTimeline class="w-full max-w-[520px] text-text-muted" />
-</Figure>
-
-The long-term vision: an open ecosystem where the harness layer is infrastructure — as foundational to agent systems as operating systems are to applications. The orchestration, memory, and autonomy capabilities that Stagent provides should become the expected baseline for any serious agent deployment.
-
----
-
-<div class="my-16 py-12 border-y border-border/50">
-  <p class="text-center text-text-muted text-sm mb-6">
-    Be the first to know when Stagent is ready for download.
-  </p>
-  <WaitlistForm variant="cta" id="research-end-waitlist" />
-</div>
-
-## References
-
-1. MarketsAndMarkets, "AI Agent Market — Global Forecast to 2030," 2025.
-2. Gartner, "Predicts 2026: AI Gateway Adoption in Enterprise," 2025.
-3. Anthropic, "Model Context Protocol Specification," 2024-2026.
-4. Google, "Agent-to-Agent Protocol (A2A) Specification," 2025.
-5. Google, "WebMCP: Structured Agent-Web Interaction Protocol," 2025.
-6. Tauri Contributors, "Tauri 2.0 Architecture Documentation," 2024-2025.
-7. Bytecode Alliance, "Wasmtime: A Fast and Secure Runtime for WebAssembly," 2024.
-8. React Flow Contributors, "React Flow: Wire Your Ideas with React Flow," 2024.
-9. SQLite Consortium, "sqlite-vec: Vector Search Extension for SQLite," 2024.
-10. Research portfolio analysis: Four case studies of existing production agent systems, 2026.
-11. CB Insights, "AI Browser and Agent Market Analysis," 2024.
-12. Robertson, S., "The Probabilistic Relevance Framework: BM25 and Beyond," *Foundations and Trends in Information Retrieval*, 2009.
-13. Carbonell, J. and Goldstein, J., "The Use of MMR, Diversity-Based Reranking for Reordering Documents," *SIGIR*, 1998.
-14. OpenTelemetry Contributors, "OpenTelemetry Specification for Distributed Tracing," 2024.
-15. W3C, "WebAssembly System Interface (WASI) Preview 2 Specification," 2025.
+*This paper was prepared with data current as of March 2026. Product features reflect Sprint 7.*

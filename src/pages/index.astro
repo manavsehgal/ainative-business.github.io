@@ -2,14 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/sections/Hero.astro';
-import Problem from '../components/sections/Problem.astro';
-import Thesis from '../components/sections/Thesis.astro';
-import Pillars from '../components/sections/Pillars.astro';
+import ProductOverview from '../components/sections/ProductOverview.astro';
+import Features from '../components/sections/Features.astro';
 import Architecture from '../components/sections/Architecture.astro';
 import Progress from '../components/sections/Progress.astro';
-import Competitive from '../components/sections/Competitive.astro';
-import Timeline from '../components/sections/Timeline.astro';
-import Vision from '../components/sections/Vision.astro';
+import MarketPosition from '../components/sections/MarketPosition.astro';
 import CTAFooter from '../components/sections/CTAFooter.astro';
 import Footer from '../components/Footer.astro';
 import { SITE, ORGANIZATION, PUBLISHER } from '../data/seo';
@@ -40,7 +37,7 @@ const jsonLd = [
       priceCurrency: 'USD',
     },
     license: 'https://www.apache.org/licenses/LICENSE-2.0',
-    programmingLanguage: ['Rust', 'TypeScript'],
+    programmingLanguage: ['TypeScript'],
   },
   {
     '@context': 'https://schema.org',
@@ -63,7 +60,7 @@ const jsonLd = [
         name: 'What is Stagent?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Stagent is a desktop-native, open-source harness that turns high-level goals into observable, long-running agent workflows — across any model, any tool, any timeline.',
+          text: 'Stagent is an AI-powered task management platform where Claude agents execute tasks with human-in-the-loop oversight. It uses a local-first architecture with SQLite and is fully open source.',
         },
       },
       {
@@ -71,7 +68,7 @@ const jsonLd = [
         name: 'What makes Stagent different from other AI agent tools?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Stagent differentiates through five pillars: long-horizon task persistence (tasks that survive beyond sessions), multi-model orchestration (right model for each subtask), memory-native architecture (four-tier hierarchical memory), graduated autonomy (trust earned through demonstrated competence), and hybrid execution (desktop-native with cloud reach).',
+          text: 'Stagent differentiates through human-in-the-loop governance (every agent action requires approval), local-first architecture (SQLite, nothing leaves your machine), and familiar UX (Kanban boards, not chat interfaces).',
         },
       },
       {
@@ -79,7 +76,7 @@ const jsonLd = [
         name: 'What technology stack does Stagent use?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Stagent uses a Rust + TypeScript hybrid architecture built on Tauri. Rust handles system integration, WASM sandboxing, and persistent storage. TypeScript handles LLM SDK integration and agent execution. MCP and A2A protocols form the communication backbone.',
+          text: 'Stagent is built with Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui, SQLite via Drizzle ORM, and the Claude Agent SDK for AI integration.',
         },
       },
       {
@@ -87,7 +84,7 @@ const jsonLd = [
         name: 'Is Stagent open source?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes, Stagent is fully open source under the Apache 2.0 license. The orchestration layer — task graphs, memory, graduated autonomy, checkpoint/resume — is model-independent and community-driven.',
+          text: 'Yes, Stagent is fully open source under the Apache 2.0 license.',
         },
       },
     ],
@@ -98,14 +95,11 @@ const jsonLd = [
   <Nav />
   <main>
     <Hero />
-    <Problem />
-    <Thesis />
-    <Pillars />
+    <ProductOverview />
+    <Features />
     <Architecture />
     <Progress />
-    <Competitive />
-    <Timeline />
-    <Vision />
+    <MarketPosition />
     <CTAFooter />
   </main>
   <Footer />

@@ -1,11 +1,11 @@
 {
   "name": "Stagent",
   "short_name": "Stagent",
-  "description": "Desktop-native, open-source harness that turns high-level goals into observable, long-running agent workflows.",
+  "description": "AI-powered task management where Claude agents execute tasks with human-in-the-loop oversight.",
   "start_url": "/",
   "display": "browser",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
   "icons": [
     {
       "src": "/favicon.svg",
