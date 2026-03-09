@@ -37,6 +37,37 @@ Settings are stored in a `settings` table in the SQLite database. The settings p
 
 The Anthropic API key is stored in `.env.local` as `ANTHROPIC_API_KEY` and is never transmitted to external services — all agent communication goes directly from your machine to the Anthropic API.
 
+---
+
+## Use Cases
+
+### Team Onboarding Setup
+
+**Product Team** · *Getting new team members started in under 5 minutes*
+
+A new developer joins the team. They install Stagent via `npx`, configure their Anthropic API key on the settings page, and click "Seed Sample Data" to populate example projects and tasks. Within minutes they're exploring a working instance — understanding the task lifecycle, inbox flow, and monitoring dashboard with real data instead of empty screens.
+
+### API Key Rotation
+
+**Developer** · *Monthly credential rotation for security compliance*
+
+Your security team requires monthly API key rotation. You generate a new key in the Anthropic console, update it on the Settings page, and you're done. The local-first architecture means the key never leaves your machine — it's stored in `.env.local`, not in a cloud service. Your security team's audit checklist gets a clean checkmark.
+
+### Starting Fresh
+
+**Non-Technical User** · *Resetting after initial experimentation*
+
+You spent a week experimenting with Stagent — creating test projects, running sample tasks, uploading practice documents. Now you're ready for real work. You click "Clear All Data" on the Settings page — all test data is removed, but the database schema stays intact. You start fresh with a clean workspace and the confidence of knowing how everything works.
+
+---
+
+## On the Roadmap
+
+- **Agent Profile Catalog Configuration** *(Coming Soon)* — Configure and customize 13 agent profiles (8 work + 5 personal) directly from the Settings page
+- **Tauri Desktop Preferences** *(Coming Soon)* — Native desktop app settings for window behavior, system tray integration, and offline-first operation
+
+---
+
 ## Related Features
 
 - [Agent Integration](/docs/agents) — Uses the configured API key

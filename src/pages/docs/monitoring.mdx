@@ -33,6 +33,37 @@ The monitoring endpoint (`/api/logs/stream`) uses a `ReadableStream` with a poll
 
 The browser receives these events and appends them to the log view in real time. Each entry is rendered with syntax highlighting for tool calls and code blocks.
 
+---
+
+## Use Cases
+
+### Live Demo for Stakeholders
+
+**Product Team** · *Showcasing agent capabilities to executives*
+
+You project the monitoring dashboard on the conference room screen and kick off a code analysis task. The SSE logs stream in real time — executives watch the agent read files, identify patterns, and generate a summary. The live feed makes the agent's reasoning transparent and builds organizational buy-in for AI adoption.
+
+### Debugging a Failed Task
+
+**Developer** · *Tracing a failure to its root cause*
+
+A nightly data-processing task failed. You filter the monitoring logs by task ID and scroll through the execution timeline. At step 5, the agent attempted an API call that returned a 401 — an expired token. The log shows the exact request, response, and the agent's error-handling attempt. You rotate the token and re-queue the task.
+
+### Overnight Batch Monitoring
+
+**Power User** · *Morning triage of unattended agent work*
+
+You queued 10 tasks before leaving the office. In the morning, the monitoring dashboard shows the results at a glance: 8 completed, 1 failed (network timeout at 3 AM), 1 still running. You click into the failed task's log stream, see the exact failure point, and decide whether to retry or reassign.
+
+---
+
+## On the Roadmap
+
+- **Multi-Agent Swarm Monitoring** *(Coming Soon)* — Unified view across multiple concurrent agent sessions, with color-coded log streams per agent
+- **Performance Analytics** *(Coming Soon)* — Tokens-per-task metrics, retry rates, and average completion times to optimize agent efficiency over time
+
+---
+
 ## Related Features
 
 - [Agent Integration](/docs/agents) — Where logs are generated

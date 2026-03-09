@@ -27,6 +27,37 @@ Projects use Server Components for read operations — the project list page que
 
 Each project has a unique ID generated via `crypto.randomUUID()`. Task counts are computed via left joins with the tasks table, grouped by status.
 
+---
+
+## Use Cases
+
+### Multi-Sprint Product Launch
+
+**Product Team** · *Coordinating a cross-functional release*
+
+Your product launch has 30+ tasks spanning content creation, documentation updates, and QA testing. You create a single project, attach brand guidelines and API specs as documents, and organize tasks by sprint. The project card on the dashboard shows aggregate progress — 18 completed, 8 running, 4 planned — giving stakeholders a single number to track.
+
+### Personal Finance Organization
+
+**Non-Technical User** · *Preparing for tax season*
+
+You create a "Tax Prep 2025" project and upload W-2s, 1099s, and mortgage interest statements. Each tax section becomes a task — wages, investments, deductions, credits. The agent processes documents against each task, extracting relevant figures and flagging missing forms. Everything lives in one place instead of scattered across folders.
+
+### Client Engagement Tracking
+
+**Knowledge Worker** · *Managing deliverables across multiple clients*
+
+Each client gets their own project with tasks for active deliverables. You use the REST API (`/api/projects/[id]`) to pull project status into your weekly client report — task counts by status translate directly into progress percentages. When a client asks "where are we?", the answer is one API call away.
+
+---
+
+## On the Roadmap
+
+- **Project-Level Agent Defaults** *(Coming Soon)* — Assign a default agent profile to a project so all new tasks inherit the right configuration automatically
+- **Parallel Workflows** *(Coming Soon)* — Run multiple workflow branches within a project simultaneously, with dependency-aware scheduling
+
+---
+
 ## Related Features
 
 - [Dashboard](/docs/dashboard) — Project cards on the homepage

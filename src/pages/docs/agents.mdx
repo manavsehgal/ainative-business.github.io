@@ -35,6 +35,44 @@ The execution manager (`src/lib/agents/execution-manager.ts`) wraps the Agent SD
 
 The `canUseTool` callback writes a notification to the database. A polling loop in the agent checks for a human response. This uses the database as a message queue — simple, reliable, and fully auditable.
 
+---
+
+## Use Cases
+
+### Governed Code Deployment
+
+**Product Team** · *Maintaining deployment safety with human oversight*
+
+Your agent completes a code refactor and attempts `git push`. The `canUseTool` callback fires, and a notification appears in your Inbox with the full diff. You review the changes, confirm they match the task requirements, and click Allow. The push goes through with a complete audit trail — who approved it, when, and what was pushed.
+
+### Research with Source Verification
+
+**Knowledge Worker** · *Ensuring agents use credible sources*
+
+The agent attempts to fetch data from a paywalled research database. You see the permission request, deny access to the paywalled source, and provide an alternative open-access URL via the `AskUserQuestion` response. The agent adjusts its approach and continues with the verified source — no hallucinated citations, no unauthorized access.
+
+### Batch Processing with Session Resume
+
+**Developer** · *Refactoring 50 files without starting over*
+
+Your agent is refactoring 50 files when it fails at file #23 due to an unexpected import pattern. The session is preserved with its full context. You fix the edge case in the source code, then resume the session from the checkpoint — the agent picks up at file #23 and completes the remaining 27 files without re-processing the first 22.
+
+### First-Time Agent Delegation
+
+**Non-Technical User** · *Building trust through full transparency*
+
+Every tool call surfaces in your Inbox for review — reading a file, writing output, accessing the network. You see exactly what the agent wants to do before it does it. After approving 50+ benign operations and seeing consistent, safe behavior, you develop confidence in the agent's judgment and begin approving faster.
+
+---
+
+## On the Roadmap
+
+- **Multi-Agent Routing** *(Coming Soon)* — 4 starter agent profiles (code-reviewer, researcher, writer, analyst) with automatic task-to-profile matching
+- **Agent Profile Catalog** *(Coming Soon)* — 13 curated profiles (8 work + 5 personal) covering scenarios from code review to meal planning
+- **Agent Self-Improvement** *(Coming Soon)* — Agents learn from denied tool calls and human corrections to reduce future permission requests
+
+---
+
 ## Related Features
 
 - [Human-in-the-Loop](/docs/inbox) — The inbox where permission requests appear

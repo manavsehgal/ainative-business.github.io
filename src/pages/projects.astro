@@ -1,0 +1,224 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import SectionLabel from '../components/ui/SectionLabel.astro';
+import { timeline, metrics } from '../data/timeline';
+---
+<Layout
+  title="Project Portfolio — Stagent"
+  description="Nine projects across five technology waves. From LLM APIs to autonomous agent harnesses."
+>
+  <Nav />
+  <main>
+    <!-- Hero -->
+    <section class="relative min-h-[60vh] flex flex-col items-center justify-center px-6 overflow-hidden pt-32 pb-16">
+      <!-- Atmospheric glow -->
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="absolute w-[600px] h-[600px] rounded-full bg-primary/[0.08] blur-[160px]"></div>
+        <div class="absolute w-[300px] h-[300px] rounded-full bg-primary/[0.12] blur-[80px]"></div>
+      </div>
+
+      <div class="relative z-10 text-center max-w-3xl">
+        <div data-animate>
+          <SectionLabel text="Portfolio" />
+        </div>
+        <h1
+          data-animate
+          class="mt-4 font-display text-[clamp(2rem,6vw,4rem)] leading-tight"
+          style="transition-delay: 80ms"
+        >
+          Project Portfolio
+        </h1>
+        <p
+          data-animate
+          class="mt-4 text-text-muted text-lg max-w-2xl mx-auto"
+          style="transition-delay: 160ms"
+        >
+          Nine projects across five technology waves — from LLM APIs and RAG systems to autonomous agent harnesses.
+        </p>
+      </div>
+    </section>
+
+    <!-- Metrics Bar -->
+    <section class="py-12 px-6 border-y border-border bg-surface-raised">
+      <div
+        id="metrics-bar"
+        class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-6"
+        data-animate-stagger
+      >
+        {metrics.map((m) => (
+          <div data-animate class="text-center">
+            <div
+              class="font-display text-3xl text-primary mb-1"
+              data-count-to={m.target}
+              data-count-suffix={m.suffix}
+            >
+              0{m.suffix}
+            </div>
+            <div class="font-mono text-[0.625rem] tracking-widest uppercase text-text-muted">
+              {m.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Timeline -->
+    <section class="py-24 px-6">
+      <div class="max-w-4xl mx-auto relative" data-animate-stagger>
+        <!-- Vertical line -->
+        <div class="absolute left-4 md:left-8 top-0 bottom-0 w-px bg-border"></div>
+
+        {timeline.map((item, i) => {
+          const showYear = i === 0 || timeline[i - 1].year !== item.year;
+          return (
+            <>
+            {/* Year label — sits outside the card row so it doesn't overlap the dot */}
+            {showYear && (
+              <div data-animate class="relative pl-12 md:pl-20 pb-3 pt-4">
+                <div class="font-mono text-sm text-text-muted tracking-widest font-medium">
+                  {item.year}
+                </div>
+              </div>
+            )}
+            <div data-animate class="relative pl-12 md:pl-20 pb-12">
+
+              {/* Dot */}
+              <div
+                class:list={[
+                  'absolute left-2.5 md:left-6.5 top-1 w-3 h-3 rounded-full border-2',
+                  item.isCurrent
+                    ? 'bg-primary border-primary primary-pulse'
+                    : 'bg-surface border-border',
+                ]}
+              />
+
+              {/* Card */}
+              <div
+                class:list={[
+                  'p-5 rounded-lg',
+                  item.isCurrent
+                    ? 'border border-primary/30 shadow-[0_0_24px_-4px_var(--color-primary-glow)] bg-primary/[0.03]'
+                    : 'border border-border/50 bg-surface-raised/50',
+                ]}
+              >
+                {/* Header */}
+                <div class="flex flex-wrap items-center gap-3 mb-2">
+                  <h3
+                    class:list={[
+                      'font-display text-lg',
+                      item.isCurrent ? 'text-primary' : 'text-text',
+                    ]}
+                  >
+                    {item.project}
+                  </h3>
+                  <span
+                    class:list={[
+                      'font-mono text-[0.55rem] tracking-widest uppercase px-2 py-0.5 rounded-full border',
+                      item.status === 'active'
+                        ? 'text-primary border-primary/40 bg-primary/10'
+                        : 'text-text-muted border-border bg-surface-overlay/50',
+                    ]}
+                  >
+                    {item.status}
+                  </span>
+                  <span class="font-mono text-[0.6rem] tracking-widest uppercase text-text-dim">
+                    {item.techWave}
+                  </span>
+                </div>
+
+                {/* Role */}
+                <p class="text-text-muted text-sm mb-2">{item.role}</p>
+
+                {/* Description */}
+                <p class="text-text-muted/80 text-sm leading-relaxed mb-3">
+                  {item.description}
+                </p>
+
+                {/* Stats */}
+                <p class="font-mono text-xs text-text-dim mb-3">{item.stats}</p>
+
+                {/* Achievements */}
+                <ul class="space-y-1.5 mb-4">
+                  {item.achievements.map((a) => (
+                    <li class="flex items-start gap-2 text-sm text-text-muted">
+                      <svg class="w-4 h-4 text-primary/70 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                      <span>{a}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Tech Categories */}
+                <div class="flex flex-wrap gap-4">
+                  {item.techCategories.map((cat) => (
+                    <div>
+                      <span class="font-mono text-[0.5rem] tracking-widest uppercase text-text-dim block mb-1">
+                        {cat.label}
+                      </span>
+                      <div class="flex flex-wrap gap-1">
+                        {cat.items.map((t) => (
+                          <span class="font-mono text-[0.55rem] tracking-wide px-1.5 py-0.5 border border-border text-text-muted rounded">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            </>
+          );
+        })}
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  function initCounterAnimation() {
+    const metricsBar = document.getElementById('metrics-bar');
+    if (!metricsBar) return;
+
+    const counters = metricsBar.querySelectorAll('[data-count-to]');
+    let animated = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !animated) {
+            animated = true;
+            counters.forEach((el) => {
+              const target = parseInt(el.getAttribute('data-count-to') || '0', 10);
+              const suffix = el.getAttribute('data-count-suffix') || '';
+              const duration = 1500;
+              const start = performance.now();
+
+              function update(now: number) {
+                const elapsed = now - start;
+                const t = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - t, 3);
+                const current = Math.round(eased * target);
+                el.textContent = current + suffix;
+                if (t < 1) requestAnimationFrame(update);
+              }
+
+              requestAnimationFrame(update);
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(metricsBar);
+  }
+
+  initCounterAnimation();
+  document.addEventListener('astro:after-swap', initCounterAnimation);
+</script>

@@ -27,6 +27,37 @@ The dashboard uses React Server Components to query the SQLite database directly
 
 Each project card aggregates task counts from the `tasks` table, grouped by status. Running task counts update on page refresh as agents complete work.
 
+---
+
+## Use Cases
+
+### Morning Standup at a Glance
+
+**Product Team** · *Team lead opening Stagent at 9 AM*
+
+Your overnight agents processed pull requests, ran regression tests, and flagged two failed deployments. The dashboard greeting shows "3 running, 2 awaiting review, 1 failed" — you click through to the failed task, see the error context, and reassign it before the standup even starts.
+
+### Personal Project Portfolio
+
+**Non-Technical User** · *Managing three personal projects simultaneously*
+
+You're tracking a home renovation, an investment portfolio rebalance, and a vacation itinerary. Each project card shows overnight activity — the renovation agent found three contractor quotes, the investment agent flagged a rebalancing opportunity, and the vacation agent completed flight comparisons. One glance, three projects, zero context switching.
+
+### Sprint Health Check
+
+**Developer** · *Checking task throughput mid-sprint*
+
+You notice the Queued column count is climbing — five tasks are stuck waiting for permission approvals. A quick click through to the Inbox reveals they're all blocked on a `git push` permission wall. You batch-approve the safe ones and get the pipeline flowing again.
+
+---
+
+## On the Roadmap
+
+- **Micro-Visualizations** *(Coming Soon)* — Sparkline charts on project cards showing task completion velocity over the past 7 days
+- **Multi-Agent Routing** *(Coming Soon)* — Agent profile badges on dashboard cards, showing which specialized agent is assigned to each project
+
+---
+
 ## Related Features
 
 - [Task Management](/docs/tasks) — Kanban board linked from project cards

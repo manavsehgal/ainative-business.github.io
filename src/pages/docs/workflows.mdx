@@ -49,6 +49,44 @@ Each workflow step creates a task in the `tasks` table. Step transitions are tri
 
 <BrowserFrame src="/screenshots/workflow-create-dialog.png" alt="Workflow creation dialog with pattern selection and step configuration" />
 
+---
+
+## Use Cases
+
+### Code Review Pipeline
+
+**Product Team** · *Automating the full review cycle with safety gates*
+
+You define a Sequence workflow: pull latest changes → run static analysis → execute security scan → **checkpoint for tech lead review** → post review comments to the PR. The checkpoint ensures no automated comments go live without human eyes on the security scan results. One workflow replaces four manual handoffs.
+
+### Investment Research Report
+
+**Knowledge Worker** · *Using Planner-Executor for structured analysis*
+
+You create a Planner-Executor workflow with the goal "Analyze NVIDIA Q4 earnings impact on portfolio." The planner agent breaks this into five executor steps: gather earnings data, compare against estimates, analyze guidance, assess sector impact, and draft a recommendation. Each executor runs independently, and the planner synthesizes results into a coherent report.
+
+### Sprint Planning Automation
+
+**Developer** · *Combining sequence steps with human checkpoints*
+
+Your workflow parses the previous sprint's task data → calculates velocity metrics → drafts next sprint's task breakdown → **pauses for PM review**. The PM reviews the generated tasks, adjusts priorities, and approves. The workflow resumes and creates the tasks in the project board — turning a 2-hour planning meeting into a 10-minute review.
+
+### Meal Planning for the Week
+
+**Non-Technical User** · *Personal automation with a review step*
+
+You set up a simple Sequence workflow: gather dietary preferences → search for recipes → generate a 7-day meal plan → compile a shopping list → **checkpoint for your review**. You scan the plan, swap out Tuesday's dinner, approve, and the final shopping list is ready. The checkpoint ensures the AI's suggestions match what you'll actually cook.
+
+---
+
+## On the Roadmap
+
+- **Workflow Blueprints** *(Coming Soon)* — 8 pre-built templates for common patterns like code review pipelines, content publishing, research reports, and data processing
+- **Parallel Workflows** *(Coming Soon)* — Run independent workflow branches simultaneously, merging results at a synchronization point
+- **Autonomous Loop Execution** *(Coming Soon)* — Workflows that run continuously with configurable trust tiers, only pausing at checkpoints for critical decisions
+
+---
+
 ## Related Features
 
 - [Task Management](/docs/tasks) — Individual tasks within workflows

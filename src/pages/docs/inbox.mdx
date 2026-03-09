@@ -34,6 +34,37 @@ The notification table acts as a message queue. When `canUseTool` fires, a row i
 
 When the user clicks Allow or Deny, their response is written via `POST /api/tasks/[id]/respond`. The polling loop detects the response and returns it to the Agent SDK.
 
+---
+
+## Use Cases
+
+### Compliance-First Oversight
+
+**Product Team** · *Enforcing access policies across agent operations*
+
+Your compliance officer reviews every agent tool call. Read operations on internal docs get quick Allow clicks, but any write to production systems gets a Deny with a note explaining why. The notification history becomes an audit trail — every decision logged with timestamp, reviewer, and rationale.
+
+### Interactive Research Session
+
+**Knowledge Worker** · *Collaborating with an agent on a financial analysis*
+
+The agent encounters conflicting revenue figures in two uploaded reports. Instead of guessing, it surfaces a clarifying question via `AskUserQuestion`: "Q3 revenue is $4.2M in the annual report but $3.8M in the quarterly filing — which source should I prioritize?" You respond directly in the Inbox, and the agent continues with the correct figure.
+
+### Learning to Trust AI
+
+**Non-Technical User** · *Gradually reducing oversight as confidence grows*
+
+You start with every tool call requiring approval — 15 notifications for a simple document analysis task. But after watching the agent make safe, predictable choices across 50+ operations over a week, you begin trusting its judgment. The Inbox becomes a spot-check rather than a gatekeep, and your workflow accelerates dramatically.
+
+---
+
+## On the Roadmap
+
+- **Autonomous Loop Execution** *(Coming Soon)* — Configurable trust tiers that let approved tool categories execute without human review, reducing Inbox noise for trusted operations
+- **Multi-Agent Swarm** *(Coming Soon)* — Aggregated notifications from multiple concurrent agents, with priority sorting so the most critical decisions surface first
+
+---
+
 ## Related Features
 
 - [Agent Integration](/docs/agents) — The canUseTool pattern that generates notifications

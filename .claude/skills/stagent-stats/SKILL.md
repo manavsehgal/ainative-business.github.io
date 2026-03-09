@@ -1,6 +1,6 @@
 ---
 name: stagent-stats
-description: Collect development metrics (LOC, tests, commits, intents, infrastructure) from the Stagent project and write a timestamped report to stagent-stats.md. Use when the user asks to check project stats, update metrics, or track development velocity.
+description: Collect development metrics (LOC, tests, commits, features, infrastructure) from the Stagent project and write a timestamped report to stagent-stats.md. Use when the user asks to check project stats, update metrics, or track development velocity.
 ---
 
 This skill collects comprehensive development metrics from the Stagent project and writes them to `stagent-stats.md` as a timestamped entry. Each run appends a new entry, building a time-series of project velocity.
@@ -9,13 +9,16 @@ This skill collects comprehensive development metrics from the Stagent project a
 
 The Stagent codebase lives at `/Users/manavsehgal/Developer/stagent/`. All metric collection commands run against that directory. The report file `stagent-stats.md` is written to the current working directory.
 
+## Architecture
+
+Stagent is a pure **Next.js 16 + React 19** web application with local SQLite storage via Drizzle ORM. AI integration uses the **Claude Agent SDK** v0.2.71. There is no Rust, Tauri, or native desktop component.
+
 ## Collection Steps
 
 ### 1. Verify Tools
 
 Check availability of these tools before proceeding:
 - `tokei` — fast LOC counter (install: `brew install tokei`)
-- `cargo` — Rust toolchain (for `cargo clippy`)
 - `git` — version control
 
 If `tokei` is missing, fall back to `find + wc -l` for LOC counting. Note any missing tools in the report.
@@ -24,31 +27,24 @@ If `tokei` is missing, fall back to `find + wc -l` for LOC counting. Note any mi
 
 Run `tokei` on the Stagent project root:
 ```bash
-tokei /Users/manavsehgal/Developer/stagent/ --sort code -t=Rust,TypeScript,TSX,CSS,HTML,SQL,TOML,JSON
+tokei /Users/manavsehgal/Developer/stagent/ --sort code -t=TypeScript,TSX,CSS,JSON
 ```
 
 If `tokei` is unavailable, use:
 ```bash
-find /Users/manavsehgal/Developer/stagent/src -name '*.rs' -o -name '*.ts' -o -name '*.tsx' | xargs wc -l
+find /Users/manavsehgal/Developer/stagent/src -name '*.ts' -o -name '*.tsx' | xargs wc -l
 ```
 
-Record: Rust LOC, TypeScript production LOC, TypeScript test LOC, total LOC.
+Record: TypeScript production LOC, TypeScript test LOC, total LOC.
 
 ### 3. Count Tests
 
-Count test functions across all frameworks:
+Count test functions (Vitest only — no Playwright or Rust tests):
 ```bash
-# Vitest/Jest tests
 grep -r "it(\|test(" /Users/manavsehgal/Developer/stagent/src --include="*.test.ts" --include="*.test.tsx" --include="*.spec.ts" | wc -l
-
-# Playwright tests
-grep -r "test(" /Users/manavsehgal/Developer/stagent/e2e --include="*.ts" 2>/dev/null | wc -l
-
-# Rust tests
-grep -r "#\[test\]" /Users/manavsehgal/Developer/stagent/src-tauri --include="*.rs" | wc -l
 ```
 
-Record: Vitest count, Playwright count, Rust count, total.
+Record: Vitest count, total.
 
 ### 4. Git Velocity
 
@@ -66,38 +62,35 @@ Compute:
 - Commits per hour (commits / hours)
 - LOC per hour (total LOC / hours)
 
-### 5. Intent Status
+### 5. Feature Status
 
 ```bash
-# Count completed intents
-grep -rl "status: done\|status: complete" /Users/manavsehgal/Developer/stagent/intents/ 2>/dev/null | wc -l
-
-# Count total intents
-ls /Users/manavsehgal/Developer/stagent/intents/*.md 2>/dev/null | wc -l
+# Count features from roadmap
+cat /Users/manavsehgal/Developer/stagent/features/roadmap.md
 ```
 
-If intents directory doesn't exist, check for alternative locations or note as unavailable.
-List completed intent names.
+Count completed vs total features from the roadmap file. List completed feature names.
 
 ### 6. Infrastructure Counts
 
 ```bash
-# IPC commands
-grep -r "#\[tauri::command\]" /Users/manavsehgal/Developer/stagent/src-tauri --include="*.rs" | wc -l
+# API routes
+find /Users/manavsehgal/Developer/stagent/src/app/api -name "route.ts" 2>/dev/null | wc -l
 
 # Database tables
-grep -c "CREATE TABLE" /Users/manavsehgal/Developer/stagent/src-tauri/migrations/*.sql 2>/dev/null || echo 0
+grep -c "export const" /Users/manavsehgal/Developer/stagent/src/db/schema.ts 2>/dev/null || echo 0
 
-# React components (exported components in src/)
+# React components
 find /Users/manavsehgal/Developer/stagent/src/components -name "*.tsx" 2>/dev/null | wc -l
+
+# Pages
+find /Users/manavsehgal/Developer/stagent/src/app -name "page.tsx" 2>/dev/null | wc -l
+
+# Agent profiles
+find /Users/manavsehgal/Developer/stagent/src -path "*/agents/*" -name "*.ts" 2>/dev/null | wc -l
 ```
 
 ### 7. Quality Indicators
-
-```bash
-cd /Users/manavsehgal/Developer/stagent/
-cargo clippy 2>&1 | tail -5  # Rust lint summary
-```
 
 Note TypeScript strict mode and ESLint config status if available.
 
@@ -110,22 +103,21 @@ Read the existing `stagent-stats.md` file if it exists. Append a new timestamped
 
 | Category | Metric | Value |
 |----------|--------|-------|
-| LOC | Rust | X,XXX |
 | LOC | TypeScript (production) | X,XXX |
 | LOC | TypeScript (tests) | X,XXX |
 | LOC | **Total** | **X,XXX** |
-| Tests | Vitest | XX |
-| Tests | Playwright | XX |
-| Tests | Rust | XX |
+| Tests | Vitest | XXX |
 | Tests | **Total** | **XXX** |
 | Git | Commits | XX |
 | Git | Hours elapsed | XX.X |
 | Git | Commits/hour | X.X |
 | Git | LOC/hour | XXX |
-| Intents | Completed | X/XX |
-| Infra | IPC commands | XX |
+| Features | Completed | XX/XX |
+| Infra | API routes | XX |
 | Infra | DB tables | XX |
 | Infra | UI components | XX |
+| Infra | Pages | XX |
+| Infra | Agent profiles | XX |
 ```
 
 ### 9. Trend Comparison
@@ -143,12 +135,7 @@ After writing the report, summarize the key metrics to the user in a concise for
 
 ## Updating the Website
 
-After collecting stats, also update `src/data/progress.ts` in the stagent.github.io project with the latest values so the website dashboard stays current. Update:
-- `stats.loc` object with new LOC breakdown
-- `stats.tests` object with new test counts
-- `stats.intents` with completion count and names
-- `stats.commits` with count and hours
-- `stats.ipc`, `stats.dbTables`, `stats.components`
-- `stats.lastUpdated` with today's date
-- Add a new entry to the `velocity` array if a new day has passed
-- Update `done` flags in the `intents` array for any newly completed intents
+After collecting stats, also update the Stagent entry in `src/data/timeline.ts` in the stagent.github.io project with the latest values so the website stays current. Update these fields in the Stagent timeline entry:
+- `stats` — LOC count, test count, features shipped ratio
+- `achievements` — notable milestones
+- `description` — if scope has meaningfully changed

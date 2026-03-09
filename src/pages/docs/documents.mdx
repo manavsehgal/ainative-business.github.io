@@ -45,6 +45,37 @@ The document manager provides a dedicated interface for uploading, organizing, a
 | PowerPoint (`.pptx`) | jszip | Slide text |
 | Excel (`.xlsx`) | xlsx | Cell data |
 
+---
+
+## Use Cases
+
+### Onboarding Knowledge Base
+
+**Product Team** · *Grounding agents in company-specific knowledge*
+
+You upload your team's wiki pages, API documentation, and architecture diagrams. When an agent processes onboarding tasks, it draws from this document context — producing guides that reference your actual endpoints, your naming conventions, and your team's workflow. No generic boilerplate, just grounded, company-specific content.
+
+### Contract Analysis
+
+**Knowledge Worker** · *Comparing terms across multiple vendor agreements*
+
+You upload 15 vendor contracts in PDF and DOCX formats. The text extraction pipeline processes each document, and the agent compares payment terms, SLA commitments, and auto-renewal clauses across all 15. The result is a structured comparison table with flagged risks — work that would take days done in minutes.
+
+### Personal Document Organization
+
+**Non-Technical User** · *Bringing order to a pile of paperwork*
+
+You upload a mix of receipts, insurance documents, and warranty cards. The agent extracts dates, amounts, and vendor names from each document using the text extraction pipeline, then organizes everything into a spreadsheet with categories, expiration dates, and totals. Your filing cabinet becomes a searchable, structured database.
+
+---
+
+## On the Roadmap
+
+- **Document Output Generation** *(Coming Soon)* — Agents produce formatted PDFs, reports, and summaries as downloadable document artifacts
+- **Smart Document Selection** *(Coming Soon)* — Automatic relevance scoring so agents pull only the most pertinent documents for each task, reducing context noise
+
+---
+
 ## Related Features
 
 - [Agent Integration](/docs/agents) — How agents consume document context

@@ -42,6 +42,43 @@ The fire-and-forget pattern means `POST /api/tasks/[id]/execute` returns HTTP 20
 
 <BrowserFrame src="/screenshots/task-create-panel.png" alt="Task creation panel with fields for title, description, priority, and complexity" />
 
+---
+
+## Use Cases
+
+### Code Review Pipeline
+
+**Product Team** · *Processing a backlog of pull requests*
+
+Twelve PRs landed overnight. You create a task for each, assign them to the code-reviewer agent profile, and drag the batch to Queued. The agent processes them sequentially — running static analysis, checking for security issues, and posting review comments. By the time your team logs on, every PR has detailed feedback waiting.
+
+### Research Decomposition
+
+**Knowledge Worker** · *Breaking down a complex analysis*
+
+You type "competitive landscape analysis for Q2 product strategy" into the AI-assisted task creator. Claude breaks it into five subtasks: identify competitors, gather pricing data, analyze feature gaps, summarize market trends, and draft recommendations. Each subtask gets appropriate complexity ratings and lands in Planned, ready for you to prioritize.
+
+### Daily Task Automation
+
+**Power User** · *Recurring maintenance tasks every morning*
+
+You keep a set of recurring tasks in Planned: lint the codebase, check for dependency updates, and generate a changelog. Each morning you drag them to Queued in order — the agent picks them up and runs them while you focus on feature work. Results appear in the side panel by the time you finish your coffee.
+
+### Delegating Without Technical Knowledge
+
+**Non-Technical User** · *Turning raw data into insights*
+
+You attach a CSV of customer feedback to a new task and describe what you need: "Find the main themes and summarize sentiment." The AI-assist suggests a pipeline — data cleaning, sentiment analysis, theme extraction, and summary generation — each as a separate subtask with clear descriptions you can understand and approve.
+
+---
+
+## On the Roadmap
+
+- **Workflow Blueprints** *(Coming Soon)* — 8 pre-built task pipeline templates for common scenarios like code review, content publishing, and data analysis
+- **Agent Profile Catalog** *(Coming Soon)* — Auto-routing tasks to the best-fit agent profile based on task type and complexity
+
+---
+
 ## Related Features
 
 - [Agent Integration](/docs/agents) — How agents execute tasks
