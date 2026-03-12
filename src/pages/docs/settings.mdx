@@ -1,14 +1,14 @@
 ---
 layout: ../../layouts/DocsLayout.astro
 title: "Settings"
-description: "Authentication, default permissions, and workspace data management for Stagent."
+description: "Authentication, permissions, cost guardrails, and workspace data management for Stagent."
 ---
 
 import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 # Settings
 
-The settings page is where operators define how Stagent authenticates, which tool requests can be trusted by default, and how the local workspace data should be managed.
+The settings page is where operators define how Stagent authenticates, which tool requests can be trusted by default, how much provider activity is allowed to cost, and how the local workspace data should be managed.
 
 <BrowserFrame src="/screenshots/settings-list.png" alt="Settings page showing authentication, tool permissions, and data management sections" />
 
@@ -16,6 +16,7 @@ The settings page is where operators define how Stagent authenticates, which too
 
 - **Authentication Modes** — Connect Stagent with OAuth or a direct API key depending on your operating model.
 - **Default Tool Permissions** — Seed safe approval patterns so the inbox does not need to mediate every low-risk action.
+- **Cost & Usage Guardrails** — Configure daily and monthly spend caps plus runtime-specific token/spend limits.
 - **Data Management** — Reset the workspace when you need to clear projects, tasks, workflows, schedules, documents, logs, and notifications.
 - **Local-First Configuration** — Settings are managed close to the workspace instead of hidden inside a remote SaaS control plane.
 
@@ -23,8 +24,16 @@ The settings page is where operators define how Stagent authenticates, which too
 
 | Method | Description | Best For |
 |--------|-------------|----------|
-| **OAuth** | Built-in sign-in flow for Claude subscriptions | Individual operators and local evaluation |
-| **API Key** | Direct credential entry for Agent SDK connectivity | Development, testing, and controlled server setups |
+| **Claude OAuth** | Built-in sign-in flow for Claude subscriptions | Individual operators and local evaluation |
+| **Claude API Key** | Direct credential entry for Claude Agent SDK connectivity | Development, testing, and controlled server setups |
+| **OpenAI API Key** | Provider-aware credential entry for Codex App Server connectivity | Dual-runtime workspaces and OpenAI-backed runs |
+
+## Cost Guardrails
+
+- **Overall Daily / Monthly Caps** — Limit total paid activity across runtimes in the current day or month window.
+- **Runtime-Scoped Caps** — Apply spend or token ceilings to Claude or Codex independently when one runtime needs tighter control.
+- **Blocked-State Visibility** — Settings shows whether a budget is currently blocking new work and when the next reset happens.
+- **Warning Notifications** — The inbox can warn operators as active budget windows approach a configured threshold.
 
 ## Data Management
 
@@ -33,9 +42,9 @@ The settings page is where operators define how Stagent authenticates, which too
 
 ## How It Works
 
-Settings centralize the trust model for the rest of the product. The authentication section controls how runs are authorized, the permissions section shapes inbox volume, and the data tools make it possible to reset or repopulate the workspace safely.
+Settings centralize the trust model for the rest of the product. The authentication section controls how runs are authorized, the permissions section shapes inbox volume, the budget section controls paid runtime expansion, and the data tools make it possible to reset or repopulate the workspace safely.
 
-The visible grouping also keeps operational choices legible. You do not have to remember where an approval rule lives or how the workspace is authenticated; both are explicit on one screen.
+The visible grouping also keeps operational choices legible. You do not have to remember where an approval rule lives, which runtime is authenticated, or why paid work is blocked; all of those controls stay explicit on one screen.
 
 ---
 
@@ -64,5 +73,6 @@ You spent a week exploring seeded sample data. When it is time to move to produc
 ## Related Features
 
 - [Agent Integration](/docs/agents) — Uses the configured API key
+- [Cost & Usage](/docs/costs) — Budget guardrails and cross-runtime usage visibility
 - [Home & Dashboard](/docs/dashboard) — Reflects current workspace state
 - [Documents](/docs/documents) — Upload storage configuration

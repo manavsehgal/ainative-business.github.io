@@ -1,9 +1,9 @@
 ---
 layout: ../layouts/ResearchLayout.astro
 title: "Stagent: The Coordination Layer for the Agentic Enterprise"
-description: "Governed AI agent operations: architecture, reusable automation, and the coordination layer for enterprise AI deployment."
+description: "Governed AI agent operations: dual-runtime execution, cost governance, reusable automation, and the coordination layer for enterprise AI deployment."
 datePublished: "2026-03-01"
-dateModified: "2026-03-11"
+dateModified: "2026-03-12"
 author: "Manav"
 readingTime: "19 min read"
 ---
@@ -44,17 +44,18 @@ import WaitlistForm from '../components/ui/WaitlistForm.astro'
 
 ## 1. Executive Summary
 
-Stagent is the **coordination layer for the agentic enterprise**: a local-first operations workspace where AI agents run inside a governed system of projects, workflows, documents, inbox approvals, profiles, schedules, and live monitoring.
+Stagent is the **coordination layer for the agentic enterprise**: a local-first operations workspace where AI agents run inside a governed system of projects, workflows, documents, inbox approvals, profiles, schedules, live monitoring, and cross-runtime cost governance.
 
 The thesis is simple. Every enterprise will deploy AI agents. But production adoption will be constrained less by model quality than by whether operators can see what the agent is doing, understand which rules it is following, reuse proven behaviors, and intervene before an unsafe action lands. Stagent is built for that operating problem.
 
-Three value propositions define Stagent's current position:
+Four value propositions define Stagent's current position:
 
 1. **Operational familiarity** — Stagent presents agent work through surfaces teams already understand: a home workspace, execution dashboard, project views, document library, approval inbox, and live monitor.
 2. **Governed execution** — The human-in-the-loop model is not an afterthought. Tool requests, policy decisions, and intervention points are visible, auditable, and close to the work.
 3. **Reusable automation primitives** — Profiles, workflow blueprints, and schedules convert ad hoc prompting into repeatable operational systems.
+4. **Cost accountability** — A shared usage ledger, spend guardrails, and a dedicated cost dashboard turn provider choice into something teams can supervise rather than guess at.
 
-As of March 2026, the current browser product spans **ten coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, and Settings. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
+As of March 2026, the current browser product spans **eleven coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, Cost & Usage, and Settings. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
 
 ---
 
@@ -163,6 +164,18 @@ What changed materially in the current product is the addition of reusable autom
 
 These primitives matter because they turn a successful experiment into an operational practice. Without them, every agent run is effectively a bespoke interaction. With them, the organization begins building an operating system for repeated AI work.
 
+### Cost & Usage Governance
+
+What changed next is that Stagent now measures and governs the economics of that automation layer instead of treating spend as invisible exhaust.
+
+- **Usage ledger** normalizes Claude and Codex activity into one cost and token record system.
+- **Budget guardrails** warn near caps and block new paid activity explicitly when a configured window is exhausted.
+- **Cost & Usage dashboard** shows spend velocity, token velocity, runtime share, and model concentration in one operator-facing surface.
+
+<Figure number={6} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
+  <BrowserFrame src="/screenshots/cost-codex-claude-code.png" alt="Cost and usage dashboard showing spend velocity, token trends, runtime breakdown, and model concentration across Claude and Codex activity" />
+</Figure>
+
 ### Technology Stack
 
 | Layer | Technology | Why |
@@ -170,8 +183,9 @@ These primitives matter because they turn a successful experiment into an operat
 | Framework | Next.js 16 + React 19 | Server-first rendering with a fast local operator experience |
 | Styling | Tailwind CSS v4 + shadcn/ui | Dense operational UI with consistent primitives |
 | Database | SQLite + Drizzle ORM | Local-first state, low setup cost, and audit-friendly persistence |
-| Agent Runtime | Claude Agent SDK | Embedded governed execution with tool-use callbacks |
+| Agent Runtime | Claude Agent SDK + Codex App Server | Dual-runtime governed execution behind one shared runtime layer |
 | Monitoring | SSE + structured runtime events | Live visibility without heavyweight infrastructure |
+| Cost Governance | Usage ledger + budget guardrails + dashboard queries | Shared spend visibility, model breakdowns, and operator-facing budget control |
 
 ---
 
@@ -181,7 +195,7 @@ These primitives matter because they turn a successful experiment into an operat
 
 The agent platform market can be mapped along two axes: **agent autonomy** and **human governance**. Most products still optimize for one at the expense of the other.
 
-<Figure number={6} caption="Competitive Positioning — Governance vs. Autonomy">
+<Figure number={7} caption="Competitive Positioning — Governance vs. Autonomy">
   <GovernanceMatrix />
 </Figure>
 
@@ -195,7 +209,7 @@ Stagent occupies the **high-governance, high-autonomy** quadrant: the space wher
 
 **3. Reusable AI operations layer** — Profiles, blueprints, and schedules convert successful runs into repeatable systems. This is a key step from experimentation to production discipline.
 
-<Figure number={7} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
+<Figure number={8} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
   <BrowserFrame src="/screenshots/profiles-detail.png" alt="Profile detail showing instructions, configuration, and tool policies" />
 </Figure>
 
@@ -218,13 +232,14 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Schedules** | Recurring and one-shot automation with guardrails |
 | **Inbox** | Permissions, questions, completions, and failures |
 | **Monitor** | Streaming runtime visibility and debugging |
+| **Cost & Usage** | Spend, tokens, budget state, runtime share, and model concentration |
 | **Settings** | Authentication, policy defaults, and data management |
 
-<Figure number={8} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
+<Figure number={9} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
   <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
 </Figure>
 
-<Figure number={9} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
+<Figure number={10} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
   <BrowserFrame src="/screenshots/schedules-detail.png" alt="Schedule detail showing prompt, next fire time, and firing history" />
 </Figure>
 
@@ -257,7 +272,7 @@ The strategic pattern is clear: Stagent is moving from governed execution toward
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|:---:|:---:|------------|
-| Claude SDK vendor dependency | Medium | High | Stagent’s product layer abstracts orchestration, policy, and visibility from the underlying runtime |
+| Single-runtime vendor dependency | Medium | High | Stagent’s product layer already abstracts orchestration, approvals, visibility, and cost governance across Claude and Codex runtimes |
 | Governance fatigue | Medium | Medium | Approval patterns, focused inbox tabs, and policy tuning reduce noise without removing control |
 | Automation sprawl | Medium | Medium | Profiles, schedules, and blueprints remain inspectable in dedicated surfaces instead of hiding inside scripts |
 | Regulatory shifts | Medium | Medium | Local-first architecture and operator-visible intervention paths remain advantageous under tighter oversight rules |
@@ -274,7 +289,7 @@ Five pillars support the case for Stagent:
 2. **Governance moat** — Approval paths, visibility surfaces, and trust boundaries are baked into the operating model.
 3. **Category creation** — Stagent is building a recognizable AI operations workspace, not just another framework or chatbot shell.
 4. **Reusable automation advantage** — Profiles, blueprints, and schedules turn successful experiments into repeatable organizational process.
-5. **Execution breadth** — The current product already spans more than ten interlocking operator surfaces in a coherent local-first system.
+5. **Execution breadth** — The current product already spans more than eleven interlocking operator surfaces in a coherent local-first system.
 
 ---
 
@@ -301,7 +316,7 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 
 | Term | Definition |
 |------|-----------|
-| **Agent SDK** | Runtime layer used to execute Claude-backed agent sessions with tool use and callbacks. |
+| **Agent Runtime** | The governed execution backend used to run Claude Agent SDK or Codex App Server sessions inside Stagent. |
 | **Blueprint** | Preconfigured workflow template that bootstraps a new multi-step automation. |
 | **canUseTool** | Callback invoked when the runtime reaches a tool-use trust boundary. |
 | **Drizzle ORM** | TypeScript-first ORM used for local database access. |
@@ -310,6 +325,7 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 | **Schedule** | Recurring or one-shot automation record that generates work on a cadence. |
 | **SSE** | Server-Sent Events used for live monitor streaming. |
 | **SQLite WAL** | Write-Ahead Logging mode supporting concurrent reads in a local database. |
+| **Usage Ledger** | Normalized cross-runtime record of tokens, cost, provider, model, status, and execution linkage. |
 
 ## Appendix B: Surface Inventory
 
@@ -324,6 +340,7 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 | **Schedules** | Trigger recurring automation | Proactive operations |
 | **Inbox** | Review permissions and questions | Governed execution |
 | **Monitor** | Observe live runtime activity | Faster debugging and trust-building |
+| **Cost & Usage** | Review spend, tokens, and budget state | Operator-visible economic control |
 | **Settings** | Configure auth, policy defaults, and reset controls | Centralized operational control |
 
 ## Appendix C: Sources & References
@@ -335,8 +352,9 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 | Deloitte | 66% of organizations report AI productivity gains |
 | IDC | 20–30% convert AI gains to financial ROI |
 | Anthropic | Claude Agent SDK and enterprise agent workflows |
+| OpenAI | Codex App Server and governed runtime infrastructure |
 | EU AI Act | Effective August 2026 — human oversight requirements for high-risk AI |
 
 ---
 
-*This paper was updated on March 11, 2026. Product coverage reflects the current browser workspace, including profiles, schedules, and blueprint-driven workflows.*
+*This paper was updated on March 12, 2026. Product coverage reflects the current browser workspace, including dual-runtime execution, cost governance, profiles, schedules, and blueprint-driven workflows.*

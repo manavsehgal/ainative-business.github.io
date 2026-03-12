@@ -11,13 +11,14 @@ const pages = [
   { href: '/docs/documents', title: 'Documents', description: 'Upload, inspect, and link files to tasks and projects.', screenshot: '/screenshots/documents-list.png' },
   { href: '/docs/inbox', title: 'Human-in-the-Loop', description: 'Permission reviews, messages, completions, and failure triage.', screenshot: '/screenshots/inbox-permissions.png' },
   { href: '/docs/monitoring', title: 'Monitoring', description: 'Live agent visibility with activity cards, filters, and log streaming.', screenshot: '/screenshots/monitor-list.png' },
+  { href: '/docs/costs', title: 'Cost & Usage', description: 'Cross-runtime spend, token trends, budget state, and model-level usage auditability.', screenshot: '/screenshots/cost-codex-claude-code.png' },
   { href: '/docs/agents', title: 'Agent Integration', description: 'Runtime execution, profile-backed policies, and governed tool use.', screenshot: '/screenshots/profiles-detail.png' },
   { href: '/docs/settings', title: 'Settings', description: 'Authentication, default permissions, and workspace data management.', screenshot: '/screenshots/settings-list.png' },
 ];
 ---
 <DocsLayout title="Overview" description="Comprehensive documentation for Stagent — a governed AI agent operations workspace with reusable profiles, workflows, documents, schedules, and local-first oversight.">
   <h1>Stagent Documentation</h1>
-  <p>Stagent is a local-first AI agent operations workspace. Explore the product surfaces below to see how home, execution, projects, workflows, profiles, schedules, documents, monitoring, and approvals fit together.</p>
+  <p>Stagent is a local-first AI agent operations workspace. Explore the product surfaces below to see how home, execution, projects, workflows, profiles, schedules, documents, monitoring, cost governance, and approvals fit together.</p>
 
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 not-prose">
     {pages.map(({ href, title, description, screenshot }) => (
