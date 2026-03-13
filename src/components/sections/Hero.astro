@@ -1,8 +1,5 @@
 ---
 import BrowserFrame from '../ui/BrowserFrame.astro';
-
-const macReleaseUrl = 'https://github.com/manavsehgal/stagent.github.io/releases/latest';
-const macReleaseApiUrl = 'https://api.github.com/repos/manavsehgal/stagent.github.io/releases/latest';
 ---
 <section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden pt-24 pb-16">
   <!-- Perspective grid -->
@@ -55,36 +52,17 @@ const macReleaseApiUrl = 'https://api.github.com/repos/manavsehgal/stagent.githu
       class="font-mono text-xs tracking-[0.28em] uppercase text-primary mb-5"
       style="transition-delay: 260ms"
     >
-      Download the macOS desktop app today
+      Run Stagent from source
     </p>
 
-    <p
-      data-animate
-      class="text-sm sm:text-base text-text-muted leading-relaxed mb-10 max-w-xl mx-auto"
-      style="transition-delay: 300ms"
-    >
-      Install the latest macOS build and start governing agent runs, approvals, and reusable workflows directly from your Mac.
-    </p>
+    <!-- Clone instructions -->
+    <div data-animate class="mb-10 max-w-xl mx-auto" style="transition-delay: 300ms">
+      <pre class="rounded-md border border-border bg-surface-raised px-6 py-4 text-left font-mono text-sm leading-relaxed text-text-muted overflow-x-auto"><code>git clone https://github.com/manavsehgal/stagent.github.io.git
+cd stagent && npm install
+npm run dev</code></pre>
+    </div>
 
-    <!-- CTAs -->
-    <div data-animate class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16" style="transition-delay: 340ms">
-      <div class="w-full sm:w-auto">
-        <a
-          id="desktop-download-link"
-          href={macReleaseUrl}
-          class="inline-flex w-full min-w-[20rem] items-center justify-center gap-3 whitespace-nowrap rounded-md bg-primary px-8 py-4 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-surface transition-colors hover:bg-primary/90 primary-pulse sm:w-auto"
-        >
-          <span>Download Desktop App for Mac</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M12 4v12" />
-            <path d="M7 11l5 5 5-5" />
-            <path d="M5 20h14" />
-          </svg>
-        </a>
-        <p id="desktop-download-meta" class="mt-3 text-center font-mono text-[0.65rem] uppercase tracking-[0.24em] text-text-dim">
-          Latest release • DMG on GitHub
-        </p>
-      </div>
+    <div data-animate class="mb-16" style="transition-delay: 340ms">
       <a
         href="/docs"
         class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-primary hover:text-primary transition-colors rounded-md"
@@ -111,39 +89,6 @@ const macReleaseApiUrl = 'https://api.github.com/repos/manavsehgal/stagent.githu
   </div>
 </section>
 
-<script is:inline define:vars={{ macReleaseApiUrl }}>
-  const link = document.getElementById('desktop-download-link');
-  const meta = document.getElementById('desktop-download-meta');
-
-  if (link instanceof HTMLAnchorElement) {
-    fetch(macReleaseApiUrl)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`GitHub release lookup failed with status ${response.status}`);
-        }
-
-        return response.json();
-      })
-      .then((release) => {
-        const macAsset = release.assets?.find((asset) => typeof asset?.name === 'string' && /\.dmg$/i.test(asset.name));
-
-        if (!macAsset?.browser_download_url) {
-          return;
-        }
-
-        link.href = macAsset.browser_download_url;
-
-        if (meta) {
-          meta.textContent = `${release.tag_name ?? 'Latest release'} • ${macAsset.name}`;
-        }
-      })
-      .catch(() => {
-        if (meta) {
-          meta.textContent = 'Latest release • DMG on GitHub';
-        }
-      });
-  }
-</script>
 
 <style>
   .hero-grid {
