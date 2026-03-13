@@ -177,48 +177,123 @@ async function sendConfirmationEmail(email: string, token: string) {
 }
 
 function confirmationEmailHtml(confirmUrl: string): string {
+  const colors = {
+    background: "#0f172a",
+    surface: "#131c31",
+    surfaceRaised: "#18233d",
+    border: "#2a3551",
+    text: "#eef2ff",
+    textMuted: "#a7b0c8",
+    textDim: "#7f8aa7",
+    primary: "#7c8cff",
+    primaryGlow: "#c7d2fe",
+  };
+
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:'JetBrains Mono',monospace,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:48px 24px;">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
-        <!-- Logo -->
-        <tr><td style="padding-bottom:32px;font-family:monospace;font-size:24px;letter-spacing:0.5em;color:#e8e4df;text-align:center;">
-          STAGENT
-        </td></tr>
-        <!-- Rule -->
-        <tr><td style="padding-bottom:32px;">
-          <div style="height:1px;background:linear-gradient(90deg,transparent,#d4a843,transparent);"></div>
-        </td></tr>
-        <!-- Body -->
-        <tr><td style="color:#b0aaa4;font-family:sans-serif;font-size:15px;line-height:1.7;padding-bottom:32px;">
-          You requested the Stagent newsletter for release announcements, product notes, and governed AI operations updates.<br><br>
-          Click below to confirm your subscription:
-        </td></tr>
-        <!-- CTA Button -->
-        <tr><td align="center" style="padding-bottom:32px;">
-          <a href="${confirmUrl}"
-             style="display:inline-block;background:#d4a843;color:#0a0a0a;font-family:monospace;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;padding:14px 32px;">
-            Confirm subscription
-          </a>
-        </td></tr>
-        <!-- Fallback -->
-        <tr><td style="color:#9a948e;font-family:sans-serif;font-size:12px;line-height:1.6;padding-bottom:32px;">
-          If the button doesn't work, copy and paste this link:<br>
-          <a href="${confirmUrl}" style="color:#4db8a4;word-break:break-all;">${confirmUrl}</a>
-        </td></tr>
-        <!-- Footer rule -->
-        <tr><td style="padding-bottom:24px;">
-          <div style="height:1px;background:#2a2725;"></div>
-        </td></tr>
-        <!-- Footer -->
-        <tr><td style="color:#9a948e;font-family:sans-serif;font-size:11px;text-align:center;">
-          This link expires in 7 days. If you did not request Stagent updates, ignore this email.
-        </td></tr>
-      </table>
-    </td></tr>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:${colors.background};font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;color:${colors.text};">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    Confirm your Stagent newsletter subscription for release announcements, product notes, and governed AI operations updates.
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:${colors.background};padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;width:100%;">
+          <tr>
+            <td align="center" style="padding:0 0 20px;font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:26px;letter-spacing:0.42em;color:${colors.text};text-align:center;">
+              STAGENT
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 0 16px;text-align:center;">
+              <span style="display:inline-block;padding:8px 12px;border:1px solid ${colors.border};border-radius:999px;background:${colors.surface};font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1;letter-spacing:0.22em;text-transform:uppercase;color:${colors.primary};">
+                Newsletter Subscription
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td style="border:1px solid ${colors.border};border-radius:20px;background:${colors.surface};padding:32px 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="padding:0 0 18px;font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:12px;line-height:1.5;letter-spacing:0.22em;text-transform:uppercase;color:${colors.primary};">
+                    Confirm your subscription
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 0 16px;font-size:30px;line-height:1.15;font-weight:700;color:${colors.text};">
+                    Governed AI operations updates, straight to your inbox.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 0 24px;font-size:15px;line-height:1.8;color:${colors.textMuted};">
+                    You requested the Stagent newsletter for release announcements, product notes, and practical field updates on governed AI agent operations. Confirm your subscription to start receiving new issues.
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 0 24px;">
+                    <table cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="padding:0 10px 10px 0;">
+                          <span style="display:inline-block;padding:10px 12px;border-radius:999px;border:1px solid ${colors.border};background:${colors.surfaceRaised};font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1;letter-spacing:0.14em;text-transform:uppercase;color:${colors.textMuted};">
+                            Release Notes
+                          </span>
+                        </td>
+                        <td style="padding:0 10px 10px 0;">
+                          <span style="display:inline-block;padding:10px 12px;border-radius:999px;border:1px solid ${colors.border};background:${colors.surfaceRaised};font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1;letter-spacing:0.14em;text-transform:uppercase;color:${colors.textMuted};">
+                            Product Notes
+                          </span>
+                        </td>
+                        <td style="padding:0 0 10px 0;">
+                          <span style="display:inline-block;padding:10px 12px;border-radius:999px;border:1px solid ${colors.border};background:${colors.surfaceRaised};font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1;letter-spacing:0.14em;text-transform:uppercase;color:${colors.textMuted};">
+                            Field Updates
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="left" style="padding:0 0 24px;">
+                    <a
+                      href="${confirmUrl}"
+                      style="display:inline-block;border-radius:10px;background:${colors.primary};padding:15px 24px;font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:12px;line-height:1.2;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;color:${colors.background};"
+                    >
+                      Confirm Subscription
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 0 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid ${colors.border};border-radius:14px;background:${colors.surfaceRaised};">
+                      <tr>
+                        <td style="padding:16px 18px;font-size:12px;line-height:1.7;color:${colors.textDim};">
+                          If the button does not work, copy and paste this link into your browser:<br>
+                          <a href="${confirmUrl}" style="color:${colors.primaryGlow};text-decoration:none;word-break:break-all;">${confirmUrl}</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px 0 0;border-top:1px solid ${colors.border};font-size:12px;line-height:1.7;color:${colors.textDim};">
+                    This link expires in 7 days. If you did not request Stagent updates, you can safely ignore this email.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 12px 0;text-align:center;font-family:'SFMono-Regular','Roboto Mono','JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.6;letter-spacing:0.08em;color:${colors.textDim};text-transform:uppercase;">
+              Stagent • Manav • Local-first oversight
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
   </table>
 </body>
 </html>`;
