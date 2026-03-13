@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       if (existing.confirmed) {
         return jsonResponse({
           success: true,
-          message: "You're already on the list!",
+          message: "You're already subscribed.",
           already_confirmed: true,
         }, corsHeaders);
       }
@@ -164,7 +164,7 @@ async function sendConfirmationEmail(email: string, token: string) {
     body: JSON.stringify({
       from: "Stagent <team@stagent.io>",
       to: [email],
-      subject: "Confirm your Stagent waitlist spot",
+      subject: "Confirm your Stagent newsletter subscription",
       html: confirmationEmailHtml(confirmUrl),
     }),
   });
@@ -194,14 +194,14 @@ function confirmationEmailHtml(confirmUrl: string): string {
         </td></tr>
         <!-- Body -->
         <tr><td style="color:#b0aaa4;font-family:sans-serif;font-size:15px;line-height:1.7;padding-bottom:32px;">
-          You requested early access to Stagent — the open-source harness for multi-agent autonomous workflows.<br><br>
-          Click below to confirm your spot on the waitlist:
+          You requested the Stagent newsletter for release announcements, product notes, and governed AI operations updates.<br><br>
+          Click below to confirm your subscription:
         </td></tr>
         <!-- CTA Button -->
         <tr><td align="center" style="padding-bottom:32px;">
           <a href="${confirmUrl}"
              style="display:inline-block;background:#d4a843;color:#0a0a0a;font-family:monospace;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;padding:14px 32px;">
-            Confirm my spot
+            Confirm subscription
           </a>
         </td></tr>
         <!-- Fallback -->
@@ -215,7 +215,7 @@ function confirmationEmailHtml(confirmUrl: string): string {
         </td></tr>
         <!-- Footer -->
         <tr><td style="color:#9a948e;font-family:sans-serif;font-size:11px;text-align:center;">
-          This link expires in 7 days. If you didn't sign up for Stagent, ignore this email.
+          This link expires in 7 days. If you did not request Stagent updates, ignore this email.
         </td></tr>
       </table>
     </td></tr>

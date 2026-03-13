@@ -1,20 +1,35 @@
 ---
+import WaitlistForm from './ui/WaitlistForm.astro';
 ---
-<footer class="border-t border-border py-10 px-6">
-  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-text-muted text-xs font-mono">
-    <span>&copy; 2026 Manav. Apache 2.0.</span>
-    <div class="flex items-center gap-6">
-      <a href="/docs" class="hover:text-primary transition-colors">Docs</a>
-      <a href="/research" class="hover:text-primary transition-colors">Research</a>
-      <a href="/projects" class="hover:text-primary transition-colors">Projects</a>
-      <a
-        href="https://github.com/stagent"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="hover:text-primary transition-colors"
-      >
-        GitHub
-      </a>
+<footer class="border-t border-border py-12 px-6">
+  <div class="max-w-6xl mx-auto grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_auto] lg:items-end">
+    <div class="max-w-2xl">
+      <p class="font-mono text-xs tracking-[0.28em] uppercase text-primary mb-4">
+        Subscribe Stagent Newsletter
+      </p>
+      <p class="text-text text-lg leading-relaxed max-w-xl">
+        Get release announcements, product notes, and practical field updates on governed AI agent operations.
+      </p>
+      <div class="mt-6 max-w-xl">
+        <WaitlistForm variant="footer" id="footer-newsletter" />
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-5 text-text-muted text-xs font-mono">
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="/docs" class="hover:text-primary transition-colors">Docs</a>
+        <a href="/research" class="hover:text-primary transition-colors">Research</a>
+        <a href="/projects" class="hover:text-primary transition-colors">Projects</a>
+        <a
+          href="https://github.com/manavsehgal/stagent.github.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-primary transition-colors"
+        >
+          GitHub
+        </a>
+      </div>
+      <span>&copy; 2026 Manav. Apache 2.0.</span>
     </div>
   </div>
 </footer>

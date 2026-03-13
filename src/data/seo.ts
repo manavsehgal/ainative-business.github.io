@@ -21,7 +21,7 @@ export const ORGANIZATION = {
   },
   foundingDate: '2026',
   sameAs: [
-    'https://github.com/stagent',
+    'https://github.com/manavsehgal/stagent.github.io',
     'https://x.com/stagent',
   ],
 };

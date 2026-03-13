@@ -9,7 +9,7 @@ const error = Astro.url.searchParams.get('error');
 const isError = status === 'error';
 const isAlready = status === 'already';
 ---
-<Layout title="Waitlist Confirmed — Stagent" noindex={true}>
+<Layout title="Newsletter Confirmed — Stagent" noindex={true}>
   <Nav />
   <main class="min-h-[70vh] flex items-center justify-center px-6">
     <div class="max-w-md text-center">
@@ -36,8 +36,8 @@ const isAlready = status === 'already';
         {isError
           ? (error || 'Something went wrong. Please try again.')
           : isAlready
-            ? "You're already confirmed on the Stagent waitlist."
-            : "You're confirmed. We'll notify you when Stagent is ready to launch."}
+            ? "You're already confirmed for the Stagent newsletter."
+            : "You're confirmed. Watch your inbox for new Stagent releases, product notes, and field updates."}
       </p>
 
       <div class="flex flex-col gap-3 items-center">

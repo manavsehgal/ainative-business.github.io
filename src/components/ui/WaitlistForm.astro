@@ -1,6 +1,6 @@
 ---
 interface Props {
-  variant?: 'hero' | 'cta';
+  variant?: 'hero' | 'cta' | 'footer';
   id?: string;
 }
 
@@ -12,12 +12,14 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
 <form
   id={formId}
   data-endpoint={endpoint}
-  class="w-full max-w-md mx-auto"
+  class:list={[
+    'w-full max-w-md',
+    variant === 'footer' ? 'mx-0' : 'mx-auto',
+  ]}
   novalidate
 >
   <div class:list={[
-    "flex gap-2",
-    variant === 'hero' ? 'flex-col sm:flex-row' : 'flex-col sm:flex-row'
+    'flex gap-2 flex-col sm:flex-row',
   ]}>
     <label for={`${formId}-email`} class="sr-only">Email address</label>
     <input
@@ -42,7 +44,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
       type="submit"
       class="font-mono text-xs tracking-[0.2em] uppercase bg-primary text-surface px-6 py-3 hover:bg-primary/90 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed rounded-md font-semibold"
     >
-      Get Early Access
+      Subscribe
     </button>
   </div>
 
@@ -56,7 +58,10 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
   <!-- Success message -->
   <div
     id={`${formId}-success`}
-    class="hidden mt-4 flex items-center gap-2 justify-center"
+    class:list={[
+      'hidden mt-4 flex items-center gap-2',
+      variant === 'footer' ? 'justify-start' : 'justify-center',
+    ]}
   >
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success">
       <polyline points="20 6 9 17 4 12"></polyline>
@@ -108,7 +113,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
       }
 
       submitBtn.disabled = true;
-      submitBtn.textContent = 'SENDING...';
+      submitBtn.textContent = 'SUBSCRIBING...';
 
       try {
         const res = await fetch(endpoint, {
@@ -125,21 +130,21 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
         if (!res.ok) {
           showError(data.error || 'Something went wrong. Please try again.');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'GET EARLY ACCESS';
+          submitBtn.textContent = 'SUBSCRIBE';
           return;
         }
 
         if (data.already_confirmed) {
-          showSuccess("You're already on the list!");
+          showSuccess("You're already subscribed.");
         } else if (data.message) {
           showSuccess(data.message);
         } else {
-          showSuccess('Check your inbox to confirm your spot.');
+          showSuccess('Check your inbox to confirm your subscription.');
         }
       } catch {
         showError('Network error. Please try again.');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'GET EARLY ACCESS';
+        submitBtn.textContent = 'SUBSCRIBE';
       }
     });
   })();
