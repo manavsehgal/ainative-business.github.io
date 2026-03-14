@@ -1,6 +1,6 @@
 ---
 import SectionLabel from '../ui/SectionLabel.astro';
-import SystemArchitecture from '../svg/SystemArchitecture.astro';
+import DetailedArchitecture from '../svg/DetailedArchitecture.astro';
 import GovernanceFlow from '../svg/GovernanceFlow.astro';
 
 const techStack = [
@@ -12,15 +12,15 @@ const techStack = [
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
       <SectionLabel text="Architecture" />
-      <h2 data-animate class="mt-4">Four layers, one mission</h2>
+      <h2 data-animate class="mt-4">Under the hood</h2>
       <p data-animate class="text-text-muted mt-4 max-w-xl mx-auto" style="transition-delay: 100ms">
-        Every agent action flows through human oversight. The coordination layer ensures nothing happens without your approval.
+        Three layers — browser, server, and local storage — with zero external dependencies. Every component runs on your machine.
       </p>
     </div>
 
     <!-- System Architecture SVG -->
     <div data-animate class="mb-20 overflow-x-auto" style="transition-delay: 200ms">
-      <SystemArchitecture />
+      <DetailedArchitecture />
     </div>
 
     <!-- Governance Flow -->

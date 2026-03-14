@@ -3,7 +3,7 @@ layout: ../layouts/ResearchLayout.astro
 title: "Stagent: The Coordination Layer for the Agentic Enterprise"
 description: "Governed AI agent operations: dual-runtime execution, cost governance, reusable automation, and the coordination layer for enterprise AI deployment."
 datePublished: "2026-03-01"
-dateModified: "2026-03-12"
+dateModified: "2026-03-14"
 author: "Manav"
 readingTime: "19 min read"
 ---
@@ -11,6 +11,7 @@ readingTime: "19 min read"
 import Figure from '../components/research/Figure.astro'
 import BrowserFrame from '../components/ui/BrowserFrame.astro'
 import SystemArchitecture from '../components/svg/SystemArchitecture.astro'
+import DetailedArchitecture from '../components/svg/DetailedArchitecture.astro'
 import GovernanceFlow from '../components/svg/GovernanceFlow.astro'
 import MarketGrowth from '../components/svg/MarketGrowth.astro'
 import GovernanceMatrix from '../components/svg/GovernanceMatrix.astro'
@@ -131,7 +132,17 @@ Stagent's architecture follows three principles:
   <SystemArchitecture />
 </Figure>
 
-<Figure number={3} caption="Home Workspace — Overview of Running Work, Pending Review, and Live Activity">
+<Figure number={3} caption="Detailed System Architecture — Browser, Server, and External Layers">
+  <DetailedArchitecture />
+</Figure>
+
+The detailed architecture reveals three distinct layers working in concert. The **browser layer** runs a React 19 single-page application with 10 operator-facing surfaces — each purpose-built for a specific governance function, from the Home workspace briefing to the Monitor's real-time streaming view and the Cost & Usage dashboard.
+
+The **server layer** runs on Next.js 16 and contains 8 service modules. The Runtime Registry abstracts provider differences behind a shared adapter interface, letting operators switch between Claude Agent SDK and OpenAI Codex without changing workflows. The Permission Gate enforces `canUseTool` at every trust boundary. The Workflow Engine supports 5 orchestration patterns that convert ad hoc prompting into repeatable automation.
+
+The **external layer** is deliberately minimal. All persistent state lives in `~/.stagent/` — a local SQLite database with WAL-mode concurrency. The only external network calls go to runtime backends (Anthropic and OpenAI) for model inference. EventSource provides real-time push to the browser via SSE, eliminating the need for polling infrastructure. Data flow follows a clear principle: Server Components handle reads with zero API overhead (direct database queries), while API Routes handle mutations only.
+
+<Figure number={4} caption="Home Workspace — Overview of Running Work, Pending Review, and Live Activity">
   <BrowserFrame src="/screenshots/home-list.png" alt="Home workspace showing summary metrics, tasks needing attention, and live agent activity" />
 </Figure>
 
@@ -139,11 +150,11 @@ Stagent's architecture follows three principles:
 
 The centerpiece of Stagent's architecture remains the `canUseTool` pattern: the mechanism that converts autonomous execution into governed execution without hiding what the agent is doing.
 
-<Figure number={4} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
+<Figure number={5} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
   <GovernanceFlow />
 </Figure>
 
-<Figure number={5} caption="Permissions Inbox — Explicit Approval Controls for Agent Tool Requests">
+<Figure number={6} caption="Permissions Inbox — Explicit Approval Controls for Agent Tool Requests">
   <BrowserFrame src="/screenshots/inbox-permissions.png" alt="Permissions inbox showing allow once, always allow, and deny actions" />
 </Figure>
 
@@ -171,7 +182,7 @@ What changed next is that Stagent now measures and governs the economics of that
 - **Budget guardrails** warn near caps and block new paid activity explicitly when a configured window is exhausted.
 - **Cost & Usage dashboard** shows spend velocity, token velocity, runtime share, and model concentration in one operator-facing surface.
 
-<Figure number={6} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
+<Figure number={7} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
   <BrowserFrame src="/screenshots/cost-codex-claude-code.png" alt="Cost and usage dashboard showing spend velocity, token trends, runtime breakdown, and model concentration across Claude and Codex activity" />
 </Figure>
 
@@ -194,7 +205,7 @@ What changed next is that Stagent now measures and governs the economics of that
 
 The agent platform market can be mapped along two axes: **agent autonomy** and **human governance**. Most products still optimize for one at the expense of the other.
 
-<Figure number={7} caption="Competitive Positioning — Governance vs. Autonomy">
+<Figure number={8} caption="Competitive Positioning — Governance vs. Autonomy">
   <GovernanceMatrix />
 </Figure>
 
@@ -208,7 +219,7 @@ Stagent occupies the **high-governance, high-autonomy** quadrant: the space wher
 
 **3. Reusable AI operations layer** — Profiles, blueprints, and schedules convert successful runs into repeatable systems. This is a key step from experimentation to production discipline.
 
-<Figure number={8} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
+<Figure number={9} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
   <BrowserFrame src="/screenshots/profiles-detail.png" alt="Profile detail showing instructions, configuration, and tool policies" />
 </Figure>
 
@@ -225,7 +236,7 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Home** | Workspace briefing with attention queue, metrics, and live activity |
 | **Dashboard** | Status-driven execution board for active work |
 | **Projects** | Portfolio organization and scoped execution context |
-| **Workflows** | Reusable orchestration with three core patterns |
+| **Workflows** | Reusable orchestration with five patterns including parallel and swarm execution |
 | **Documents** | Upload, extraction review, and linked context |
 | **Profiles** | Reusable specialist agents with explicit policy and tuning |
 | **Schedules** | Recurring and one-shot automation with guardrails |
@@ -234,11 +245,11 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Cost & Usage** | Spend, tokens, budget state, runtime share, and model concentration |
 | **Settings** | Authentication, policy defaults, and data management |
 
-<Figure number={9} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
+<Figure number={10} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
   <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
 </Figure>
 
-<Figure number={10} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
+<Figure number={11} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
   <BrowserFrame src="/screenshots/schedules-detail.png" alt="Schedule detail showing prompt, next fire time, and firing history" />
 </Figure>
 
@@ -248,7 +259,7 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 |---------|----------|-------|---------------|
 | **H1** | Q2 2026 | Trust Administration | Richer policy tiers, delegated approvals, exportable audit views |
 | **H2** | Q3 2026 | Automation Depth | More blueprints, richer schedule triggers, output artifact generation |
-| **H3** | Q4 2026 | Distribution | Desktop packaging, broader team workflows, ecosystem expansion |
+| **H3** | Q4 2026 | Distribution | CLI distribution hardening, broader team workflows, ecosystem expansion |
 
 The strategic pattern is clear: Stagent is moving from governed execution toward governed operations.
 
@@ -349,4 +360,4 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 
 ---
 
-*This paper was updated on March 12, 2026. Product coverage reflects the current browser workspace, including dual-runtime execution, cost governance, profiles, schedules, and blueprint-driven workflows.*
+*This paper was updated on March 14, 2026. Product coverage reflects the current browser workspace, including dual-runtime execution, cost governance, profiles, schedules, and blueprint-driven workflows.*

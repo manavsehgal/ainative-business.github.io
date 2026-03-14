@@ -32,14 +32,27 @@ Agent executes autonomously until it reaches a defined checkpoint, then pauses f
 
 **Example**: Draft client email → **human approves** → send email → log to CRM
 
+### 4. Fork/Join Parallel
+
+2–5 branches execute concurrently. Each branch runs an independent agent step. Results converge in a synthesis step that receives all branch outputs.
+
+**Example**: Analyze 4 competitor products in parallel → synthesize findings into comparison report
+
+### 5. Multi-Agent Swarm
+
+A Mayor agent plans the work. 2–5 Worker agents execute in parallel with independent retries. A Refinery agent consolidates results. Failed branches can retry without re-running successful workers.
+
+**Example**: Mayor plans code audit → Workers review auth, API, DB, and tests → Refinery merges findings
+
 <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
 
 ## Key Concepts
 
-- **Workflow Library** — The main list shows each workflow’s pattern, status, step count, and duplication controls.
+- **Workflow Library** — The main list shows each workflow’s pattern, status, step count, and duplication controls. Five patterns are currently supported.
 - **Blueprint Catalog** — Operators can start from pre-built templates for code review, documentation, research, sprint planning, meal planning, and more.
 - **Profile-Aware Steps** — Each workflow step can reference an agent profile so specialist behavior is reused consistently.
 - **Checkpoint & Resume** — Human-in-the-loop workflows pause naturally at approval points and resume when the operator responds.
+- **Parallel & Swarm** — Fork/Join and Swarm patterns run bounded concurrent branches with automatic result consolidation.
 
 ## How It Works
 
