@@ -1,21 +1,16 @@
 ---
 const slides = [
   { src: '/screenshots/home-list.png', alt: 'Workspace overview with active tasks and agent activity' },
-  { src: '/screenshots/dashboard-detail.png', alt: 'Dashboard analytics with project metrics' },
+  { src: '/screenshots/dashboard-list.png', alt: 'Dashboard analytics with project metrics' },
+  { src: '/screenshots/inbox-list.png', alt: 'Inbox with notifications and approval requests' },
   { src: '/screenshots/workflows-blueprints.png', alt: 'Blueprint catalog for reusable workflows' },
-  { src: '/screenshots/kanban-board.png', alt: 'Kanban board for task management' },
-  { src: '/screenshots/profiles-detail.png', alt: 'Agent profile configuration' },
-  { src: '/screenshots/schedules-detail.png', alt: 'Scheduled runs and automation' },
+  { src: '/screenshots/profiles-list.png', alt: 'Agent profiles cards view' },
+  { src: '/screenshots/cost-codex-claude-code.png', alt: 'Cost and usage breakdown for AI agents' },
 ];
 ---
 <section class="relative min-h-[calc(100dvh-80px)] flex items-center px-6 overflow-hidden pt-20">
-  <!-- Perspective grid -->
-  <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <div class="hero-grid"></div>
-  </div>
-
   <!-- Dual atmospheric glow -->
-  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+  <div class="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
     <div class="absolute w-[800px] h-[800px] rounded-full bg-primary/[0.10] blur-[180px]"></div>
     <div class="absolute w-[400px] h-[400px] rounded-full bg-primary/[0.15] blur-[100px]"></div>
   </div>
@@ -82,7 +77,7 @@ const slides = [
 
     <!-- Right column: Carousel -->
     <div data-animate class="hero-carousel-wrapper" style="transition-delay: 200ms">
-      <div class="hero-carousel rounded-xl overflow-hidden border border-border shadow-2xl shadow-primary/5 lg:transform lg:perspective-[1200px] lg:rotate-x-[2deg] lg:rotate-y-[-1deg]">
+      <div class="hero-carousel rounded-xl overflow-hidden border border-border shadow-2xl shadow-primary/5">
         <!-- macOS title bar -->
         <div class="bg-surface-raised border-b border-border px-4 py-3 flex items-center gap-2">
           <div class="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
@@ -90,7 +85,7 @@ const slides = [
           <div class="w-3 h-3 rounded-full bg-[#28c840]"></div>
         </div>
         <!-- Slide stack -->
-        <div class="hero-slides relative">
+        <div class="hero-slides relative overflow-hidden">
           {slides.map((slide, i) => (
             <img
               src={slide.src}
@@ -101,7 +96,6 @@ const slides = [
                 'hero-slide w-full block',
                 i === 0 ? 'relative' : 'absolute inset-0',
               ]}
-              style={`animation-delay: ${i * -5}s`}
               data-slide={i}
             />
           ))}
@@ -127,27 +121,6 @@ const slides = [
 
 
 <style>
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      repeating-linear-gradient(
-        90deg,
-        var(--color-border) 0 1px,
-        transparent 1px 60px
-      ),
-      repeating-linear-gradient(
-        0deg,
-        var(--color-border) 0 1px,
-        transparent 1px 60px
-      );
-    opacity: 0.2;
-    transform: perspective(600px) rotateX(55deg);
-    transform-origin: center top;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
-  }
-
   /* ── Gradient text ── */
   .hero-gradient-text {
     background: linear-gradient(135deg, oklch(0.78 0.12 230), var(--color-primary), oklch(0.58 0.18 280));
@@ -174,22 +147,42 @@ const slides = [
     position: relative;
   }
 
-  /* ── Slide crossfade ── */
+  /* ── Slide base ── */
   .hero-slide {
-    animation: hero-fade 30s infinite;
     opacity: 0;
+    transform: translateX(100%);
+    image-rendering: -webkit-optimize-contrast;
   }
-  .hero-slide:first-child {
+  .hero-slide.active {
     opacity: 1;
+    transform: translateX(0);
   }
 
-  @keyframes hero-fade {
-    0%, 2%   { opacity: 0; }
-    3%, 16%  { opacity: 1; }
-    20%, 100% { opacity: 0; }
+  /* ── Zoom on hover ── */
+  .hero-slide.active {
+    transition: transform 0.6s ease-in-out;
+  }
+  .hero-slide.zoomed {
+    transform: scale(2);
   }
 
-  /* Stagger: each slide's delay is set inline via style attribute (negative delay trick) */
+  /* ── Slide transitions ── */
+  @keyframes hero-slide-in {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes hero-slide-out {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+  }
+  .hero-slide.sliding-in {
+    opacity: 1;
+    animation: hero-slide-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .hero-slide.sliding-out {
+    opacity: 1;
+    animation: hero-slide-out 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
 
   /* ── Dot active state (managed by JS) ── */
   .hero-dot.active {
@@ -200,8 +193,9 @@ const slides = [
   /* ── Small screens: single static image ── */
   @media (max-width: 639px) {
     .hero-slide {
-      animation: none;
+      animation: none !important;
       opacity: 0;
+      transform: none;
     }
     .hero-slide:first-child {
       opacity: 1;
@@ -216,12 +210,10 @@ const slides = [
 
   /* ── Reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
-    .hero-grid {
-      transform: none;
-    }
     .hero-slide {
-      animation: none;
+      animation: none !important;
       opacity: 0;
+      transform: none;
     }
     .hero-slide:first-child {
       opacity: 1;
@@ -248,16 +240,29 @@ const slides = [
       }, 2000);
     });
 
-    // ── Carousel dots & hover ──
+    // ── Carousel slide manager ──
     const slides = document.querySelectorAll<HTMLImageElement>('.hero-slide');
     const dots = document.querySelectorAll<HTMLButtonElement>('.hero-dot');
+    const carousel = document.querySelector('.hero-carousel');
     if (slides.length === 0 || dots.length === 0) return;
 
-    function showSlide(index: number) {
-      slides.forEach((s, i) => {
-        s.style.animation = 'none';
-        s.style.opacity = i === index ? '1' : '0';
-      });
+    // Skip animation on mobile or reduced motion
+    const isMobile = window.matchMedia('(max-width: 639px)').matches;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isMobile || prefersReduced) {
+      slides[0]?.classList.add('active');
+      return;
+    }
+
+    let currentIndex = 0;
+    let isTransitioning = false;
+    let isPaused = false;
+    let autoplayTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const SLIDE_INTERVAL = 4000;
+    const SLIDE_DURATION = 600;
+
+    function updateDots(index: number) {
       dots.forEach((d, i) => {
         d.classList.toggle('active', i === index);
         d.classList.toggle('bg-primary', i === index);
@@ -267,50 +272,83 @@ const slides = [
       });
     }
 
+    function clearSlideClasses(slide: HTMLImageElement) {
+      slide.classList.remove('active', 'zoomed', 'sliding-in', 'sliding-out');
+      slide.style.animation = '';
+    }
+
+    function scheduleNext() {
+      if (autoplayTimer) clearTimeout(autoplayTimer);
+      autoplayTimer = setTimeout(() => {
+        if (isPaused) return; // Will be rescheduled on mouseleave
+        transitionToNext();
+      }, SLIDE_INTERVAL);
+    }
+
+    function jumpToSlide(index: number) {
+      if (autoplayTimer) clearTimeout(autoplayTimer);
+      isTransitioning = false;
+
+      slides.forEach(s => clearSlideClasses(s as HTMLImageElement));
+
+      currentIndex = index;
+      slides[currentIndex]?.classList.add('active');
+      updateDots(currentIndex);
+
+      scheduleNext();
+    }
+
+    function transitionToNext() {
+      if (isTransitioning) return;
+      isTransitioning = true;
+
+      const nextIndex = (currentIndex + 1) % slides.length;
+      const current = slides[currentIndex] as HTMLImageElement;
+      const next = slides[nextIndex] as HTMLImageElement;
+
+      // Remove zoom if hovering, then slide out
+      current.classList.remove('zoomed');
+      current.classList.add('sliding-out');
+      next.classList.add('sliding-in');
+      updateDots(nextIndex);
+
+      autoplayTimer = setTimeout(() => {
+        clearSlideClasses(current);
+        next.classList.remove('sliding-in');
+        next.classList.add('active');
+        // Re-apply zoom if mouse is still over carousel
+        if (isPaused) next.classList.add('zoomed');
+
+        currentIndex = nextIndex;
+        isTransitioning = false;
+
+        scheduleNext();
+      }, SLIDE_DURATION);
+    }
+
+    // ── Dot clicks ──
     dots.forEach((dot, i) => {
-      dot.addEventListener('click', () => showSlide(i));
+      dot.addEventListener('click', () => jumpToSlide(i));
     });
 
-    // Pause on hover
-    const carousel = document.querySelector('.hero-carousel');
+    // ── Hover: zoom in on enter, zoom out on leave ──
     carousel?.addEventListener('mouseenter', () => {
-      slides.forEach(s => { s.style.animationPlayState = 'paused'; });
+      isPaused = true;
+      const active = slides[currentIndex];
+      if (active && !isTransitioning) active.classList.add('zoomed');
     });
     carousel?.addEventListener('mouseleave', () => {
-      // Only resume if animations haven't been manually overridden
-      slides.forEach(s => {
-        if (s.style.animation !== 'none') {
-          s.style.animationPlayState = 'running';
-        }
-      });
+      isPaused = false;
+      const active = slides[currentIndex];
+      if (active) active.classList.remove('zoomed');
+      // Resume autoplay
+      scheduleNext();
     });
 
-    // Update dots to track CSS animation (when not manually controlled)
-    let dotInterval = setInterval(() => {
-      // Check if animation is still running (not manually overridden)
-      const firstSlide = slides[0];
-      if (firstSlide?.style.animation === 'none') {
-        clearInterval(dotInterval);
-        return;
-      }
-      // Determine active slide from computed opacity
-      let activeIndex = 0;
-      let maxOpacity = 0;
-      slides.forEach((s, i) => {
-        const opacity = parseFloat(getComputedStyle(s).opacity);
-        if (opacity > maxOpacity) {
-          maxOpacity = opacity;
-          activeIndex = i;
-        }
-      });
-      dots.forEach((d, i) => {
-        d.classList.toggle('active', i === activeIndex);
-        d.classList.toggle('bg-primary', i === activeIndex);
-        d.classList.toggle('w-4', i === activeIndex);
-        d.classList.toggle('bg-text-muted/30', i !== activeIndex);
-        d.classList.toggle('w-2', i !== activeIndex);
-      });
-    }, 500);
+    // ── Initialize first slide and start ──
+    slides[0]?.classList.add('active');
+    updateDots(0);
+    scheduleNext();
   }
 
   // Init on load and on Astro view transitions

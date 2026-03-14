@@ -14,7 +14,7 @@ const docsPages = [
   { href: '/docs/settings', label: 'Settings' },
 ];
 ---
-<nav id="main-nav" aria-label="Main navigation" class="fixed top-0 left-0 right-0 z-40 transition-[background-color,backdrop-filter,border-color] duration-300">
+<nav id="main-nav" aria-label="Main navigation" class="fixed top-0 left-0 right-0 z-40 border-b border-transparent transition-[background-color,backdrop-filter,border-color] duration-300">
   <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
     <a
       href="/"
@@ -136,11 +136,11 @@ const docsPages = [
       if (isScrolled !== scrolled) {
         scrolled = isScrolled;
         if (scrolled) {
-          nav.classList.add('bg-surface/80', 'backdrop-blur-md', 'border-b', 'border-border');
-          nav.classList.remove('bg-transparent');
+          nav.classList.add('bg-surface/80', 'backdrop-blur-md', 'border-border');
+          nav.classList.remove('bg-transparent', 'border-transparent');
         } else {
-          nav.classList.remove('bg-surface/80', 'backdrop-blur-md', 'border-b', 'border-border');
-          nav.classList.add('bg-transparent');
+          nav.classList.remove('bg-surface/80', 'backdrop-blur-md', 'border-border');
+          nav.classList.add('bg-transparent', 'border-transparent');
         }
       }
     }
