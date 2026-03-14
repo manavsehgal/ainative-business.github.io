@@ -242,9 +242,24 @@ section {
     transition: none;
   }
 
+  main img {
+    transition: none;
+  }
+  main img:hover {
+    transform: none;
+  }
+
   html {
     scroll-behavior: auto;
   }
+}
+
+/* ── Image hover zoom ── */
+main img {
+  transition: transform 0.5s ease-in-out;
+}
+main img:hover {
+  transform: scale(1.5);
 }
 
 /* ── Focus accessibility ── */
