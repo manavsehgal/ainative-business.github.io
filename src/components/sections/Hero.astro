@@ -1,7 +1,14 @@
 ---
-import BrowserFrame from '../ui/BrowserFrame.astro';
+const slides = [
+  { src: '/screenshots/home-list.png', alt: 'Workspace overview with active tasks and agent activity' },
+  { src: '/screenshots/dashboard-detail.png', alt: 'Dashboard analytics with project metrics' },
+  { src: '/screenshots/workflows-blueprints.png', alt: 'Blueprint catalog for reusable workflows' },
+  { src: '/screenshots/kanban-board.png', alt: 'Kanban board for task management' },
+  { src: '/screenshots/profiles-detail.png', alt: 'Agent profile configuration' },
+  { src: '/screenshots/schedules-detail.png', alt: 'Scheduled runs and automation' },
+];
 ---
-<section class="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden pt-24 pb-16">
+<section class="relative min-h-[calc(100dvh-80px)] flex items-center px-6 overflow-hidden pt-20">
   <!-- Perspective grid -->
   <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
     <div class="hero-grid"></div>
@@ -13,96 +20,108 @@ import BrowserFrame from '../ui/BrowserFrame.astro';
     <div class="absolute w-[400px] h-[400px] rounded-full bg-primary/[0.15] blur-[100px]"></div>
   </div>
 
-  <!-- Bottom gradient fade into next section (bg-surface-raised) -->
+  <!-- Bottom gradient fade into next section -->
   <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style="background: linear-gradient(to bottom, transparent, var(--color-surface-raised));"></div>
 
-  <!-- Content -->
-  <div class="relative z-10 text-center max-w-4xl">
-    <h1
-      data-animate
-      class="font-mono text-[clamp(2.2rem,10vw,7rem)] tracking-[0.2em] sm:tracking-[0.5em] font-normal mb-6 text-text whitespace-nowrap text-center"
-      style="padding-left: 0.2em;"
-    >
-      STAGENT
-    </h1>
+  <!-- Two-column grid -->
+  <div class="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-[1fr_1.2fr] gap-8 lg:gap-12 items-center py-12 lg:py-0">
 
-    <p
-      data-animate
-      class="text-[clamp(0.95rem,2.5vw,1.5rem)] text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto"
-      style="transition-delay: 120ms"
-    >
-      Governed AI agent operations with reusable profiles, workflow blueprints, scheduled runs, and local-first oversight
-    </p>
+    <!-- Left column: Content -->
+    <div class="text-center lg:text-left" data-animate-stagger>
 
-    <!-- Stats bar -->
-    <div
-      data-animate
-      class="flex items-center justify-center gap-3 sm:gap-8 mb-10 flex-wrap font-mono text-xs tracking-widest text-text-muted"
-      style="transition-delay: 200ms"
-    >
-      <span>Profiles &amp; Policies</span>
-      <span class="text-border">·</span>
-      <span>Blueprints &amp; Schedules</span>
-      <span class="text-border">·</span>
-      <span>Open Source</span>
+      <h1
+        data-animate
+        class="hero-gradient-text font-display text-[clamp(1.8rem,3.5vw,3.2rem)] font-bold leading-[1.15] mb-4"
+      >
+        Govern Your AI Agents.<br/>Ship With Confidence.
+      </h1>
+
+      <p
+        data-animate
+        class="text-[clamp(0.9rem,2vw,1.15rem)] text-text-muted leading-relaxed mb-6 max-w-lg mx-auto lg:mx-0"
+      >
+        Local-first agent operations with reusable profiles, workflow blueprints, scheduled runs, and human-in-the-loop oversight.
+      </p>
+
+      <!-- Value proposition pills -->
+      <div
+        data-animate
+        class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mb-8"
+      >
+        <span class="font-mono text-[11px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1">Local-First</span>
+        <span class="font-mono text-[11px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1">Human-in-the-Loop</span>
+        <span class="font-mono text-[11px] tracking-wider text-success border border-success/20 bg-success/5 rounded-full px-3 py-1">Open Source</span>
+      </div>
+
+      <!-- Terminal CTA -->
+      <div data-animate class="mb-6 max-w-md mx-auto lg:mx-0">
+        <div class="relative border border-primary/30 rounded-lg primary-pulse overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2 border-b border-primary/10">
+            <span class="font-mono text-[10px] uppercase tracking-widest text-text-muted">Terminal</span>
+            <button
+              id="hero-copy-btn"
+              class="p-1 rounded text-text-muted/50 hover:text-text-muted transition-colors"
+              aria-label="Copy to clipboard"
+            >
+              <svg id="hero-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <svg id="hero-check-icon" class="hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="bg-surface-raised px-4 py-3">
+            <pre class="font-mono text-lg sm:text-xl leading-relaxed text-text-muted"><span class="text-primary">$</span> <code id="hero-code">npx stagent</code><span class="hero-cursor">▌</span></pre>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <p
-      data-animate
-      class="font-mono text-xs tracking-[0.28em] uppercase text-primary mb-5"
-      style="transition-delay: 260ms"
-    >
-      Get started
-    </p>
-
-    <!-- CTA -->
-    <div data-animate class="mb-10 max-w-xl mx-auto" style="transition-delay: 300ms">
-      <!-- Run Local Web App card -->
-      <div class="relative border border-border rounded-md px-6 py-4 flex flex-col justify-center">
-        <span class="font-mono text-xs uppercase tracking-widest text-text-muted mb-4 text-center">Run Local Web App</span>
-        <button
-          id="hero-copy-btn"
-          class="absolute top-3 right-3 p-1.5 rounded text-text-muted/50 hover:text-text-muted transition-colors"
-          aria-label="Copy to clipboard"
-        >
-          <svg id="hero-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          <svg id="hero-check-icon" class="hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </button>
-        <pre class="rounded-md bg-surface-raised px-4 py-3 text-left font-mono text-sm leading-relaxed text-text-muted"><code id="hero-code">git clone https://github.com/manavsehgal/stagent.github.io.git
-cd stagent && npm install
-npm run dev</code></pre>
+    <!-- Right column: Carousel -->
+    <div data-animate class="hero-carousel-wrapper" style="transition-delay: 200ms">
+      <div class="hero-carousel rounded-xl overflow-hidden border border-border shadow-2xl shadow-primary/5 lg:transform lg:perspective-[1200px] lg:rotate-x-[2deg] lg:rotate-y-[-1deg]">
+        <!-- macOS title bar -->
+        <div class="bg-surface-raised border-b border-border px-4 py-3 flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
+          <div class="w-3 h-3 rounded-full bg-[#febc2e]"></div>
+          <div class="w-3 h-3 rounded-full bg-[#28c840]"></div>
+        </div>
+        <!-- Slide stack -->
+        <div class="hero-slides relative">
+          {slides.map((slide, i) => (
+            <img
+              src={slide.src}
+              alt={slide.alt}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              decoding={i === 0 ? 'sync' : 'async'}
+              class:list={[
+                'hero-slide w-full block',
+                i === 0 ? 'relative' : 'absolute inset-0',
+              ]}
+              style={`animation-delay: ${i * -5}s`}
+              data-slide={i}
+            />
+          ))}
+        </div>
+        <!-- Dot indicators -->
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+          {slides.map((_, i) => (
+            <button
+              class:list={[
+                'hero-dot w-2 h-2 rounded-full transition-all duration-300',
+                i === 0 ? 'bg-primary w-4' : 'bg-text-muted/30 hover:bg-text-muted/50',
+              ]}
+              data-dot={i}
+              aria-label={`Show slide ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
 
-    <div data-animate class="mb-16" style="transition-delay: 340ms">
-      <a
-        href="/docs"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-primary hover:text-primary transition-colors rounded-md"
-      >
-        View Docs
-      </a>
-    </div>
-
-    <!-- Hero screenshot -->
-    <div data-animate style="transition-delay: 400ms" class="max-w-4xl mx-auto">
-      <BrowserFrame
-        src="/screenshots/home-list.png"
-        alt="Stagent home workspace showing active tasks, pending reviews, project metrics, and live agent activity"
-        perspective={true}
-      />
-    </div>
-  </div>
-
-  <!-- Scroll chevron -->
-  <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M6 9l6 6 6-6" />
-    </svg>
   </div>
 </section>
 
@@ -129,31 +148,172 @@ npm run dev</code></pre>
     -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
   }
 
-  .hero-download-btn {
-    box-shadow: 0 0 20px var(--color-primary-glow), 0 0 40px var(--color-primary-dim);
-  }
-  .hero-download-btn:hover {
-    box-shadow: 0 0 25px var(--color-primary-glow), 0 0 50px var(--color-primary-glow);
+  /* ── Gradient text ── */
+  .hero-gradient-text {
+    background: linear-gradient(135deg, oklch(0.78 0.12 230), var(--color-primary), oklch(0.58 0.18 280));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
+  /* ── Blinking cursor ── */
+  .hero-cursor {
+    animation: hero-blink 1s step-end infinite;
+    color: var(--color-primary);
+  }
+  @keyframes hero-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ── Carousel wrapper - relative for dot positioning ── */
+  .hero-carousel-wrapper {
+    position: relative;
+  }
+  .hero-carousel {
+    position: relative;
+  }
+
+  /* ── Slide crossfade ── */
+  .hero-slide {
+    animation: hero-fade 30s infinite;
+    opacity: 0;
+  }
+  .hero-slide:first-child {
+    opacity: 1;
+  }
+
+  @keyframes hero-fade {
+    0%, 2%   { opacity: 0; }
+    3%, 16%  { opacity: 1; }
+    20%, 100% { opacity: 0; }
+  }
+
+  /* Stagger: each slide's delay is set inline via style attribute (negative delay trick) */
+
+  /* ── Dot active state (managed by JS) ── */
+  .hero-dot.active {
+    background: var(--color-primary);
+    width: 1rem;
+  }
+
+  /* ── Small screens: single static image ── */
+  @media (max-width: 639px) {
+    .hero-slide {
+      animation: none;
+      opacity: 0;
+    }
+    .hero-slide:first-child {
+      opacity: 1;
+    }
+    .hero-slide:not(:first-child) {
+      display: none;
+    }
+    .hero-dot {
+      display: none;
+    }
+  }
+
+  /* ── Reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
     .hero-grid {
       transform: none;
+    }
+    .hero-slide {
+      animation: none;
+      opacity: 0;
+    }
+    .hero-slide:first-child {
+      opacity: 1;
+    }
+    .hero-cursor {
+      animation: none;
     }
   }
 </style>
 
 <script>
-  document.getElementById('hero-copy-btn')?.addEventListener('click', async () => {
-    const code = document.getElementById('hero-code')?.textContent ?? '';
-    await navigator.clipboard.writeText(code);
-    const copyIcon = document.getElementById('hero-copy-icon');
-    const checkIcon = document.getElementById('hero-check-icon');
-    copyIcon?.classList.add('hidden');
-    checkIcon?.classList.remove('hidden');
-    setTimeout(() => {
-      copyIcon?.classList.remove('hidden');
-      checkIcon?.classList.add('hidden');
-    }, 2000);
-  });
+  function initHero() {
+    // ── Copy button ──
+    document.getElementById('hero-copy-btn')?.addEventListener('click', async () => {
+      const code = document.getElementById('hero-code')?.textContent ?? '';
+      await navigator.clipboard.writeText(code);
+      const copyIcon = document.getElementById('hero-copy-icon');
+      const checkIcon = document.getElementById('hero-check-icon');
+      copyIcon?.classList.add('hidden');
+      checkIcon?.classList.remove('hidden');
+      setTimeout(() => {
+        copyIcon?.classList.remove('hidden');
+        checkIcon?.classList.add('hidden');
+      }, 2000);
+    });
+
+    // ── Carousel dots & hover ──
+    const slides = document.querySelectorAll<HTMLImageElement>('.hero-slide');
+    const dots = document.querySelectorAll<HTMLButtonElement>('.hero-dot');
+    if (slides.length === 0 || dots.length === 0) return;
+
+    function showSlide(index: number) {
+      slides.forEach((s, i) => {
+        s.style.animation = 'none';
+        s.style.opacity = i === index ? '1' : '0';
+      });
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+        d.classList.toggle('bg-primary', i === index);
+        d.classList.toggle('w-4', i === index);
+        d.classList.toggle('bg-text-muted/30', i !== index);
+        d.classList.toggle('w-2', i !== index);
+      });
+    }
+
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', () => showSlide(i));
+    });
+
+    // Pause on hover
+    const carousel = document.querySelector('.hero-carousel');
+    carousel?.addEventListener('mouseenter', () => {
+      slides.forEach(s => { s.style.animationPlayState = 'paused'; });
+    });
+    carousel?.addEventListener('mouseleave', () => {
+      // Only resume if animations haven't been manually overridden
+      slides.forEach(s => {
+        if (s.style.animation !== 'none') {
+          s.style.animationPlayState = 'running';
+        }
+      });
+    });
+
+    // Update dots to track CSS animation (when not manually controlled)
+    let dotInterval = setInterval(() => {
+      // Check if animation is still running (not manually overridden)
+      const firstSlide = slides[0];
+      if (firstSlide?.style.animation === 'none') {
+        clearInterval(dotInterval);
+        return;
+      }
+      // Determine active slide from computed opacity
+      let activeIndex = 0;
+      let maxOpacity = 0;
+      slides.forEach((s, i) => {
+        const opacity = parseFloat(getComputedStyle(s).opacity);
+        if (opacity > maxOpacity) {
+          maxOpacity = opacity;
+          activeIndex = i;
+        }
+      });
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === activeIndex);
+        d.classList.toggle('bg-primary', i === activeIndex);
+        d.classList.toggle('w-4', i === activeIndex);
+        d.classList.toggle('bg-text-muted/30', i !== activeIndex);
+        d.classList.toggle('w-2', i !== activeIndex);
+      });
+    }, 500);
+  }
+
+  // Init on load and on Astro view transitions
+  initHero();
+  document.addEventListener('astro:after-swap', initHero);
 </script>
