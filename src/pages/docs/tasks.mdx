@@ -18,6 +18,8 @@ Tasks are the unit of execution inside Stagent. They move through explicit lifec
 - **Project Context** — Every task remains tied to a project so work can be filtered globally or reviewed in a project-specific queue.
 - **Task Detail** — The detail view keeps priority, status, timestamps, and the task description together for review and intervention.
 - **Task Creation** — New tasks can be created directly from the dashboard with project, priority, and complexity fields filled in up front.
+- **AI Assist** — The creation form generates sub-task suggestions from a brief, letting operators bootstrap detailed task descriptions with AI support.
+- **Inline Editing** — Tasks can be edited directly from the board without navigating away from the execution view.
 
 <BrowserFrame src="/screenshots/dashboard-detail.png" alt="Task detail view showing status, priority, description, and cancel action" />
 
@@ -39,6 +41,29 @@ Operators typically create tasks from the dashboard or from within a project. On
 The task detail view is the control surface for one execution record. It is where you verify the task definition, confirm current state, and intervene when a run should be canceled or retried.
 
 <BrowserFrame src="/screenshots/dashboard-create-form-filled.png" alt="Task creation form showing title, project, priority, and complexity fields" />
+
+## AI-Assisted Task Creation
+
+The task creation form includes an AI Assist panel that analyzes the task brief and suggests
+sub-task breakdowns, description refinements, or workflow patterns. Operators review the
+suggestions, accept or dismiss them, and submit the final task. This keeps human judgment
+in the loop while reducing the effort of writing detailed execution briefs from scratch.
+
+<BrowserFrame src="/screenshots/dashboard-create-form-empty.png" alt="Empty task creation form with AI Assist panel ready for input" />
+
+<BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="Task creation with AI Assist showing generated sub-task suggestions and workflow patterns" />
+
+<BrowserFrame src="/screenshots/dashboard-create-form-ai-applied.png" alt="Task creation form after AI suggestions applied to the description field" />
+
+## Editing & Bulk Operations
+
+Tasks can be edited inline from the dashboard using the card edit modal. The modal exposes
+title, description, priority, runtime, and agent profile fields. Operators can also work
+with multiple tasks across status columns from the board view.
+
+<BrowserFrame src="/screenshots/dashboard-card-edit.png" alt="Edit Task modal showing editable title, description, priority, runtime, and agent profile fields" />
+
+<BrowserFrame src="/screenshots/dashboard-bulk-select.png" alt="Dashboard board with tasks populated across Planned, Queued, Running, Completed, and Failed columns" />
 
 ---
 

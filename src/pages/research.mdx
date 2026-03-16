@@ -146,15 +146,27 @@ The **external layer** is deliberately minimal. All persistent state lives in `~
   <BrowserFrame src="/screenshots/home-list.png" alt="Home workspace showing summary metrics, tasks needing attention, and live agent activity" />
 </Figure>
 
+### AI Assist in the Creation Flow
+
+The product embeds AI assistance directly into the task creation surface. The creation form
+includes an AI Assist panel that generates sub-task suggestions from the current brief.
+Operators review, accept, or dismiss suggestions before submitting. When AI generates a
+multi-step breakdown, operators can promote those steps into a reusable workflow — bridging
+ad hoc task creation and structured orchestration.
+
+<Figure number={5} caption="AI-Assisted Task Creation — Operator Reviews AI-Generated Sub-Tasks Before Submission">
+  <BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="Task creation with AI Assist panel showing generated sub-task suggestions" />
+</Figure>
+
 ### The canUseTool Governance Pattern
 
 The centerpiece of Stagent's architecture remains the `canUseTool` pattern: the mechanism that converts autonomous execution into governed execution without hiding what the agent is doing.
 
-<Figure number={5} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
+<Figure number={6} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
   <GovernanceFlow />
 </Figure>
 
-<Figure number={6} caption="Permissions Inbox — Explicit Approval Controls for Agent Tool Requests">
+<Figure number={7} caption="Permissions Inbox — Explicit Approval Controls for Agent Tool Requests">
   <BrowserFrame src="/screenshots/inbox-permissions.png" alt="Permissions inbox showing allow once, always allow, and deny actions" />
 </Figure>
 
@@ -182,7 +194,7 @@ What changed next is that Stagent now measures and governs the economics of that
 - **Budget guardrails** warn near caps and block new paid activity explicitly when a configured window is exhausted.
 - **Cost & Usage dashboard** shows spend velocity, token velocity, runtime share, and model concentration in one operator-facing surface.
 
-<Figure number={7} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
+<Figure number={8} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
   <BrowserFrame src="/screenshots/cost-codex-claude-code.png" alt="Cost and usage dashboard showing spend velocity, token trends, runtime breakdown, and model concentration across Claude and Codex activity" />
 </Figure>
 
@@ -205,7 +217,7 @@ What changed next is that Stagent now measures and governs the economics of that
 
 The agent platform market can be mapped along two axes: **agent autonomy** and **human governance**. Most products still optimize for one at the expense of the other.
 
-<Figure number={8} caption="Competitive Positioning — Governance vs. Autonomy">
+<Figure number={9} caption="Competitive Positioning — Governance vs. Autonomy">
   <GovernanceMatrix />
 </Figure>
 
@@ -219,7 +231,7 @@ Stagent occupies the **high-governance, high-autonomy** quadrant: the space wher
 
 **3. Reusable AI operations layer** — Profiles, blueprints, and schedules convert successful runs into repeatable systems. This is a key step from experimentation to production discipline.
 
-<Figure number={9} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
+<Figure number={10} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
   <BrowserFrame src="/screenshots/profiles-detail.png" alt="Profile detail showing instructions, configuration, and tool policies" />
 </Figure>
 
@@ -245,11 +257,11 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Cost & Usage** | Spend, tokens, budget state, runtime share, and model concentration |
 | **Settings** | Authentication, policy defaults, and data management |
 
-<Figure number={10} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
+<Figure number={11} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
   <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
 </Figure>
 
-<Figure number={11} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
+<Figure number={12} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
   <BrowserFrame src="/screenshots/schedules-detail.png" alt="Schedule detail showing prompt, next fire time, and firing history" />
 </Figure>
 
