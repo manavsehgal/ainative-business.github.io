@@ -282,6 +282,11 @@ const roadmapNext = [
     height: 1.65rem;
   }
 
+  /* Invert white logos to black in light mode */
+  :global(html[data-theme="light"]) .runtime-brand__logo img {
+    filter: invert(1);
+  }
+
   .runtime-brand__title {
     font-size: 1.15rem;
     font-weight: 700;
