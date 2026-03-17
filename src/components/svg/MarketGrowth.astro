@@ -14,7 +14,7 @@ const bars = [
 <svg viewBox="0 0 460 260" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-sm mx-auto" data-svg-animate>
   <!-- Grid lines -->
   <g class="svg-reveal">
-    <line x1="40" y1="200" x2="440" y2="200" stroke="oklch(0.25 0.02 250)" stroke-width="0.5" />
+    <line x1="40" y1="200" x2="440" y2="200" stroke="var(--svg-stroke)" stroke-width="0.5" />
   </g>
 
   <!-- Bars -->
@@ -29,13 +29,13 @@ const bars = [
           width="44"
           height={height}
           rx="4"
-          fill="oklch(0.65 0.18 250)"
+          fill="var(--svg-accent-blue)"
           fill-opacity={0.4 + (i * 0.1)}
         />
         <text
           x={x + 22}
           y={y - 8}
-          fill="oklch(0.65 0.18 250)"
+          fill="var(--svg-accent-blue)"
           font-family="var(--font-mono)"
           font-size="15"
           font-weight="600"
@@ -46,7 +46,7 @@ const bars = [
         <text
           x={x + 22}
           y="218"
-          fill="oklch(0.5 0.02 250)"
+          fill="var(--svg-text-muted)"
           font-family="var(--font-mono)"
           font-size="14"
           text-anchor="middle"
@@ -58,7 +58,7 @@ const bars = [
   })}
 
   <!-- Title -->
-  <text x="240" y="250" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="14" text-anchor="middle">
+  <text x="240" y="250" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="14" text-anchor="middle">
     AI Agent Market Size (USD)
   </text>
 </svg>

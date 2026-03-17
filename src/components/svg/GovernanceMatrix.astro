@@ -7,61 +7,61 @@
 <svg viewBox="0 0 560 520" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-sm mx-auto" data-svg-animate>
   <!-- Grid background -->
   <g class="svg-reveal">
-    <rect x="70" y="20" width="460" height="440" rx="8" fill="oklch(0.16 0.02 250)" stroke="oklch(0.25 0.02 250)" stroke-width="1" />
+    <rect x="70" y="20" width="460" height="440" rx="8" fill="var(--svg-card-fill)" stroke="var(--svg-stroke)" stroke-width="1" />
 
     <!-- Quadrant dividers -->
-    <line x1="300" y1="20" x2="300" y2="460" stroke="oklch(0.25 0.02 250)" stroke-width="1" stroke-dasharray="4 4" />
-    <line x1="70" y1="240" x2="530" y2="240" stroke="oklch(0.25 0.02 250)" stroke-width="1" stroke-dasharray="4 4" />
+    <line x1="300" y1="20" x2="300" y2="460" stroke="var(--svg-stroke)" stroke-width="1" stroke-dasharray="4 4" />
+    <line x1="70" y1="240" x2="530" y2="240" stroke="var(--svg-stroke)" stroke-width="1" stroke-dasharray="4 4" />
   </g>
 
   <!-- Axis labels -->
   <g class="svg-reveal svg-reveal-d1">
-    <text x="300" y="505" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="20" text-anchor="middle">AUTONOMY →</text>
-    <text x="28" y="240" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="20" text-anchor="middle" transform="rotate(-90 28 240)">GOVERNANCE →</text>
+    <text x="300" y="505" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="20" text-anchor="middle">AUTONOMY →</text>
+    <text x="28" y="240" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="20" text-anchor="middle" transform="rotate(-90 28 240)">GOVERNANCE →</text>
   </g>
 
   <!-- Quadrant labels -->
   <g class="svg-reveal svg-reveal-d2">
     <!-- Top-left: Locked Down -->
-    <text x="185" y="58" fill="oklch(0.4 0.02 250)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Locked Down</text>
-    <text x="185" y="80" fill="oklch(0.35 0.02 250)" font-family="var(--font-body)" font-size="15" text-anchor="middle">Low utility</text>
+    <text x="185" y="58" fill="var(--svg-text-extra-dim)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Locked Down</text>
+    <text x="185" y="80" fill="var(--svg-text-faint)" font-family="var(--font-body)" font-size="15" text-anchor="middle">Low utility</text>
 
     <!-- Top-right: Governed -->
-    <text x="415" y="58" fill="oklch(0.4 0.02 250)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Governed</text>
-    <text x="415" y="80" fill="oklch(0.35 0.02 250)" font-family="var(--font-body)" font-size="15" text-anchor="middle">Optimal balance</text>
+    <text x="415" y="58" fill="var(--svg-text-extra-dim)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Governed</text>
+    <text x="415" y="80" fill="var(--svg-text-faint)" font-family="var(--font-body)" font-size="15" text-anchor="middle">Optimal balance</text>
 
     <!-- Bottom-left: Manual -->
-    <text x="185" y="370" fill="oklch(0.4 0.02 250)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Manual</text>
-    <text x="185" y="392" fill="oklch(0.35 0.02 250)" font-family="var(--font-body)" font-size="15" text-anchor="middle">No AI benefit</text>
+    <text x="185" y="370" fill="var(--svg-text-extra-dim)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Manual</text>
+    <text x="185" y="392" fill="var(--svg-text-faint)" font-family="var(--font-body)" font-size="15" text-anchor="middle">No AI benefit</text>
 
     <!-- Bottom-right: Wild West -->
-    <text x="415" y="370" fill="oklch(0.4 0.02 250)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Wild West</text>
-    <text x="415" y="392" fill="oklch(0.35 0.02 250)" font-family="var(--font-body)" font-size="15" text-anchor="middle">Risky</text>
+    <text x="415" y="370" fill="var(--svg-text-extra-dim)" font-family="var(--font-body)" font-size="18" text-anchor="middle">Wild West</text>
+    <text x="415" y="392" fill="var(--svg-text-faint)" font-family="var(--font-body)" font-size="15" text-anchor="middle">Risky</text>
   </g>
 
   <!-- Competitor dots -->
   <g class="dot-pop">
     <!-- Jira: bottom-left quadrant (low autonomy, low governance) -->
-    <circle cx="150" cy="310" r="10" fill="oklch(0.5 0.02 250)" fill-opacity="0.4" />
-    <text x="150" y="335" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">Jira</text>
+    <circle cx="150" cy="310" r="10" fill="var(--svg-text-muted)" fill-opacity="0.4" />
+    <text x="150" y="335" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">Jira</text>
 
     <!-- AutoGPT: bottom-right quadrant (high autonomy, low governance) -->
-    <circle cx="440" cy="300" r="10" fill="oklch(0.5 0.02 250)" fill-opacity="0.4" />
-    <text x="440" y="325" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">AutoGPT</text>
+    <circle cx="440" cy="300" r="10" fill="var(--svg-text-muted)" fill-opacity="0.4" />
+    <text x="440" y="325" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">AutoGPT</text>
 
     <!-- LangGraph: top-left quadrant (low autonomy, high governance) -->
-    <circle cx="200" cy="160" r="10" fill="oklch(0.5 0.02 250)" fill-opacity="0.4" />
-    <text x="200" y="185" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">LangGraph</text>
+    <circle cx="200" cy="160" r="10" fill="var(--svg-text-muted)" fill-opacity="0.4" />
+    <text x="200" y="185" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">LangGraph</text>
 
     <!-- CrewAI: top-right quadrant, near center (moderate autonomy, moderate governance) -->
-    <circle cx="370" cy="170" r="10" fill="oklch(0.5 0.02 250)" fill-opacity="0.4" />
-    <text x="370" y="195" fill="oklch(0.5 0.02 250)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">CrewAI</text>
+    <circle cx="370" cy="170" r="10" fill="var(--svg-text-muted)" fill-opacity="0.4" />
+    <text x="370" y="195" fill="var(--svg-text-muted)" font-family="var(--font-mono)" font-size="17" text-anchor="middle">CrewAI</text>
   </g>
 
   <!-- Stagent dot (highlighted) -->
   <g class="dot-pop" style="transition-delay: 0.5s">
-    <circle cx="450" cy="65" r="18" fill="oklch(0.65 0.18 250)" fill-opacity="0.3" />
-    <circle cx="450" cy="65" r="12" fill="oklch(0.65 0.18 250)" />
-    <text x="450" y="44" fill="oklch(0.65 0.18 250)" font-family="var(--font-mono)" font-size="20" font-weight="700" text-anchor="middle">Stagent</text>
+    <circle cx="450" cy="65" r="18" fill="var(--svg-accent-blue)" fill-opacity="0.3" />
+    <circle cx="450" cy="65" r="12" fill="var(--svg-accent-blue)" />
+    <text x="450" y="44" fill="var(--svg-accent-blue)" font-family="var(--font-mono)" font-size="20" font-weight="700" text-anchor="middle">Stagent</text>
   </g>
 </svg>
