@@ -4,3 +4,16 @@ dist/
 .DS_Store
 *.log
 supabase/.temp/
+.agents/
+.playwright-mcp/
+output/
+.claude/settings.local.json
+.claude/skills/apply-screengrabs/
+.claude/skills/skill-creator/
+architecture-*.png
+hero-carousel-dot-click.png
+hero-redesign-*.png
+hero-section.png
+projects-current-dark.png
+theme-dark-*.png
+theme-light-*.png
