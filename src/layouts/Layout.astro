@@ -31,6 +31,17 @@ const jsonLdSchemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- No-FOUC theme initialization (must run before any rendering) -->
+    <script is:inline>
+      (function() {
+        var s = localStorage.getItem('theme');
+        var t = (s === 'light' || s === 'dark')
+          ? s
+          : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7PLZC5EJF7"></script>
     <script is:inline>
@@ -86,7 +97,7 @@ const jsonLdSchemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Preload fonts -->
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#0f172a" id="meta-theme-color" />
 
     <!-- JSON-LD Structured Data -->
     {jsonLdSchemas.map((schema) => (
@@ -168,6 +179,17 @@ const jsonLdSchemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
       }
       initImgZoom();
       document.addEventListener('astro:after-swap', initImgZoom);
+    </script>
+
+    <!-- Enable smooth theme transitions after first paint -->
+    <script>
+      function enableThemeTransitions() {
+        requestAnimationFrame(() => {
+          document.documentElement.classList.add('theme-transitions');
+        });
+      }
+      enableThemeTransitions();
+      document.addEventListener('astro:after-swap', enableThemeTransitions);
     </script>
   </body>
 </html>
