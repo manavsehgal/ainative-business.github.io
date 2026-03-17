@@ -143,6 +143,21 @@
   margin: 2rem 0;
 }
 
+.prose .figure--bleed {
+  width: min(80rem, calc(100vw - 3rem));
+  max-width: none;
+  position: relative;
+  left: 50%;
+  margin-left: calc(-0.5 * min(80rem, calc(100vw - 3rem)));
+  margin-right: calc(-0.5 * min(80rem, calc(100vw - 3rem)));
+}
+
+.prose .figure--architecture svg {
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+
 .prose figcaption {
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -150,6 +165,15 @@
   text-align: center;
   margin-top: 0.75rem;
   line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .prose .figure--bleed {
+    width: 100%;
+    left: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .prose hr {
