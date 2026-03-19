@@ -21,7 +21,7 @@ export interface TimelineItem {
 }
 
 export const metrics = [
-  { label: 'Lines of Code', target: 270, suffix: 'K+' },
+  { label: 'Lines of Code', target: 300, suffix: 'K+' },
   { label: 'AI Agents', target: 30, suffix: '+' },
   { label: 'Production Systems', target: 8, suffix: '' },
   { label: 'Projects', target: 18, suffix: '+' },
@@ -214,19 +214,19 @@ export const timeline: TimelineItem[] = [
     project: 'Stagent',
     role: 'Governed AI agent operations workspace',
     description:
-      'Building a local-first control plane for AI operations — a Next.js workspace with governed execution, reusable profiles, workflow blueprints, schedules, documents, monitoring, and a human-in-the-loop inbox.',
+      'Shipped a local-first AI operations workspace with 51 features across 11 operator surfaces — dual-runtime execution via Claude Agent SDK and Codex App Server, full cost governance, reusable agent profiles, workflow blueprints, and a human-in-the-loop inbox.',
     achievements: [
-      'Expanded the product into ten coordinated operator surfaces',
-      'Added reusable agent profiles, blueprint-driven workflows, and recurring schedules',
-      'Implemented human-in-the-loop governance with live monitoring and document-linked execution',
+      'Shipped 51 features across 11 coordinated operator surfaces in 12 days',
+      'Dual-runtime execution with Claude Agent SDK and OpenAI Codex App Server',
+      'Full cost governance with budget enforcement, 6 workflow patterns, and 13+ reusable agent profiles',
     ],
-    stats: '20K LOC · 132 tests · local-first AI operations',
+    stats: '49.7K LOC · 312 tests · 51/53 features shipped',
     techWave: 'The Harness Layer',
     techCategories: [
       { label: 'Frontend', items: ['Next.js 16', 'React 19', 'Tailwind v4', 'shadcn/ui'] },
       { label: 'Backend', items: ['TypeScript', 'SQLite', 'Drizzle ORM'] },
-      { label: 'AI', items: ['Claude Agent SDK', 'Tool Use', 'Streaming'] },
-      { label: 'Infrastructure', items: ['Vitest', 'Turbopack', 'SSE'] },
+      { label: 'AI', items: ['Claude Agent SDK', 'Codex App Server', 'Multi-Agent'] },
+      { label: 'Infrastructure', items: ['Vitest', 'Turbopack', 'SSE', 'E2E Tests'] },
     ],
     status: 'active',
     isCurrent: true,

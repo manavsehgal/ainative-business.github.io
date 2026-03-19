@@ -88,3 +88,47 @@
 - Complete rewrite from Tauri (Rust + TypeScript) to pure Next.js 16
 - LOC/day velocity of 6,575 reflects AI-assisted development with Claude Code
 - Feature count methodology changed: "intents" → "features" with new scope (30 total)
+
+---
+
+## [2026-03-18 19:00] Metrics Snapshot — Post-MVP Maturity
+
+| Category | Metric | Value |
+|----------|--------|-------|
+| LOC | Production | 42,673 |
+| LOC | Tests | 6,997 |
+| LOC | **Total** | **49,670** |
+| Tests | Vitest | 312 |
+| Tests | **Total** | **312** |
+| Git | Commits | 93 |
+| Git | Hours elapsed | 282.9 |
+| Git | Commits/hour | 0.33 |
+| Git | LOC/hour | 175.6 |
+| Features | Completed | 51/53 |
+| Infra | API routes | 52 |
+| Infra | DB tables | 10 |
+| Infra | UI components | 149 |
+| Infra | Pages | 29 |
+| Infra | Agent files | 34 |
+
+### Feature Status
+- 51 completed, 1 in-progress (workflow-ux-overhaul), 1 deferred (npm-publish-readiness)
+- 14 MVP features + 39 post-MVP features across 8 categories
+- 6 workflow patterns, 11 product surfaces, 13+ agent profiles, 8 workflow blueprints
+- Dual-runtime: Claude Agent SDK + OpenAI Codex App Server
+
+### Trend (vs previous snapshot — 9 days of post-MVP development)
+- ↑ +29,667 LOC (20,003 → 49,670)
+- ↑ +180 tests (132 → 312)
+- ↑ +71 commits (22 → 93)
+- ↑ +30 features completed (21/30 → 51/53)
+- ↑ +20 API routes (32 → 52)
+- ↑ +2 DB tables (8 → 10)
+- ↑ +58 UI components (91 → 149)
+- ↑ +17 pages (12 → 29)
+
+### Notes
+- LOC counted via `find + wc -l` (tokei not installed)
+- Production LOC = total TypeScript minus test files
+- Post-MVP shipped: dual-runtime, cost governance, agent self-improvement, parallel/swarm/loop workflows, permission presets, E2E tests, playbook docs
+- Feature scope expanded from 30 → 53 as post-MVP categories grew
