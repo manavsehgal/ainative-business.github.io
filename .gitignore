@@ -8,7 +8,7 @@ supabase/.temp/
 .playwright-mcp/
 output/
 .claude/settings.local.json
-.claude/skills/apply-screengrabs/
+.claude/skills/apply-product-release/
 .claude/skills/skill-creator/
 architecture-*.png
 hero-carousel-dot-click.png

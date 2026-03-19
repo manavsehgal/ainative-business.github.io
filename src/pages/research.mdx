@@ -3,7 +3,7 @@ layout: ../layouts/ResearchLayout.astro
 title: "Stagent: The Coordination Layer for the Agentic Enterprise"
 description: "Governed AI agent operations: dual-runtime execution, cost governance, reusable automation, and the coordination layer for enterprise AI deployment."
 datePublished: "2026-03-01"
-dateModified: "2026-03-14"
+dateModified: "2026-03-18"
 author: "Manav"
 readingTime: "19 min read"
 ---
@@ -145,7 +145,7 @@ Stagent's architecture follows three principles:
 
 The detailed architecture reveals three distinct layers working in concert. The **browser layer** runs a React 19 single-page application with 10 operator-facing surfaces — each purpose-built for a specific governance function, from the Home workspace briefing to the Monitor's real-time streaming view and the Cost & Usage dashboard.
 
-The **server layer** runs on Next.js 16 and contains 8 service modules. The Runtime Registry abstracts provider differences behind a shared adapter interface, letting operators switch between Claude Agent SDK and OpenAI Codex without changing workflows. The Permission Gate enforces `canUseTool` at every trust boundary. The Workflow Engine supports 5 orchestration patterns that convert ad hoc prompting into repeatable automation.
+The **server layer** runs on Next.js 16 and contains 8 service modules. The Runtime Registry abstracts provider differences behind a shared adapter interface, letting operators switch between Claude Agent SDK and OpenAI Codex without changing workflows. The Permission Gate enforces `canUseTool` at every trust boundary. The Workflow Engine supports 6 orchestration patterns — sequence, planner-executor, checkpoint, fork/join parallel, autonomous loop, and multi-agent swarm — that convert ad hoc prompting into repeatable automation.
 
 The **external layer** is deliberately minimal. All persistent state lives in `~/.stagent/` — a local SQLite database with WAL-mode concurrency. The only external network calls go to runtime backends (Anthropic and OpenAI) for model inference. EventSource provides real-time push to the browser via SSE, eliminating the need for polling infrastructure. Data flow follows a clear principle: Server Components handle reads with zero API overhead (direct database queries), while API Routes handle mutations only.
 
@@ -252,17 +252,17 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 
 | Surface | What Ships Today |
 |---------|------------------|
-| **Home** | Workspace briefing with attention queue, metrics, and live activity |
-| **Dashboard** | Status-driven execution board for active work |
-| **Projects** | Portfolio organization and scoped execution context |
-| **Workflows** | Reusable orchestration with five patterns including parallel and swarm execution |
-| **Documents** | Upload, extraction review, and linked context |
-| **Profiles** | Reusable specialist agents with explicit policy and tuning |
-| **Schedules** | Recurring and one-shot automation with guardrails |
-| **Inbox** | Permissions, questions, completions, and failures |
-| **Monitor** | Streaming runtime visibility and debugging |
-| **Cost & Usage** | Spend, tokens, budget state, runtime share, and model concentration |
-| **Settings** | Authentication, policy defaults, and data management |
+| **Home** | Workspace briefing with micro-visualizations, attention queue, and live activity |
+| **Dashboard** | Status-driven execution board with AI-assisted creation and bulk operations |
+| **Projects** | Portfolio organization with working directories and scoped execution context |
+| **Workflows** | Reusable orchestration with six patterns including parallel, loop, and swarm execution |
+| **Documents** | Drag-and-drop upload, automatic text extraction, and agent context injection |
+| **Profiles** | 13+ curated specialists with cross-provider support, GitHub import, and self-improvement |
+| **Schedules** | Human-friendly intervals, cron expressions, runtime targeting, and governed execution |
+| **Inbox** | Approval controls, ambient toasts, agent questions, and batch context proposals |
+| **Monitor** | Streaming logs with click-to-navigate, auto-pause, and event filtering |
+| **Cost & Usage** | Spend, tokens, budget enforcement, project budgets, and execution path tracking |
+| **Settings** | Permission presets with risk tiers, task resume, authentication, and data management |
 
 <Figure number={11} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
   <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
@@ -379,4 +379,4 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 
 ---
 
-*This paper was updated on March 14, 2026. Product coverage reflects the current browser workspace, including dual-runtime execution, cost governance, profiles, schedules, and blueprint-driven workflows.*
+*This paper was updated on March 18, 2026. Product coverage reflects the current browser workspace with 53 features across 11 surfaces, including dual-runtime execution, cost governance with budget enforcement, 13+ curated profiles with self-improvement, 6 workflow patterns, and permission presets.*

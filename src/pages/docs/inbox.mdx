@@ -16,7 +16,10 @@ The inbox is the operator-facing governance surface for Stagent. It consolidates
 
 - **Mixed Feed** — The default inbox view blends permissions, messages, completions, and failures into one triage surface.
 - **Focused Tabs** — Operators can narrow to unread items, permission requests, or conversational messages when they need a tighter queue.
-- **Approval Controls** — Permission cards expose `Allow Once`, `Always Allow`, and `Deny` actions directly on the notification.
+- **Approval Controls** — Permission cards expose `Allow Once`, `Always Allow`, and `Deny` actions directly on the notification. `Always Allow` patterns persist for future auto-approval.
+- **Ambient Approval Toasts** — Permission requests surface as toasts on any page so you can approve or deny without navigating to the inbox.
+- **Agent Questions** — Agents can pause execution and ask for clarification. Your typed response is injected directly into the agent's context so execution resumes with a clear human decision.
+- **Batch Context Proposals** — When workflows generate multiple context suggestions, operators can review and approve them as a batch instead of handling each one individually.
 - **Response History** — Stagent preserves whether a request has been handled already, preventing duplicate decision-making.
 
 ## Notification Types

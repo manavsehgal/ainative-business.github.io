@@ -38,7 +38,13 @@ Agent executes autonomously until it reaches a defined checkpoint, then pauses f
 
 **Example**: Analyze 4 competitor products in parallel → synthesize findings into comparison report
 
-### 5. Multi-Agent Swarm
+### 5. Autonomous Loop
+
+Iterative execution patterns where agents repeat until a stop condition is met. Four built-in stop conditions: max iterations, time budget, human cancel, or agent-signaled completion.
+
+**Example**: Monitor competitor pricing → check for changes → alert if threshold exceeded → repeat every cycle
+
+### 6. Multi-Agent Swarm
 
 A Mayor agent plans the work. 2–5 Worker agents execute in parallel with independent retries. A Refinery agent consolidates results. Failed branches can retry without re-running successful workers.
 
@@ -48,9 +54,10 @@ A Mayor agent plans the work. 2–5 Worker agents execute in parallel with indep
 
 ## Key Concepts
 
-- **Workflow Library** — The main list shows each workflow’s pattern, status, step count, and duplication controls. Five patterns are currently supported.
-- **Blueprint Catalog** — Operators can start from pre-built templates for code review, documentation, research, sprint planning, meal planning, and more.
+- **Workflow Library** — The main list shows each workflow’s pattern, status, step count, and duplication controls. Six execution patterns are supported.
+- **Blueprint Catalog** — Operators can start from pre-built templates for code review, documentation, research, sprint planning, meal planning, and more. Blueprint lineage tracks the template origin and any customizations applied.
 - **Profile-Aware Steps** — Each workflow step can reference an agent profile so specialist behavior is reused consistently.
+- **Step-Level Retry** — Retry individual failed steps without re-running the entire workflow, saving time and cost on long-running orchestrations.
 - **Checkpoint & Resume** — Human-in-the-loop workflows pause naturally at approval points and resume when the operator responds.
 - **Parallel & Swarm** — Fork/Join and Swarm patterns run bounded concurrent branches with automatic result consolidation.
 

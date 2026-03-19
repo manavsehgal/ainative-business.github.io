@@ -14,9 +14,10 @@ Projects are the top-level containers for work in Stagent. They group tasks, wor
 
 ## Key Concepts
 
-- **Project Cards** — The list view summarizes each initiative with a short description, task count, and status badge.
+- **Server-Rendered Project Cards** — Cards load instantly with pre-rendered task counts and status badges — no client-side fetching delay.
 - **Scoped Execution** — Opening a project narrows the operational view to the work, metrics, and status breakdown for that initiative.
-- **Optional Working Directory** — Project creation can include a local working directory so agent tasks run in the right context by default.
+- **Working Directory** — Set a file-system path per project; agents automatically operate within that directory, keeping execution context aligned with the codebase or file structure.
+- **Completion Donuts & Sparklines** — Each card shows a visual completion donut and 7-day activity sparkline so you can spot stalled initiatives at a glance.
 - **Cross-Surface Context** — Documents, tasks, workflows, and schedules can all reference the same project record.
 
 <BrowserFrame src="/screenshots/projects-detail.png" alt="Project detail view showing summary metrics, progress strip, and project task list" />

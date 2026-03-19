@@ -14,8 +14,8 @@ Stagent integrates both Claude Agent SDK and Codex App Server execution into an 
 
 ## Key Concepts
 
-- **Claude Agent SDK** — Embedded Claude runtime with streaming, tool use, and governance callbacks
-- **Codex App Server** — OpenAI runtime with resumable thread semantics, approvals, and provider-aware event streaming
+- **Claude Agent SDK** — Embedded Claude runtime with streaming, tool use, and governance callbacks via a polling-based approval pattern.
+- **Codex App Server** — OpenAI runtime with persistent channels, working directory preservation, resumable threads, and provider-aware event streaming. Threads survive disconnection so long-running tasks can resume without losing context.
 - **Profile-Backed Execution** — The selected profile defines instructions, tool availability, temperature, max turns, and output format before the run starts.
 - **Shared Runtime Governance** — Tool requests and user questions cross a trust boundary and surface in the inbox for explicit allow or deny decisions.
 - **Asynchronous Runs** — Tasks execute independently of the UI so operators can keep working while agents continue in the background.

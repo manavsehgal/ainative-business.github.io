@@ -22,7 +22,7 @@ The cost and usage view gives operators a shared ledger for Claude and Codex act
 
 ## How It Works
 
-Every provider-calling activity writes to a normalized usage ledger instead of relying on runtime-specific log parsing. That includes task runs, resumes, workflow child tasks, schedule firings, task assist, and profile tests.
+Every provider-calling activity writes to a normalized usage ledger instead of relying on runtime-specific log parsing. Five execution paths are tracked: task runs, workflow child tasks, schedule firings, task assist, and profile behavior tests.
 
 The dashboard queries that shared ledger to build operator-facing views for:
 
@@ -31,6 +31,12 @@ The dashboard queries that shared ledger to build operator-facing views for:
 - runtime and model concentration
 - budget-state warnings and blocked windows
 - audit rows linked back to the task, workflow, or schedule that created the usage
+
+## Budget Enforcement
+
+- **Project Budgets** — Set spending limits per project with warnings when approaching the cap and blocks when exceeded.
+- **Global Budget Alerts** — Organization-wide spending thresholds trigger notifications before costs escalate.
+- **Blocked-State Enforcement** — Tasks are proactively blocked before they can exceed a budget, preventing silent overspend.
 
 Because the ledger is shared across providers, teams can compare Claude and Codex usage directly without switching tools or reconciling two different accounting models.
 

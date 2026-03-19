@@ -14,9 +14,12 @@ Schedules turn repeatable prompts into recurring or one-shot automations. They e
 
 ## Key Concepts
 
+- **Human-Friendly Intervals** — Define cadence with plain language shorthand like `5m`, `2h`, or `1d`, or use standard cron expressions for advanced scheduling.
 - **Recurring or One-Shot** — Schedules can run on a repeating cadence or fire once and expire.
 - **Operational Status** — Active, paused, and expired states make it obvious which automations are live.
+- **Runtime Targeting** — Choose Claude or OpenAI per schedule to control which runtime executes recurring work.
 - **Profile Selection** — A schedule can choose which agent profile should execute the recurring work.
+- **Governed Execution** — Each firing creates a new task that flows through the full execution pipeline with monitoring, approvals, and logging — scheduled work is never a black box.
 - **Guardrails** — Max firings and expiry windows stop a schedule from running forever by accident.
 
 <BrowserFrame src="/screenshots/schedules-detail.png" alt="Schedule detail showing prompt, next fire time, and firing history" />

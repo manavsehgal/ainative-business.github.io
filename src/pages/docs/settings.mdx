@@ -15,9 +15,11 @@ The settings page is where operators define how Stagent authenticates, which too
 ## Key Concepts
 
 - **Authentication Modes** — Connect Stagent with OAuth or a direct API key depending on your operating model.
-- **Default Tool Permissions** — Seed safe approval patterns so the inbox does not need to mediate every low-risk action.
+- **Permission Presets** — Three composable tiers — Read-Only (low risk), Git-Safe (moderate), and Full-Auto (high) — each with risk badges. Higher tiers include all lower-tier permissions.
+- **Default Tool Permissions** — Seed safe approval patterns so the inbox does not need to mediate every low-risk action. Patterns can be broad (`Read`) or specific (`Bash(command:git status)`) with wildcard support.
+- **Task Resume** — Retry failed or cancelled tasks with a 3-attempt limit, resuming execution from a known state instead of starting over.
 - **Cost & Usage Guardrails** — Configure daily and monthly spend caps plus runtime-specific token/spend limits.
-- **Data Management** — Reset the workspace when you need to clear projects, tasks, workflows, schedules, documents, logs, and notifications.
+- **Data Management** — Seed sample data for evaluation or clear all data (respects table relationships) when resetting the workspace.
 - **Local-First Configuration** — Settings are managed close to the workspace instead of hidden inside a remote SaaS control plane.
 
 ## Authentication Methods

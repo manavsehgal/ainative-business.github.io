@@ -16,10 +16,12 @@ The document workspace keeps project files, uploaded references, and extracted c
 
 ## Key Concepts
 
-- **Multi-Format Upload** — Text files, PDFs, spreadsheets, office documents, and images can all enter the same document library.
+- **Drag-and-Drop Upload** — Upload multiple files at once with a progress indicator. Text files, PDFs, spreadsheets, Office documents, and images all enter the same library.
+- **Automatic Text Extraction** — Stagent extracts searchable text from five file types automatically, making document content available to agents without manual preparation.
 - **Status Visibility** — Extraction state is visible directly in the list so operators can spot failures before an agent depends on the file.
-- **List & Grid Views** — Table and card layouts support both metadata-heavy browsing and faster visual scanning.
-- **Linked Context** — Documents can remain associated with both a task and a project so the context chain stays explicit.
+- **List & Grid Views** — Table and card layouts support both metadata-heavy browsing and faster visual scanning. View preference is remembered across sessions.
+- **Agent Context Injection** — Linked documents are auto-injected into agent context at execution time, ensuring agents always have the right reference material.
+- **Output Document Generation** — Agents can generate documents as deliverables. Agent-created files appear with a badge so operators can distinguish uploads from outputs.
 
 <BrowserFrame src="/screenshots/documents-grid.png" alt="Documents grid view showing card-based file browsing" />
 
