@@ -10,7 +10,7 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 Workflows are how Stagent turns one-off tasks into repeatable, multi-step operational playbooks. The product now includes both a workflow library and a blueprint catalog for bootstrapping new flows quickly.
 
-<BrowserFrame src="/screenshots/workflows-list.png" alt="Workflows list showing active, completed, and paused workflows" />
+<BrowserFrame src="/screenshots/workflows-list.png" alt="Workflows library with 8 workflows, pattern labels, and All/Templates/Runs tabs" />
 
 ## Workflow Patterns
 
@@ -50,7 +50,13 @@ A Mayor agent plans the work. 2–5 Worker agents execute in parallel with indep
 
 **Example**: Mayor plans code audit → Workers review auth, API, DB, and tests → Refinery merges findings
 
-<BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
+<BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Blueprint gallery with 8 template cards, domain tabs, and Create Custom button" />
+
+The Templates tab isolates reusable workflow patterns, while the Runs tab shows active and completed workflow executions with their current status.
+
+<BrowserFrame src="/screenshots/workflows-templates.png" alt="Workflows Templates tab showing reusable template with pattern and step count" />
+
+<BrowserFrame src="/screenshots/workflows-runs.png" alt="Workflows Runs tab showing active and completed workflow executions across projects" />
 
 ## Key Concepts
 
@@ -67,11 +73,11 @@ Blueprints are the fastest way to launch a new workflow. Operators can choose a 
 
 Once a workflow exists, the detail view exposes its exact step sequence. This is where Stagent makes orchestration legible: you can inspect prompts, identify checkpoints, and understand how work will proceed before any agent runs.
 
-<BrowserFrame src="/screenshots/workflows-detail.png" alt="Workflow detail view showing ordered steps and checkpoint badges" />
+<BrowserFrame src="/screenshots/workflows-detail.png" alt="Content Review Pipeline sequence workflow with single step and Execute button" />
 
 To create a new workflow from scratch, the creation form collects identity details, the orchestration pattern, a target project, and individual step prompts — giving operators full control over how work will be structured before any agent runs.
 
-<BrowserFrame src="/screenshots/workflows-create-form-filled.png" alt="Workflow creation form showing identity, pattern, project, and step prompts" />
+<BrowserFrame src="/screenshots/workflows-create-form-filled.png" alt="Create Workflow form with Customer Onboarding Pipeline, Checkpoint pattern, and step builder" />
 
 ### AI-Generated Workflows
 
@@ -79,7 +85,7 @@ When AI Assist produces a multi-step breakdown during task creation, operators c
 those steps into a full workflow. The confirmation page shows each generated step with its
 assigned agent profile, letting the operator review the structure before committing.
 
-<BrowserFrame src="/screenshots/dashboard-workflow-confirm.png" alt="Create Workflow from AI Assist showing 4 generated steps with profile assignments" />
+<BrowserFrame src="/screenshots/dashboard-workflow-confirm.png" alt="Create Workflow from AI Assist with 6 API Security Audit steps and assigned profiles" />
 
 ---
 

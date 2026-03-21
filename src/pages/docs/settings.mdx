@@ -10,7 +10,7 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 The settings page is where operators define how Stagent authenticates, which tool requests can be trusted by default, how much provider activity is allowed to cost, and how the local workspace data should be managed.
 
-<BrowserFrame src="/screenshots/settings-list.png" alt="Settings page showing authentication, tool permissions, and data management sections" />
+<BrowserFrame src="/screenshots/settings-list.png" alt="Settings with Claude OAuth and API Key authentication, plus OpenAI Codex Runtime configuration" />
 
 ## Key Concepts
 
@@ -32,12 +32,16 @@ The settings page is where operators define how Stagent authenticates, which too
 
 ## Cost Guardrails
 
+<BrowserFrame src="/screenshots/settings-budget.png" alt="Budget configuration with monthly spend cap, Claude/Codex provider allocation slider, and latest pricing table" />
+
 - **Overall Daily / Monthly Caps** — Limit total paid activity across runtimes in the current day or month window.
 - **Runtime-Scoped Caps** — Apply spend or token ceilings to Claude or Codex independently when one runtime needs tighter control.
 - **Blocked-State Visibility** — Settings shows whether a budget is currently blocking new work and when the next reset happens.
 - **Warning Notifications** — The inbox can warn operators as active budget windows approach a configured threshold.
 
 ## Data Management
+
+<BrowserFrame src="/screenshots/settings-presets.png" alt="Permission presets with Read Only, Git Safe, and Full Auto risk tiers, tool permissions, and data management" />
 
 - **Clear All Data** — Removes projects, tasks, workflows, schedules, documents, logs, notifications, and seeded profiles while preserving the underlying setup.
 - **Permission Pattern Curation** — Operators can review and revoke auto-approved command patterns from one place.

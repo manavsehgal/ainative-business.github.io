@@ -12,6 +12,10 @@ Tasks are the unit of execution inside Stagent. They move through explicit lifec
 
 <BrowserFrame src="/screenshots/dashboard-list.png" alt="Dashboard board showing tasks organized by status across multiple projects" />
 
+Tasks can also be viewed as a sortable table with columns for status, priority, project, profile, and actions — useful when you need to scan or filter a long task list quickly.
+
+<BrowserFrame src="/screenshots/dashboard-table.png" alt="Tasks table view with sortable columns for status, priority, project, and profile" />
+
 ## Key Concepts
 
 - **Lifecycle Lanes** — Planned, queued, running, completed, and failed states make task progress obvious at a glance.
@@ -23,7 +27,7 @@ Tasks are the unit of execution inside Stagent. They move through explicit lifec
 - **Inline Editing** — Tasks can be edited directly from the board without navigating away from the execution view.
 - **Bulk Operations** — Multi-select tasks across columns with a floating action bar for move, delete, or reassign actions.
 
-<BrowserFrame src="/screenshots/dashboard-detail.png" alt="Task detail view showing status, priority, description, and cancel action" />
+<BrowserFrame src="/screenshots/dashboard-detail.png" alt="Task detail showing planned status, P0 Critical priority, and Queue/Edit/Delete actions" />
 
 ## Task Lifecycle
 
@@ -42,7 +46,7 @@ Operators typically create tasks from the dashboard or from within a project. On
 
 The task detail view is the control surface for one execution record. It is where you verify the task definition, confirm current state, and intervene when a run should be canceled or retried.
 
-<BrowserFrame src="/screenshots/dashboard-create-form-filled.png" alt="Task creation form showing title, project, priority, and complexity fields" />
+<BrowserFrame src="/screenshots/dashboard-create-form-filled.png" alt="Create Task form with title, project, priority, runtime, agent profile, and AI Assist panel" />
 
 ## AI-Assisted Task Creation
 
@@ -51,13 +55,15 @@ sub-task breakdowns, description refinements, or workflow patterns. Operators re
 suggestions, accept or dismiss them, and submit the final task. This keeps human judgment
 in the loop while reducing the effort of writing detailed execution briefs from scratch.
 
-<BrowserFrame src="/screenshots/dashboard-create-form-empty.png" alt="Empty task creation form with AI Assist panel ready for input" />
+<BrowserFrame src="/screenshots/dashboard-create-form-empty.png" alt="Empty Create Task form with Auto-detect profile and AI Assist panel ready for input" />
 
 Once a title and description are entered, the AI Assist panel analyzes the brief and generates sub-task suggestions, description refinements, and workflow pattern recommendations in the right panel.
 
-<BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="Task creation with AI Assist showing generated sub-task suggestions and workflow patterns" />
+<BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="AI Assist panel with improved description, 4 sub-task suggestions, and Create as Workflow option" />
 
 Clicking **Apply** writes the AI-generated content back into the form's description field, giving the operator a polished starting point they can refine before submitting.
+
+<BrowserFrame src="/screenshots/dashboard-create-form-ai-applied.png" alt="Create Task form after applying AI-improved description with enriched context and sub-task breakdown" />
 
 ## Editing & Bulk Operations
 
@@ -65,11 +71,11 @@ Tasks can be edited inline from the dashboard using the card edit modal. The mod
 title, description, priority, runtime, and agent profile fields. Operators can also work
 with multiple tasks across status columns from the board view.
 
-<BrowserFrame src="/screenshots/dashboard-card-edit.png" alt="Edit Task modal showing editable title, description, priority, runtime, and agent profile fields" />
+<BrowserFrame src="/screenshots/dashboard-card-edit.png" alt="Edit Task dialog with title, description, priority, runtime, and agent profile fields" />
 
 The board view also supports working with multiple tasks at once. Selecting tasks across columns lets operators apply bulk actions — reassigning priorities, moving work between states, or clearing completed items — without opening each card individually.
 
-<BrowserFrame src="/screenshots/dashboard-bulk-select.png" alt="Dashboard board with tasks populated across Planned, Queued, Running, Completed, and Failed columns" />
+<BrowserFrame src="/screenshots/dashboard-bulk-select.png" alt="Kanban board with 3 tasks selected and bulk action toolbar visible" />
 
 ---
 

@@ -3,7 +3,7 @@ layout: ../layouts/ResearchLayout.astro
 title: "Stagent: The Coordination Layer for the Agentic Enterprise"
 description: "Governed AI agent operations: dual-runtime execution, cost governance, reusable automation, and the coordination layer for enterprise AI deployment."
 datePublished: "2026-03-01"
-dateModified: "2026-03-18"
+dateModified: "2026-03-21"
 author: "Manav"
 readingTime: "19 min read"
 ---
@@ -55,7 +55,7 @@ Four value propositions define Stagent's current position:
 3. **Reusable automation primitives** — Profiles, workflow blueprints, and schedules convert ad hoc prompting into repeatable operational systems.
 4. **Cost accountability** — A shared usage ledger, spend guardrails, and a dedicated cost dashboard turn provider choice into something teams can supervise rather than guess at.
 
-As of March 2026, the current browser product spans **eleven coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, Cost & Usage, and Settings. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
+As of March 2026, the current browser product spans **twelve coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, Cost & Usage, Settings, and Playbook. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
 
 ---
 
@@ -162,7 +162,7 @@ multi-step breakdown, operators can promote those steps into a reusable workflow
 ad hoc task creation and structured orchestration.
 
 <Figure number={5} caption="AI-Assisted Task Creation — Operator Reviews AI-Generated Sub-Tasks Before Submission">
-  <BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="Task creation with AI Assist panel showing generated sub-task suggestions" />
+  <BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="AI Assist panel with improved description, sub-task suggestions, and Create as Workflow option" />
 </Figure>
 
 ### The canUseTool Governance Pattern
@@ -174,7 +174,7 @@ The centerpiece of Stagent's architecture remains the `canUseTool` pattern: the 
 </Figure>
 
 <Figure number={7} caption="Permissions Inbox — Explicit Approval Controls for Agent Tool Requests">
-  <BrowserFrame src="/screenshots/inbox-permissions.png" alt="Permissions inbox showing allow once, always allow, and deny actions" />
+  <BrowserFrame src="/screenshots/inbox-permissions.png" alt="Governance command center Permissions tab with responded Write and SendEmail tool requests" />
 </Figure>
 
 1. **Agent requests a tool** — The runtime reaches a trust boundary.
@@ -202,7 +202,7 @@ What changed next is that Stagent now measures and governs the economics of that
 - **Cost & Usage dashboard** shows spend velocity, token velocity, runtime share, and model concentration in one operator-facing surface.
 
 <Figure number={8} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
-  <BrowserFrame src="/screenshots/cost-codex-claude-code.png" alt="Cost and usage dashboard showing spend velocity, token trends, runtime breakdown, and model concentration across Claude and Codex activity" />
+  <BrowserFrame src="/screenshots/cost-codex-claude-code.png" alt="Cost and usage dashboard with budget pacing, spend metrics, runtime counts, and Anthropic/OpenAI pricing table" />
 </Figure>
 
 ### Technology Stack
@@ -239,7 +239,7 @@ Stagent occupies the **high-governance, high-autonomy** quadrant: the space wher
 **3. Reusable AI operations layer** — Profiles, blueprints, and schedules convert successful runs into repeatable systems. This is a key step from experimentation to production discipline.
 
 <Figure number={10} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
-  <BrowserFrame src="/screenshots/profiles-detail.png" alt="Profile detail showing instructions, configuration, and tool policies" />
+  <BrowserFrame src="/screenshots/profiles-detail.png" alt="Code Reviewer profile detail with identity, configuration, runtime coverage, tools, and SKILL.md" />
 </Figure>
 
 ---
@@ -257,7 +257,7 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Projects** | Portfolio organization with working directories and scoped execution context |
 | **Workflows** | Reusable orchestration with six patterns including parallel, loop, and swarm execution |
 | **Documents** | Drag-and-drop upload, automatic text extraction, and agent context injection |
-| **Profiles** | 13+ curated specialists with cross-provider support, GitHub import, and self-improvement |
+| **Profiles** | 21 curated specialists with cross-provider support, auto-detect routing, and self-improvement |
 | **Schedules** | Human-friendly intervals, cron expressions, runtime targeting, and governed execution |
 | **Inbox** | Approval controls, ambient toasts, agent questions, and batch context proposals |
 | **Monitor** | Streaming logs with click-to-navigate, auto-pause, and event filtering |
@@ -265,11 +265,11 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Settings** | Permission presets with risk tiers, task resume, authentication, and data management |
 
 <Figure number={11} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
-  <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Workflow blueprint gallery showing reusable work and personal templates" />
+  <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Blueprint gallery with 8 template cards, domain tabs, and Create Custom button" />
 </Figure>
 
 <Figure number={12} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
-  <BrowserFrame src="/screenshots/schedules-detail.png" alt="Schedule detail showing prompt, next fire time, and firing history" />
+  <BrowserFrame src="/screenshots/schedules-detail.png" alt="Daily Standup Summary schedule detail with firings count, next fire time, and prompt" />
 </Figure>
 
 ### Three-Horizon Roadmap
@@ -318,7 +318,7 @@ Five pillars support the case for Stagent:
 2. **Governance moat** — Approval paths, visibility surfaces, and trust boundaries are baked into the operating model.
 3. **Category creation** — Stagent is building a recognizable AI operations workspace, not just another framework or chatbot shell.
 4. **Reusable automation advantage** — Profiles, blueprints, and schedules turn successful experiments into repeatable organizational process.
-5. **Execution breadth** — The current product already spans more than eleven interlocking operator surfaces in a coherent local-first system.
+5. **Execution breadth** — The current product already spans twelve interlocking operator surfaces in a coherent local-first system.
 
 ---
 
@@ -364,6 +364,7 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 | **Monitor** | Observe live runtime activity | Faster debugging and trust-building |
 | **Cost & Usage** | Review spend, tokens, and budget state | Operator-visible economic control |
 | **Settings** | Configure auth, policy defaults, and reset controls | Centralized operational control |
+| **Playbook** | Guide adoption with feature tracking and journey cards | Faster onboarding and feature discovery |
 
 ## Appendix C: Sources & References
 
@@ -379,4 +380,4 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 
 ---
 
-*This paper was updated on March 18, 2026. Product coverage reflects the current browser workspace with 53 features across 11 surfaces, including dual-runtime execution, cost governance with budget enforcement, 13+ curated profiles with self-improvement, 6 workflow patterns, and permission presets.*
+*This paper was updated on March 21, 2026. Product coverage reflects the current browser workspace with 51 completed features across 12 surfaces, including dual-runtime execution, cost governance with budget enforcement, 21 curated profiles with auto-detect routing, 6 workflow patterns, permission presets, and a built-in playbook.*
