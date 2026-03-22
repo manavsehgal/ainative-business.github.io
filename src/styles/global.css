@@ -198,6 +198,8 @@ section {
 .svg-reveal-d4 { transition-delay: 0.4s; }
 .svg-reveal-d5 { transition-delay: 0.5s; }
 .svg-reveal-d6 { transition-delay: 0.6s; }
+.svg-reveal-d7 { transition-delay: 0.7s; }
+.svg-reveal-d8 { transition-delay: 0.8s; }
 
 /* Hover lift for interactive SVG elements */
 .svg-hover-lift {

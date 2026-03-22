@@ -3,7 +3,7 @@ layout: ../layouts/ResearchLayout.astro
 title: "Stagent: The Coordination Layer for the Agentic Enterprise"
 description: "Governed AI agent operations: dual-runtime execution, cost governance, reusable automation, and the coordination layer for enterprise AI deployment."
 datePublished: "2026-03-01"
-dateModified: "2026-03-21"
+dateModified: "2026-03-22"
 author: "Manav"
 readingTime: "19 min read"
 ---
@@ -55,7 +55,7 @@ Four value propositions define Stagent's current position:
 3. **Reusable automation primitives** — Profiles, workflow blueprints, and schedules convert ad hoc prompting into repeatable operational systems.
 4. **Cost accountability** — A shared usage ledger, spend guardrails, and a dedicated cost dashboard turn provider choice into something teams can supervise rather than guess at.
 
-As of March 2026, the current browser product spans **twelve coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, Cost & Usage, Settings, and Playbook. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
+As of March 2026, the current browser product spans **fifteen coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, Cost & Usage, Chat, Environment, Playbook, Settings, and Command Palette. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
 
 ---
 
@@ -143,9 +143,9 @@ Stagent's architecture follows three principles:
   <DetailedArchitecture />
 </Figure>
 
-The detailed architecture reveals three distinct layers working in concert. The **browser layer** runs a React 19 single-page application with 10 operator-facing surfaces — each purpose-built for a specific governance function, from the Home workspace briefing to the Monitor's real-time streaming view and the Cost & Usage dashboard.
+The detailed architecture reveals three distinct layers working in concert. The **browser layer** runs a React 19 single-page application with 15 operator-facing surfaces — each purpose-built for a specific governance function, from the Home workspace briefing to the Chat conversational AI, Environment scanner, Monitor's real-time streaming view, and the Cost & Usage dashboard.
 
-The **server layer** runs on Next.js 16 and contains 8 service modules. The Runtime Registry abstracts provider differences behind a shared adapter interface, letting operators switch between Claude Agent SDK and OpenAI Codex without changing workflows. The Permission Gate enforces `canUseTool` at every trust boundary. The Workflow Engine supports 6 orchestration patterns — sequence, planner-executor, checkpoint, fork/join parallel, autonomous loop, and multi-agent swarm — that convert ad hoc prompting into repeatable automation.
+The **server layer** runs on Next.js 16 and contains 11 service modules. The Runtime Registry abstracts provider differences behind a shared adapter interface, letting operators switch between Claude Agent SDK and OpenAI Codex without changing workflows. The Permission Gate enforces `canUseTool` at every trust boundary. The Workflow Engine supports 6 orchestration patterns — sequence, planner-executor, checkpoint, fork/join parallel, autonomous loop, and multi-agent swarm — that convert ad hoc prompting into repeatable automation. Three recent additions — the Chat Engine (context-aware workspace AI with multi-provider model selection), the Environment Scanner (health scoring, skill portfolio, and cross-project comparison), and the Cost Engine (usage metering ledger with budget guardrails) — extend the server layer from pure execution into conversational interaction, environment governance, and spend control.
 
 The **external layer** is deliberately minimal. All persistent state lives in `~/.stagent/` — a local SQLite database with WAL-mode concurrency. The only external network calls go to runtime backends (Anthropic and OpenAI) for model inference. EventSource provides real-time push to the browser via SSE, eliminating the need for polling infrastructure. Data flow follows a clear principle: Server Components handle reads with zero API overhead (direct database queries), while API Routes handle mutations only.
 
@@ -262,6 +262,9 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 | **Inbox** | Approval controls, ambient toasts, agent questions, and batch context proposals |
 | **Monitor** | Streaming logs with click-to-navigate, auto-pause, and event filtering |
 | **Cost & Usage** | Spend, tokens, budget enforcement, project budgets, and execution path tracking |
+| **Chat** | Conversational AI with multi-provider model selection, context-aware prompts, and entity CRUD |
+| **Environment** | Environment scanning with health scoring, artifact discovery, and cross-project comparison |
+| **Playbook** | Built-in documentation with usage-stage awareness, adoption heatmap, and guided learning journeys |
 | **Settings** | Permission presets with risk tiers, task resume, authentication, and data management |
 
 <Figure number={11} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
@@ -270,6 +273,14 @@ The March 2026 product now covers the core surfaces an operator needs to supervi
 
 <Figure number={12} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
   <BrowserFrame src="/screenshots/schedules-detail.png" alt="Daily Standup Summary schedule detail with firings count, next fire time, and prompt" />
+</Figure>
+
+<Figure number={13} caption="Chat — Conversational AI with Multi-Provider Model Selection and Workspace Context">
+  <BrowserFrame src="/screenshots/chat-list.png" alt="Chat empty state with suggested prompt categories, model selector, and conversation history sidebar" />
+</Figure>
+
+<Figure number={14} caption="Environment — Development Environment Scanner with Health Scoring and Artifact Inventory">
+  <BrowserFrame src="/screenshots/environment-list.png" alt="Environment dashboard showing artifacts, health score, MCP servers, skills, and safety ratings" />
 </Figure>
 
 ### Three-Horizon Roadmap
@@ -318,7 +329,7 @@ Five pillars support the case for Stagent:
 2. **Governance moat** — Approval paths, visibility surfaces, and trust boundaries are baked into the operating model.
 3. **Category creation** — Stagent is building a recognizable AI operations workspace, not just another framework or chatbot shell.
 4. **Reusable automation advantage** — Profiles, blueprints, and schedules turn successful experiments into repeatable organizational process.
-5. **Execution breadth** — The current product already spans twelve interlocking operator surfaces in a coherent local-first system.
+5. **Execution breadth** — The current product already spans fifteen interlocking operator surfaces in a coherent local-first system.
 
 ---
 
@@ -363,8 +374,10 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 | **Inbox** | Review permissions and questions | Governed execution |
 | **Monitor** | Observe live runtime activity | Faster debugging and trust-building |
 | **Cost & Usage** | Review spend, tokens, and budget state | Operator-visible economic control |
-| **Settings** | Configure auth, policy defaults, and reset controls | Centralized operational control |
+| **Chat** | Converse with workspace through natural language | Faster entity creation and discovery |
+| **Environment** | Scan and audit development environments | Configuration health and consistency |
 | **Playbook** | Guide adoption with feature tracking and journey cards | Faster onboarding and feature discovery |
+| **Settings** | Configure auth, policy defaults, and reset controls | Centralized operational control |
 
 ## Appendix C: Sources & References
 
@@ -380,4 +393,4 @@ That is what Stagent is becoming: the governed AI operations layer for teams tha
 
 ---
 
-*This paper was updated on March 21, 2026. Product coverage reflects the current browser workspace with 51 completed features across 12 surfaces, including dual-runtime execution, cost governance with budget enforcement, 21 curated profiles with auto-detect routing, 6 workflow patterns, permission presets, and a built-in playbook.*
+*This paper was updated on March 22, 2026. Product coverage reflects the current browser workspace with 68 completed features across 15 surfaces, including dual-runtime execution, cost governance with budget enforcement, 21 curated profiles with auto-detect routing, 6 workflow patterns, permission presets, conversational AI with multi-provider model selection, environment scanning with health scoring, and a built-in playbook.*

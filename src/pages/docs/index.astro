@@ -13,12 +13,14 @@ const pages = [
   { href: '/docs/monitoring', title: 'Monitoring', description: 'Streaming logs with click-to-navigate, auto-pause on tab switch, and event filtering.', screenshot: '/screenshots/monitor-list.png' },
   { href: '/docs/costs', title: 'Cost & Usage', description: 'Cross-runtime spend, budget enforcement, project budgets, and execution path tracking.', screenshot: '/screenshots/cost-codex-claude-code.png' },
   { href: '/docs/agents', title: 'Agent Integration', description: 'Dual-runtime execution with Claude SDK and Codex App Server, profile-backed policies.', screenshot: '/screenshots/profiles-detail.png' },
+  { href: '/docs/chat', title: 'Chat', description: 'Conversational AI with model selection, suggested prompts, entity CRUD, and Quick Access navigation.', screenshot: '/screenshots/chat-list.png' },
+  { href: '/docs/environment', title: 'Environment', description: 'Scan, audit, and manage Claude Code and Codex CLI environments with health scoring and artifact discovery.', screenshot: '/screenshots/environment-list.png' },
   { href: '/docs/settings', title: 'Settings', description: 'Permission presets with risk tiers, task resume, authentication, and data management.', screenshot: '/screenshots/settings-list.png' },
 ];
 ---
 <DocsLayout title="Overview" description="Comprehensive documentation for Stagent — a governed AI agent operations workspace with reusable profiles, workflows, documents, schedules, and local-first oversight.">
   <h1>Stagent Documentation</h1>
-  <p>Stagent is a local-first AI agent operations workspace. Explore the product surfaces below to see how home, execution, projects, workflows, profiles, schedules, documents, monitoring, cost governance, and approvals fit together.</p>
+  <p>Stagent is a local-first AI agent operations workspace. Explore the product surfaces below to see how home, execution, projects, workflows, profiles, schedules, documents, chat, environment, monitoring, cost governance, and approvals fit together.</p>
 
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 not-prose">
     {pages.map(({ href, title, description, screenshot }) => (

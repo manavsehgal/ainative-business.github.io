@@ -1,0 +1,78 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: "Chat"
+description: "Conversational AI control plane for your workspace — ask questions, create entities, and navigate to any project, task, or workflow through natural language."
+---
+
+import BrowserFrame from '../../components/ui/BrowserFrame.astro'
+
+# Chat
+
+The chat surface turns natural language into workspace actions. Ask about your projects, create tasks, explore workflows, and navigate to any entity — all through a conversational interface that understands your Stagent workspace context.
+
+<BrowserFrame src="/screenshots/chat-list.png" alt="Chat empty state with hero heading, suggested prompt categories, and conversation history sidebar" />
+
+## Key Concepts
+
+- **Conversational Control Plane** — Chat is not a standalone assistant. It has full awareness of your projects, tasks, workflows, documents, and schedules through progressive context injection.
+- **Multi-Provider Model Selection** — Choose between Claude (Haiku, Sonnet, Opus) and OpenAI (GPT-5.x) models with clear cost tier labels ($, $$, $$$) per conversation.
+- **Suggested Prompts** — Tabbed prompt categories (Explore, Create, Debug, Automate, Smart picks) generated from your actual workspace data help you discover what the assistant can do.
+- **Quick Access Navigation** — When the assistant mentions an entity, navigation pills appear at the bottom of the response for one-click deep linking to that project, task, or workflow.
+- **Entity CRUD via Chat** — Create, update, and delete projects, tasks, and workflows through natural language without navigating to their respective surfaces.
+
+## How It Works
+
+Chat uses a progressive 5-tier context injection system that loads workspace awareness from lightweight summaries up to full document content within a ~53K token budget. This means the assistant knows your workspace state without you having to explain your setup.
+
+<BrowserFrame src="/screenshots/chat-conversation.png" alt="Active conversation showing task creation response with Quick Access navigation pills" />
+
+Responses stream in real time with full markdown support — headings, lists, code blocks with syntax highlighting, and tables render as the text arrives. Quick Access pills appear after streaming completes, linking directly to any entity mentioned in the response.
+
+### Model Selection
+
+Switch models at any time using the selector in the input area. Each model is labeled with its cost tier so you can balance capability against spend.
+
+<BrowserFrame src="/screenshots/chat-model-selector.png" alt="Model selector dropdown showing Anthropic and OpenAI models grouped by provider with cost tier labels" />
+
+### Suggested Prompts & Create Tab
+
+The empty state displays context-aware prompt suggestions organized into tabbed categories. The Create tab surfaces entity creation options that are pre-filled with workspace context.
+
+<BrowserFrame src="/screenshots/chat-create-tab.png" alt="Suggested prompts with Create tab showing workflow design, task creation, and document drafting options" />
+
+### Quick Access Deep Linking
+
+After asking about a workspace entity, Quick Access pills at the bottom of the response let you jump directly to the relevant detail page in one click.
+
+<BrowserFrame src="/screenshots/chat-quick-access.png" alt="Chat response with Quick Access navigation pill linking to a created task" />
+
+---
+
+## Use Cases
+
+### Daily Standup Triage
+
+**Product Team** · *Getting a quick status overview before the morning standup*
+
+Ask "What's the current status of the Q2 launch project?" and get a summary of task distribution, recent completions, and blockers — then click the Quick Access pill to jump straight to the project detail view.
+
+### Task Creation from Context
+
+**Developer** · *Creating structured work from a natural language description*
+
+Describe what needs to happen — "Create a task to analyze the Magnificent 7 tech companies" — and the assistant creates it with proper priority, status, and description, ready for agent execution.
+
+### Workspace Discovery
+
+**New User** · *Learning what Stagent can do through conversation*
+
+Browse the suggested prompt categories to discover capabilities you haven't explored yet. The Explore tab surfaces questions about your existing data, while the Create tab helps you build new entities.
+
+---
+
+## Related Features
+
+- [Task Execution](/docs/tasks) — Where tasks created from chat land for agent execution
+- [Projects](/docs/projects) — Project context that powers chat awareness
+- [Workflows](/docs/workflows) — Multi-step orchestration you can create through chat
+- [Cost & Usage](/docs/costs) — Model selection in chat directly impacts spend visibility
