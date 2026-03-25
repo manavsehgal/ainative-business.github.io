@@ -25,11 +25,19 @@ const PREFS_KEY = "stagent-book-prefs";
 const PROGRESS_KEY = "stagent-book-progress";
 const BOOKMARKS_KEY = "stagent-book-bookmarks";
 
+function getSiteTheme(): ReaderPreferences["theme"] {
+  if (typeof window === "undefined") return "light";
+  const siteTheme = document.documentElement.getAttribute("data-theme");
+  return siteTheme === "dark" ? "dark" : "light";
+}
+
 function loadPrefs(): ReaderPreferences {
   if (typeof window === "undefined") return DEFAULT_READER_PREFS;
   try {
     const saved = localStorage.getItem(PREFS_KEY);
-    return saved ? { ...DEFAULT_READER_PREFS, ...JSON.parse(saved) } : DEFAULT_READER_PREFS;
+    if (saved) return { ...DEFAULT_READER_PREFS, ...JSON.parse(saved) };
+    // No saved prefs — match the site theme
+    return { ...DEFAULT_READER_PREFS, theme: getSiteTheme() };
   } catch {
     return DEFAULT_READER_PREFS;
   }
