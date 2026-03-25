@@ -8,8 +8,6 @@ relatedDocs: [workflows, agent-intelligence]
 relatedJourney: power-user
 ---
 
-# Workflow Orchestration
-
 ## The Problem
 
 Individual tasks are solved. But real work isn't a series of independent tasks—it's a *workflow*. Tasks depend on each other. Outputs flow from one step to the next. Failures need to be caught and handled. And the whole sequence needs to be observable. Stagent's workflow engine turns linear task sequences into adaptive, observable pipelines.

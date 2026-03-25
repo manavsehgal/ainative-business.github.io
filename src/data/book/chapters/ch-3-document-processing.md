@@ -7,8 +7,6 @@ readingTime: 14
 relatedDocs: [documents, shared-components]
 ---
 
-# Document Processing
-
 ## The Problem
 
 Every business runs on documents. Contracts, invoices, meeting notes, research papers, design specs, customer feedback surveys -- the knowledge that drives decisions lives not in tidy database rows but in PDFs, Word documents, spreadsheets, and plain text files scattered across file systems and cloud drives.
