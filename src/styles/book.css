@@ -1,0 +1,215 @@
+/* ── Book Reader Styles ──
+   Uses the site's OKLCH design tokens. Reader themes are independent
+   of the site's data-theme and apply via data-book-theme on the reader container. */
+
+/* ── Reader Theme: Light (default) ── */
+[data-book-theme="light"] .book-reading-area {
+  --book-bg: oklch(0.99 0.002 260);
+  --book-text: oklch(0.15 0.02 260);
+  --book-text-muted: oklch(0.45 0.03 260);
+  --book-code-bg: oklch(0.96 0.005 260);
+  --book-code-header: oklch(0.94 0.008 260);
+  --book-border: oklch(0.88 0.01 260);
+  background: var(--book-bg);
+  color: var(--book-text);
+}
+
+/* ── Reader Theme: Sepia ── */
+[data-book-theme="sepia"] .book-reading-area {
+  --book-bg: oklch(0.94 0.025 80);
+  --book-text: oklch(0.25 0.04 60);
+  --book-text-muted: oklch(0.45 0.04 70);
+  --book-code-bg: oklch(0.90 0.025 75);
+  --book-code-header: oklch(0.88 0.03 75);
+  --book-border: oklch(0.82 0.03 75);
+  background: var(--book-bg);
+  color: var(--book-text);
+}
+
+/* ── Reader Theme: Dark ── */
+[data-book-theme="dark"] .book-reading-area {
+  --book-bg: oklch(0.13 0.02 250);
+  --book-text: oklch(0.93 0.01 250);
+  --book-text-muted: oklch(0.6 0.02 250);
+  --book-code-bg: oklch(0.16 0.02 250);
+  --book-code-header: oklch(0.19 0.02 250);
+  --book-border: oklch(0.25 0.02 250);
+  background: var(--book-bg);
+  color: var(--book-text);
+}
+
+/* ── Book Prose (markdown content) ── */
+.book-prose {
+  line-height: inherit;
+}
+
+.book-prose p {
+  margin-bottom: 1em;
+}
+
+.book-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.book-prose strong {
+  font-weight: 600;
+}
+
+.book-prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.2s;
+}
+
+.book-prose a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.book-prose ul,
+.book-prose ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.book-prose li {
+  margin-bottom: 0.25em;
+}
+
+.book-prose li::marker {
+  color: var(--color-primary);
+}
+
+.book-prose blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+  color: var(--book-text-muted, var(--color-text-muted));
+}
+
+.book-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: var(--book-code-bg, var(--color-surface-raised));
+}
+
+.book-prose h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 1.5em 0 0.75em;
+}
+
+.book-prose h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 1.25em 0 0.5em;
+}
+
+.book-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9em;
+}
+
+.book-prose th,
+.book-prose td {
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--book-border, var(--color-border));
+  text-align: left;
+}
+
+.book-prose th {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0.025em;
+  background: var(--book-code-bg, var(--color-surface-raised));
+}
+
+/* ── Code Blocks ── */
+.book-code-header {
+  background: var(--book-code-header, var(--color-surface-overlay));
+  border: 1px solid var(--book-border, var(--color-border));
+  border-bottom: none;
+}
+
+.book-code-pre {
+  background: var(--book-code-bg, var(--color-surface-raised));
+  border: 1px solid var(--book-border, var(--color-border));
+  border-top: none;
+}
+
+/* ── Images ── */
+.book-image {
+  border: 1px solid var(--book-border, var(--color-border));
+  box-shadow: 0 2px 8px oklch(0.5 0.02 260 / 0.06);
+}
+
+/* ── Callout Variants ── */
+.book-callout {
+  background: var(--book-code-bg, var(--color-surface-raised));
+}
+
+.book-callout-tip {
+  border-color: oklch(0.55 0.15 170);
+}
+.book-callout-tip .book-callout-icon {
+  color: oklch(0.55 0.15 170);
+}
+
+.book-callout-warning {
+  border-color: oklch(0.65 0.15 75);
+}
+.book-callout-warning .book-callout-icon {
+  color: oklch(0.65 0.15 75);
+}
+
+.book-callout-info {
+  border-color: var(--color-primary);
+}
+.book-callout-info .book-callout-icon {
+  color: var(--color-primary);
+}
+
+.book-callout-lesson {
+  border-color: oklch(0.6 0.15 300);
+}
+.book-callout-lesson .book-callout-icon {
+  color: oklch(0.6 0.15 300);
+}
+
+.book-callout-authors-note {
+  border-color: var(--book-text-muted, var(--color-text-muted));
+}
+.book-callout-authors-note .book-callout-icon {
+  color: var(--book-text-muted, var(--color-text-muted));
+}
+
+/* ── Quiz ── */
+.book-quiz-correct {
+  border-color: oklch(0.55 0.15 170) !important;
+  background: oklch(0.55 0.15 170 / 0.08);
+}
+
+.book-quiz-wrong {
+  border-color: oklch(0.6 0.2 25) !important;
+  background: oklch(0.6 0.2 25 / 0.08);
+}
+
+/* ── Sugar-high syntax highlighting token colors ── */
+.book-code-pre code {
+  --sh-class: oklch(0.65 0.15 170);
+  --sh-identifier: var(--book-text, var(--color-text));
+  --sh-sign: var(--book-text-muted, var(--color-text-muted));
+  --sh-string: oklch(0.65 0.15 170);
+  --sh-keyword: oklch(0.6 0.15 300);
+  --sh-comment: var(--book-text-muted, var(--color-text-muted));
+  --sh-jsxliterals: oklch(0.65 0.18 250);
+  --sh-property: oklch(0.65 0.18 250);
+  --sh-entity: oklch(0.65 0.15 170);
+}

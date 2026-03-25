@@ -1,0 +1,42 @@
+---
+import Layout from './Layout.astro';
+import Nav from '../components/Nav.astro';
+import '../styles/book.css';
+import { SITE, PUBLISHER } from '../data/seo';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'AI Native — The Book', description = '' } = Astro.props;
+const pageTitle = `${title} — Stagent`;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: 'AI Native: Building Autonomous Business Systems with AI Agents',
+    description: 'A practical guide to building AI-native applications, from single-agent task execution to fully autonomous business processes.',
+    publisher: PUBLISHER,
+    url: new URL(Astro.url.pathname, SITE.url).toString(),
+    inLanguage: 'en',
+    accessMode: 'textual',
+    isAccessibleForFree: true,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Book', item: `${SITE.url}/book/` },
+      { '@type': 'ListItem', position: 3, name: title, item: new URL(Astro.url.pathname, SITE.url).toString() },
+    ],
+  },
+];
+---
+<Layout title={pageTitle} description={description} jsonLd={jsonLd}>
+  <main>
+    <slot />
+  </main>
+</Layout>

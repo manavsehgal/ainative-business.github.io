@@ -1,0 +1,42 @@
+---
+// Permanent notification bar for book release announcement
+// Gradient tint + pill badge style, designed for light-first with dark mode support
+---
+<div class="notification-bar border-b border-border/50 py-2">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-center gap-3 text-sm">
+    <span class="inline-flex items-center gap-1.5 bg-success-dim px-2.5 py-0.5 rounded-full">
+      <span class="h-1.5 w-1.5 rounded-full bg-success animate-pulse" aria-hidden="true"></span>
+      <span class="font-mono text-[10px] tracking-wider font-semibold text-success uppercase">
+        New Release
+      </span>
+    </span>
+    <span class="text-text">
+      Read <strong class="font-semibold">AI Native</strong> — free online book
+    </span>
+    <a
+      href="/book"
+      class="text-primary hover:text-text transition-colors font-medium"
+      aria-label="Read AI Native book"
+    >
+      →
+    </a>
+  </div>
+</div>
+
+<style>
+  .notification-bar {
+    background: linear-gradient(
+      90deg,
+      oklch(0.55 0.18 260 / 0.04),
+      oklch(0.45 0.15 170 / 0.04)
+    );
+  }
+
+  :global(html[data-theme="dark"]) .notification-bar {
+    background: linear-gradient(
+      90deg,
+      oklch(0.65 0.18 250 / 0.06),
+      oklch(0.65 0.15 170 / 0.06)
+    );
+  }
+</style>

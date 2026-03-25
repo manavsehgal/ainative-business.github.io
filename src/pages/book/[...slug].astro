@@ -1,0 +1,74 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import BookLayout from '../../layouts/BookLayout.astro';
+import { BookReader } from '../../components/book/book-reader';
+import { CHAPTERS, CHAPTER_SLUG_MAP, PARTS } from '../../lib/book/content';
+import { parseMarkdownChapter } from '../../lib/book/markdown-parser';
+import type { BookChapter, ContentBlock } from '../../lib/book/types';
+
+export function getStaticPaths() {
+  // Parse all chapters at build time
+  const allChapters: BookChapter[] = CHAPTERS.map((chapterStub) => {
+    const fileSlug = CHAPTER_SLUG_MAP[chapterStub.id];
+    if (!fileSlug) return chapterStub;
+
+    const filePath = path.join(process.cwd(), 'src', 'data', 'book', 'chapters', `${fileSlug}.md`);
+    if (!fs.existsSync(filePath)) return chapterStub;
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // Parse frontmatter
+    const fmRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+    const fmMatch = content.match(fmRegex);
+    const fmBlock = fmMatch ? fmMatch[1] : '';
+    const body = fmMatch ? fmMatch[2] : content;
+
+    const fm: Record<string, unknown> = {};
+    for (const line of fmBlock.split('\n')) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+      const key = line.slice(0, colonIdx).trim();
+      let value: unknown = line.slice(colonIdx + 1).trim();
+      if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+        value = value.slice(1, -1);
+      }
+      fm[key] = value;
+    }
+
+    const { sections } = parseMarkdownChapter(body, chapterStub.id);
+    const partNum = Number(fm.part) || chapterStub.part.number;
+
+    return {
+      ...chapterStub,
+      title: (fm.title as string) || chapterStub.title,
+      subtitle: (fm.subtitle as string) || chapterStub.subtitle,
+      readingTime: Number(fm.readingTime) || chapterStub.readingTime,
+      part: PARTS[partNum - 1] || chapterStub.part,
+      sections,
+    };
+  });
+
+  // Generate one path per chapter, each getting ALL chapters for in-reader navigation
+  return CHAPTERS.map((ch) => {
+    const slug = CHAPTER_SLUG_MAP[ch.id];
+    return {
+      params: { slug },
+      props: {
+        currentChapterId: ch.id,
+        allChapters,
+        chapterTitle: allChapters.find((c) => c.id === ch.id)?.title ?? ch.title,
+      },
+    };
+  });
+}
+
+const { currentChapterId, allChapters, chapterTitle } = Astro.props;
+---
+<BookLayout title={chapterTitle}>
+  <BookReader
+    client:load
+    chapters={allChapters}
+    initialChapterId={currentChapterId}
+  />
+</BookLayout>

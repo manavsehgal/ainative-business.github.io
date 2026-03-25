@@ -3,15 +3,14 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
+import react from '@astrojs/react';
+
 export default defineConfig({
   site: 'https://stagent.io',
-  integrations: [
-    mdx(),
-    sitemap({
-      filter: (page) =>
-        !page.includes('/confirmed') && !page.includes('/og'),
-    }),
-  ],
+  integrations: [mdx(), sitemap({
+    filter: (page) =>
+      !page.includes('/confirmed') && !page.includes('/og'),
+  }), react()],
   vite: {
     plugins: [tailwindcss()],
   },
