@@ -6,6 +6,7 @@ import '../../styles/book.css';
 import { PARTS, CHAPTERS, CHAPTER_SLUG_MAP } from '../../lib/book/content';
 import { READING_PATHS } from '../../lib/book/reading-paths';
 import { SITE, PUBLISHER } from '../../data/seo';
+import BrowserFrame from '../../components/ui/BrowserFrame.astro';
 
 const totalReadingTime = CHAPTERS.reduce((sum, ch) => sum + ch.readingTime, 0);
 
@@ -150,6 +151,22 @@ const jsonLd = [
             </div>
           </a>
         ))}
+      </div>
+    </section>
+
+    <!-- Reading Experience Preview -->
+    <section class="max-w-5xl mx-auto px-6 mb-20" data-animate>
+      <div class="text-center mb-10">
+        <h2 class="text-2xl font-bold mb-3">The Reading Experience</h2>
+        <p class="text-text-muted">
+          A distraction-free reader with customizable fonts, themes, reading progress, and chapter navigation.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <BrowserFrame src="/screenshots/book-reader.png" alt="Book reader showing Chapter 1: Project Management with reading progress bar and Regenerate button" />
+        <BrowserFrame src="/screenshots/book-toc.png" alt="Book table of contents sidebar with chapter list, reading paths, and completion checkmarks" />
+        <BrowserFrame src="/screenshots/book-settings.png" alt="Book reading settings panel with font size, line height, font family, and theme selection" />
+        <BrowserFrame src="/screenshots/book-chapter-nav.png" alt="Book chapter navigation with breadcrumb, reading time estimate, and section progress" />
       </div>
     </section>
 

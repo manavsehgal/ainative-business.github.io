@@ -19,8 +19,14 @@ The settings page is where operators define how Stagent authenticates, which too
 - **Default Tool Permissions** — Seed safe approval patterns so the inbox does not need to mediate every low-risk action. Patterns can be broad (`Read`) or specific (`Bash(command:git status)`) with wildcard support.
 - **Task Resume** — Retry failed or cancelled tasks with a 3-attempt limit, resuming execution from a known state instead of starting over.
 - **Cost & Usage Guardrails** — Configure daily and monthly spend caps plus runtime-specific token/spend limits.
+- **Browser Tools** — Independent toggles for Chrome DevTools and Playwright automation; read-only browser actions auto-approved within the trust tier.
+- **Chat Defaults** — Choose the default AI model for new conversations with cost-tier indicators so operators can balance capability against spend.
 - **Data Management** — Seed sample data for evaluation or clear all data (respects table relationships) when resetting the workspace.
 - **Local-First Configuration** — Settings are managed close to the workspace instead of hidden inside a remote SaaS control plane.
+
+The settings page also manages runtime connections — OAuth and API Key authentication for Claude, plus OpenAI Codex Runtime configuration with connection testing for each provider.
+
+<BrowserFrame src="/screenshots/settings-browser-tools.png" alt="Settings authentication with Claude OAuth and API Key methods, OpenAI Codex Runtime configuration, and connection test buttons" />
 
 ## Authentication Methods
 

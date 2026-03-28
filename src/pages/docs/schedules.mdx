@@ -21,8 +21,10 @@ Schedules turn repeatable prompts into recurring or one-shot automations. They e
 - **Profile Selection** — A schedule can choose which agent profile should execute the recurring work.
 - **Governed Execution** — Each firing creates a new task that flows through the full execution pipeline with monitoring, approvals, and logging — scheduled work is never a black box.
 - **Guardrails** — Max firings and expiry windows stop a schedule from running forever by accident.
+- **Firing History** — Every firing creates a tracked child task visible in the detail view, enabling audit trails and pattern spotting across runs.
+- **Pause and Resume** — Suspend a schedule without losing configuration or firing history; resuming picks up where it left off.
 
-<BrowserFrame src="/screenshots/schedules-detail.png" alt="Daily Standup Summary schedule detail with firings count, next fire time, and prompt" />
+<BrowserFrame src="/screenshots/schedules-detail.png" alt="New Gadget Trends schedule detail with firings count, next fire time, and prompt" />
 
 ## How It Works
 
@@ -31,6 +33,10 @@ The list view is the automation roster. It shows cadence, firing count, and life
 The detail view then exposes the exact prompt, next fire time, selected profile, and firing history. This keeps recurring automation observable in the same way that ad hoc tasks remain observable elsewhere in the product.
 
 <BrowserFrame src="/screenshots/schedules-create-form-filled.png" alt="Create Schedule dialog with Daily Portfolio Health Check, 9 AM interval, recurring toggle, and Wealth Manager profile" />
+
+Editing an existing schedule exposes the same fields — name, prompt, interval, max firings, expiry, project, runtime, and agent profile — so operators can adjust timing or behavior without recreating the schedule from scratch.
+
+<BrowserFrame src="/screenshots/schedules-edit-form.png" alt="Edit Schedule form with New Gadget Trends name, daily 9 AM interval, recurring toggle, and auto-detect profile" />
 
 ---
 
