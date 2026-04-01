@@ -10,15 +10,18 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 The inbox is the operator-facing governance surface for Stagent. It consolidates permission requests, agent messages, completions, and failures into a single review queue so agents never act outside the trust boundary you set.
 
-<BrowserFrame src="/screenshots/inbox-list.png" alt="Governance command center with pending count, notification queue, and context proposals" />
+<BrowserFrame src="/screenshots/inbox-list.png" alt="Governance command center with pending, approved, and denied counts, notification queue with permissions and messages" />
 
 ## Key Concepts
 
-- **Mixed Feed** — The default inbox view blends permissions, messages, completions, and failures into one triage surface.
+- **Mixed Feed** — The default inbox view blends permissions, messages, completions, and failures into one triage surface with progressive disclosure.
 - **Focused Tabs** — Operators can narrow to unread items, permission requests, or conversational messages when they need a tighter queue.
 - **Approval Controls** — Permission cards expose `Allow Once`, `Always Allow`, and `Deny` actions directly on the notification. `Always Allow` patterns persist for future auto-approval.
-- **Ambient Approval Toasts** — Permission requests surface as toasts on any page so you can approve or deny without navigating to the inbox.
+- **Ambient Approval Toasts** — Permission requests surface as edge-of-screen toasts on any page so you can approve or deny without navigating to the inbox.
+- **Agent Handoff Approvals** — Governance gates for async agent-to-agent handoffs ensure operators approve delegation chains before work transfers between agents.
 - **Agent Questions** — Agents can pause execution and ask for clarification. Your typed response is injected directly into the agent's context so execution resumes with a clear human decision.
+- **Budget Alerts** — Notifications fire at 80% and 100% of configured spend caps, giving operators time to adjust before work is blocked.
+- **Rich Content Rendering** — Notification bodies render GitHub Flavored Markdown with code blocks, tables, lists, and links for detailed agent output.
 - **Batch Context Proposals** — When workflows generate multiple context suggestions, operators can review and approve them as a batch instead of handling each one individually.
 - **Response History** — Stagent preserves whether a request has been handled already, preventing duplicate decision-making.
 

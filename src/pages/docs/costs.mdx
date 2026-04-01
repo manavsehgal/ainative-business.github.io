@@ -8,7 +8,7 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 # Cost & Usage
 
-The cost and usage view gives operators a shared ledger for Claude and Codex activity. Instead of inferring spend from provider-specific logs, Stagent surfaces spend, tokens, budget health, runtime share, and model concentration in one governed screen.
+The cost and usage view gives operators a shared ledger across all five provider runtimes — Claude Agent SDK, Anthropic Direct API, Codex App Server, OpenAI Direct API, and Ollama (tracked at $0). Instead of inferring spend from provider-specific logs, Stagent surfaces spend, tokens, budget health, runtime share, and model concentration in one governed screen.
 
 <BrowserFrame src="/screenshots/cost-usage-list.png" alt="Cost and usage dashboard with budget pacing, spend metrics, runtime counts, and Anthropic/OpenAI pricing table" />
 
@@ -18,7 +18,7 @@ The cost and usage view gives operators a shared ledger for Claude and Codex act
 
 - **Spend Velocity** — Compare 7-day and 30-day spend trends to see whether usage is accelerating or stabilizing.
 - **Token Velocity** — Track token growth separately from dollars so teams can spot workload changes even when pricing differs by model.
-- **Runtime Breakdown** — See how much filtered spend and token usage came from Claude Agent SDK work versus Codex App Server work.
+- **Runtime Breakdown** — See how much filtered spend and token usage came from each of the five provider runtimes, including Ollama local work tracked at $0.
 - **Model Concentration** — Identify which models are responsible for current cost concentration and which runs have unknown pricing states.
 - **Budget State** — Budget health and blocked-state messaging make it explicit when new paid work is approaching or exceeding a configured cap.
 

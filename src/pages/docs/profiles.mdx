@@ -8,21 +8,22 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 # Profiles
 
-Profiles are Stagent’s reusable agent definitions. They turn agent behavior into something operators can browse, inspect, duplicate, and tune instead of hiding it inside one-off prompts.
+Profiles are Stagent’s reusable agent definitions. They turn agent behavior into something operators can browse, inspect, duplicate, and tune instead of hiding it inside one-off prompts. The catalog spans both technical specialists and business-function roles, and every profile works across all five supported providers.
 
-<BrowserFrame src="/screenshots/profiles-list.png" alt="Profiles catalog with Import/Create, search, and specialist cards including tags and ratings" />
+<BrowserFrame src="/screenshots/profiles-list.png" alt="Profiles catalog with Start from Template, Import, Create Profile buttons, search, and specialist cards with tags" />
 
 ## Key Concepts
 
-- **Profile Gallery** — Browse 21 curated specialist profiles across work and personal domains from one searchable, filterable catalog.
-- **Cross-Provider Compatibility** — Profiles work across both Claude and Codex runtimes, so switching providers does not require rebuilding agent definitions.
+- **Profile Gallery** — Browse curated specialist profiles across work and personal domains from one searchable, filterable catalog. Start from a template, import from GitHub, or create from scratch.
+- **Business-Function Profiles** — Six built-in business roles — Marketing Strategist, Sales Researcher, Customer Support Agent, Financial Analyst, Content Creator, and Operations Coordinator — sit alongside technical specialists like Code Reviewer, DevOps Engineer, and Data Analyst.
+- **Cross-Provider Compatibility** — Profiles work across all five runtimes (Claude Code, OpenAI Codex, Anthropic Direct API, OpenAI Direct API, and Ollama), so switching providers does not require rebuilding agent definitions.
 - **Auto-Detect Routing** — The task classifier analyzes incoming tasks and routes them to the best-fit profile based on description, project context, and required capabilities.
 - **Tool Policy** — Allowed tools are visible directly on the profile, making trust assumptions inspectable before execution begins.
 - **Runtime Tuning** — Temperature, max turns, and output format are part of the profile definition instead of being buried in code.
-- **GitHub Import** — Import profiles from GitHub URLs to share configurations across teams or adopt community-built specialists.
+- **GitHub Import** — Import profiles from GitHub URLs to share configurations across teams or adopt community-built specialists. Imported profiles show provenance badges (Built-in, Custom, Imported).
 - **Supervised Self-Improvement** — Agents learn from execution history through a governed proposal process. Operators review suggested context changes before they take effect, with versioned diffs and rollback to any previous state.
 
-<BrowserFrame src="/screenshots/profiles-detail.png" alt="Code Reviewer profile detail with identity, configuration, runtime coverage, tools, and SKILL.md" />
+<BrowserFrame src="/screenshots/profiles-detail.png" alt="Marketing Strategist profile detail with identity, configuration, runtime coverage, tools and policy" />
 
 ## How It Works
 

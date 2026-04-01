@@ -50,7 +50,7 @@ const features = [
     description: 'Start from preconfigured blueprints for code review, research, planning, documentation, and personal workflows instead of creating flows from scratch.',
     bullets: ['Work and personal templates', 'Difficulty labels', 'Search and filter controls'],
     screenshot: '/screenshots/workflows-blueprints.png',
-    alt: 'Blueprint gallery with 8 template cards, domain tabs, and Create Custom button',
+    alt: 'Blueprint gallery with 12 template cards, domain tabs, and Create Custom button',
   },
   {
     title: 'Document Operations',
@@ -62,16 +62,16 @@ const features = [
   {
     title: 'Agent Profiles',
     description: 'Profiles make agent behavior explicit through instructions, tool policies, output formats, and tuning controls that operators can inspect and reuse.',
-    bullets: ['21 curated specialist profiles', 'Auto-detect routing per task', 'Cross-provider Claude and Codex support'],
+    bullets: ['Technical and business-function specialists', 'Auto-detect routing per task', 'Cross-provider support across 5 runtimes'],
     screenshot: '/screenshots/profiles-detail.png',
-    alt: 'Code Reviewer profile detail with identity, configuration, runtime coverage, tools, and SKILL.md',
+    alt: 'Marketing Strategist profile detail with identity, configuration, runtime coverage, tools and policy',
   },
   {
     title: 'Scheduled Runs',
-    description: 'Turn repeatable prompts into recurring or one-shot schedules with explicit timing, firing limits, expiry windows, and agent-profile selection.',
-    bullets: ['Recurring and one-shot schedules', 'Pause and resume controls', 'Next-fire visibility'],
+    description: 'Turn repeatable prompts into clock-driven or heartbeat schedules. Heartbeat mode evaluates conditions before acting, suppressing no-op runs when nothing needs attention.',
+    bullets: ['Clock-driven and heartbeat modes', 'Natural language intervals', 'Delivery channel notifications'],
     screenshot: '/screenshots/schedules-detail.png',
-    alt: 'New Gadget Trends schedule detail with firings count, next fire time, and prompt',
+    alt: 'Prospect Pipeline Pulse schedule detail with firings count, next fire time, and prompt',
   },
   {
     title: 'Human Oversight',
@@ -89,15 +89,15 @@ const features = [
   },
   {
     title: 'Cost & Usage',
-    description: 'Track spend, token velocity, runtime share, and model concentration across Claude and Codex activity from one operational ledger.',
-    bullets: ['7-day and 30-day spend trends', 'Runtime and model breakdowns', 'Budget-state and audit visibility'],
+    description: 'Track spend, token velocity, runtime share, and model concentration across all five provider runtimes from one operational ledger — including Ollama at $0.',
+    bullets: ['5-provider spend and token trends', 'Runtime and model breakdowns', 'Budget pacing with guardrails'],
     screenshot: '/screenshots/cost-codex-claude-code.png',
     alt: 'Cost and usage dashboard with budget pacing, spend metrics, provider counts, and Anthropic/OpenAI pricing table',
   },
   {
     title: 'Conversational AI',
-    description: 'Ask questions, create tasks, and navigate your workspace through natural language with multi-provider model selection and context-aware responses.',
-    bullets: ['Progressive workspace context injection', 'Quick Access entity deep-linking', 'Multi-provider model selector with cost tiers'],
+    description: 'Ask questions, create tasks, and navigate your workspace through natural language. Chat from the app, Slack, or Telegram with the same engine and full tool access.',
+    bullets: ['Tool catalog with @ mentions', 'Bidirectional Slack and Telegram channels', 'Multi-provider model selector with cost tiers'],
     screenshot: '/screenshots/chat-list.png',
     alt: 'Chat interface with suggested prompt categories, model selector, and conversation history sidebar',
   },
@@ -106,7 +106,7 @@ const features = [
     description: 'Scan and audit your Claude Code and Codex CLI setups with health scoring, artifact discovery, and cross-project comparison.',
     bullets: ['Composite health score across 4 dimensions', 'Artifact inventory with type filtering', 'Cross-project configuration comparison'],
     screenshot: '/screenshots/environment-list.png',
-    alt: 'Environment dashboard showing 57 artifacts, health score, MCP servers, skills, and safety ratings',
+    alt: 'Environment dashboard showing 80 artifacts, health score of 88, MCP servers, skills, and safety ratings',
   },
 ];
 ---

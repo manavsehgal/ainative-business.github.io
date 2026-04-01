@@ -10,21 +10,23 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 The settings page is where operators define how Stagent authenticates, which tool requests can be trusted by default, how much provider activity is allowed to cost, and how the local workspace data should be managed.
 
-<BrowserFrame src="/screenshots/settings-list.png" alt="Settings with Claude OAuth and API Key authentication, plus OpenAI Codex Runtime configuration" />
+<BrowserFrame src="/screenshots/settings-list.png" alt="Settings with Providers and Runtimes, task routing options, Anthropic OAuth, OpenAI API, and Ollama local models" />
 
 ## Key Concepts
 
-- **Authentication Modes** — Connect Stagent with OAuth or a direct API key depending on your operating model.
+- **Providers & Runtimes** — Configure authentication for all five provider runtimes from one section with task routing preferences (Latency, Cost, Quality, or Manual).
+- **Ollama Local Models** — Connect to a local Ollama instance for free, private AI execution. Test connection, discover available models, pull new ones, and integrate with smart routing.
 - **Permission Presets** — Three composable tiers — Read-Only (low risk), Git-Safe (moderate), and Full-Auto (high) — each with risk badges. Higher tiers include all lower-tier permissions.
 - **Default Tool Permissions** — Seed safe approval patterns so the inbox does not need to mediate every low-risk action. Patterns can be broad (`Read`) or specific (`Bash(command:git status)`) with wildcard support.
-- **Task Resume** — Retry failed or cancelled tasks with a 3-attempt limit, resuming execution from a known state instead of starting over.
-- **Cost & Usage Guardrails** — Configure daily and monthly spend caps plus runtime-specific token/spend limits.
+- **Delivery Channels** — Connect Slack, Telegram, or webhook endpoints for outbound notifications and bidirectional chat. Each channel card shows Chat/Active/Test/Delete controls.
+- **Cost & Usage Guardrails** — Configure daily and monthly spend caps plus runtime-specific token/spend limits with pacing meters.
 - **Browser Tools** — Independent toggles for Chrome DevTools and Playwright automation; read-only browser actions auto-approved within the trust tier.
 - **Chat Defaults** — Choose the default AI model for new conversations with cost-tier indicators so operators can balance capability against spend.
+- **Task Resume** — Retry failed or cancelled tasks with a 3-attempt limit, resuming execution from a known state instead of starting over.
 - **Data Management** — Seed sample data for evaluation or clear all data (respects table relationships) when resetting the workspace.
 - **Local-First Configuration** — Settings are managed close to the workspace instead of hidden inside a remote SaaS control plane.
 
-The settings page also manages runtime connections — OAuth and API Key authentication for Claude, plus OpenAI Codex Runtime configuration with connection testing for each provider.
+The Providers & Runtimes section manages connections for Anthropic (OAuth or API Key), OpenAI (API Key), and Ollama (local endpoint). A task routing selector lets operators choose between Latency, Cost, Quality, or Manual mode to control how Stagent picks a runtime when creating tasks.
 
 <BrowserFrame src="/screenshots/settings-browser-tools.png" alt="Settings authentication with Claude OAuth and API Key methods, OpenAI Codex Runtime configuration, and connection test buttons" />
 
@@ -32,9 +34,10 @@ The settings page also manages runtime connections — OAuth and API Key authent
 
 | Method | Description | Best For |
 |--------|-------------|----------|
-| **Claude OAuth** | Built-in sign-in flow for Claude subscriptions | Individual operators and local evaluation |
-| **Claude API Key** | Direct credential entry for Claude Agent SDK connectivity | Development, testing, and controlled server setups |
-| **OpenAI API Key** | Provider-aware credential entry for Codex App Server connectivity | Dual-runtime workspaces and OpenAI-backed runs |
+| **Anthropic OAuth** | Built-in sign-in flow for Claude subscriptions | Individual operators and local evaluation |
+| **Anthropic API Key** | Direct credential entry for Claude Agent SDK and Direct API | Development, testing, and controlled server setups |
+| **OpenAI API Key** | Provider-aware credential entry for Codex App Server and Direct API | Dual-runtime workspaces and OpenAI-backed runs |
+| **Ollama (Local)** | Connect to a local Ollama instance for free, private inference | Privacy-sensitive work and cost-free experimentation |
 
 ## Cost Guardrails
 

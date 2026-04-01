@@ -10,7 +10,7 @@ import BrowserFrame from '../../components/ui/BrowserFrame.astro'
 
 Workflows are how Stagent turns one-off tasks into repeatable, multi-step operational playbooks. The product now includes both a workflow library and a blueprint catalog for bootstrapping new flows quickly.
 
-<BrowserFrame src="/screenshots/workflows-list.png" alt="Workflows library with 8 workflows, pattern labels, and All/Templates/Runs tabs" />
+<BrowserFrame src="/screenshots/workflows-list.png" alt="Workflows library with 5 workflows, pattern labels, and All/Templates/Runs tabs" />
 
 ## Workflow Patterns
 
@@ -50,7 +50,7 @@ A Mayor agent plans the work. 2–5 Worker agents execute in parallel with indep
 
 **Example**: Mayor plans code audit → Workers review auth, API, DB, and tests → Refinery merges findings
 
-<BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Blueprint gallery with 8 template cards, domain tabs, and Create Custom button" />
+<BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Blueprint gallery with 12 template cards, domain tabs, and Create Custom button" />
 
 The Templates tab isolates reusable workflow patterns, while the Runs tab shows active and completed workflow executions with their current status.
 
@@ -61,7 +61,7 @@ The Templates tab isolates reusable workflow patterns, while the Runs tab shows 
 ## Key Concepts
 
 - **Workflow Library** — The main list shows each workflow’s pattern, status, step count, and duplication controls. Six execution patterns are supported.
-- **Blueprint Catalog** — Operators can start from pre-built templates for code review, documentation, research, sprint planning, meal planning, and more. Blueprint lineage tracks the template origin and any customizations applied.
+- **Blueprint Catalog** — Operators can start from pre-built templates across technical workflows (code review, deploy-and-verify, research synthesis, documentation generation) and business functions (lead research, content marketing, customer support triage, financial reporting, business daily briefing). Blueprint lineage tracks the template origin and any customizations applied.
 - **Profile-Aware Steps** — Each workflow step can reference an agent profile so specialist behavior is reused consistently.
 - **Step-Level Retry** — Retry individual failed steps without re-running the entire workflow, saving time and cost on long-running orchestrations.
 - **Checkpoint & Resume** — Human-in-the-loop workflows pause naturally at approval points and resume when the operator responds.
