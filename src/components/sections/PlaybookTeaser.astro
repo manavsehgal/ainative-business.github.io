@@ -1,0 +1,59 @@
+---
+import SectionLabel from '../ui/SectionLabel.astro';
+
+const topics = [
+  {
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><path d="M20 16l-4-4 4-4M4 8l4 4-4 4"/></svg>`,
+    title: 'The $52B Market',
+    description: 'Why the AI agent market is growing at 46% CAGR and what it means for business builders',
+  },
+  {
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    title: 'The Governance Gap',
+    description: 'Why 80–90% of agent projects fail in production — and how to beat the odds',
+  },
+  {
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`,
+    title: 'The PE Transformation Wave',
+    description: 'How Vista, Apollo, and Hg are deploying billions into AI-native portfolio transformation',
+  },
+  {
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    title: 'Building AI-Native',
+    description: 'A practical framework for running your entire business with governed AI agents',
+  },
+];
+---
+<section class="py-24 px-6 bg-surface-raised/50">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-12">
+      <SectionLabel text="Thought Leadership" />
+      <h2 data-animate class="mt-4 mb-4">The AI Transformation Playbook</h2>
+      <p data-animate class="text-text-muted max-w-2xl mx-auto" style="transition-delay: 80ms">
+        How solo founders, agencies, and PE firms are building AI-native businesses.
+      </p>
+    </div>
+
+    <div data-animate-stagger class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      {topics.map(({ icon, title, description }) => (
+        <div data-animate class="rounded-xl border border-border bg-surface-raised p-5">
+          <div class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary mb-3" set:html={icon} />
+          <h3 class="text-sm font-semibold mb-1">{title}</h3>
+          <p class="text-xs text-text-muted leading-relaxed">{description}</p>
+        </div>
+      ))}
+    </div>
+
+    <div data-animate class="text-center">
+      <a
+        href="/research"
+        class="inline-flex items-center gap-2 font-mono text-xs tracking-[0.15em] uppercase text-primary border border-primary/30 px-6 py-2.5 rounded-md hover:bg-primary/10 transition-colors"
+      >
+        Read the Playbook
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

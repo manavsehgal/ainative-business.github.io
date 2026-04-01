@@ -2,12 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/sections/Hero.astro';
-import RuntimeBridge from '../components/sections/RuntimeBridge.astro';
-import ProductOverview from '../components/sections/ProductOverview.astro';
-import Features from '../components/sections/Features.astro';
-import Architecture from '../components/sections/Architecture.astro';
-import Progress from '../components/sections/Progress.astro';
-import MarketPosition from '../components/sections/MarketPosition.astro';
+import Problem from '../components/sections/Problem.astro';
+import PersonaLanes from '../components/sections/PersonaLanes.astro';
+import Proof from '../components/sections/Proof.astro';
+import Pricing from '../components/sections/Pricing.astro';
+import PlaybookTeaser from '../components/sections/PlaybookTeaser.astro';
 import CTAFooter from '../components/sections/CTAFooter.astro';
 import Footer from '../components/Footer.astro';
 import { SITE, ORGANIZATION, PUBLISHER } from '../data/seo';
@@ -29,7 +28,7 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Stagent',
-    applicationCategory: 'DeveloperApplication',
+    applicationCategory: 'BusinessApplication',
     operatingSystem: 'macOS, Windows, Linux',
     description: SITE.description,
     offers: {
@@ -61,7 +60,7 @@ const jsonLd = [
         name: 'What is Stagent?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Stagent is a local-first AI agent operations workspace with governed execution, reusable profiles, workflow blueprints, schedules, and human-in-the-loop oversight.',
+          text: 'Stagent is the operating system for AI-native business. It orchestrates AI agents across marketing, sales, support, operations, and finance with governed execution, reusable profiles, workflow blueprints, and human-in-the-loop oversight.',
         },
       },
       {
@@ -69,7 +68,7 @@ const jsonLd = [
         name: 'What makes Stagent different from other AI agent tools?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Stagent differentiates through governed execution, reusable agent profiles, workflow blueprints, recurring schedules, and a local-first workspace that keeps approvals and data close to the operator.',
+          text: 'Stagent is the only platform combining full-stack agent orchestration with enterprise-grade governance. It supports 5 AI runtimes, 21+ specialist agent profiles, 6 workflow patterns, multi-channel delivery, and a local-first architecture that keeps your data on your machine.',
         },
       },
       {
@@ -96,12 +95,11 @@ const jsonLd = [
   <Nav />
   <main>
     <Hero />
-    <RuntimeBridge />
-    <ProductOverview />
-    <Features />
-    <Architecture />
-    <Progress />
-    <MarketPosition />
+    <Problem />
+    <PersonaLanes />
+    <Proof />
+    <Pricing />
+    <PlaybookTeaser />
     <CTAFooter />
   </main>
   <Footer />

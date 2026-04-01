@@ -1,0 +1,120 @@
+---
+import SectionLabel from '../ui/SectionLabel.astro';
+
+const personas = [
+  {
+    title: 'Solo Founder',
+    tagline: 'Run your business with AI agents',
+    items: [
+      'Marketing, sales, and support agents working proactively',
+      'Chat with your business from Slack or Telegram',
+      'See everything on one governed dashboard',
+      'Heartbeat scheduling keeps agents running overnight',
+    ],
+    cta: { label: 'Start Free', href: '#pricing' },
+  },
+  {
+    title: 'Agency Owner',
+    tagline: 'Deploy AI operations for every client',
+    items: [
+      'Reusable profiles and workflow blueprints',
+      'Multi-project portfolio management',
+      'Cost tracking per client engagement',
+      'Import and customize agent skills from repos',
+    ],
+    cta: { label: 'Start Free', href: '#pricing' },
+    highlight: true,
+  },
+  {
+    title: 'PE Operating Partner',
+    tagline: 'Transform portfolio companies at scale',
+    items: [
+      'Standardized AI playbooks across companies',
+      'Governed execution with audit trails',
+      'EBITDA-trackable agent ROI',
+    ],
+    roadmapItems: [
+      'Portfolio-wide dashboards',
+    ],
+    cta: { label: 'Book a Conversation', href: '#advisory' },
+  },
+];
+
+const platformFeatures = [
+  '5 AI runtimes',
+  '21+ agent profiles',
+  '6 workflow patterns',
+  'Human-in-the-loop',
+  'Cost metering',
+  'Open source',
+];
+---
+<section class="py-24 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <SectionLabel text="The Solution" />
+      <h2 data-animate class="mt-4 mb-4">One Platform. Three Ways to Win.</h2>
+      <p data-animate class="text-text-muted max-w-2xl mx-auto" style="transition-delay: 80ms">
+        Whether you're building solo, running an agency, or transforming a portfolio — Stagent gives you the operating system to make AI agents work for your business.
+      </p>
+    </div>
+
+    <!-- Persona lanes -->
+    <div data-animate-stagger class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      {personas.map(({ title, tagline, items, roadmapItems, cta, highlight }) => (
+        <div
+          data-animate
+          class:list={[
+            'rounded-xl border p-6 flex flex-col',
+            highlight ? 'border-primary/40 bg-primary/[0.03]' : 'border-border bg-surface-raised',
+          ]}
+        >
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold mb-1">{title}</h3>
+            <p class="text-sm text-primary font-mono">{tagline}</p>
+          </div>
+
+          <ul class="flex-1 space-y-3 mb-6">
+            {items.map((item) => (
+              <li class="flex items-start gap-2 text-sm text-text-muted">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary shrink-0 mt-0.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                {item}
+              </li>
+            ))}
+            {roadmapItems?.map((item) => (
+              <li class="flex items-start gap-2 text-sm text-text-muted/60">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted/40 shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+                <span>{item} <span class="text-xs font-mono text-text-muted/40">roadmap</span></span>
+              </li>
+            ))}
+          </ul>
+
+          <a
+            href={cta.href}
+            class:list={[
+              'block text-center font-mono text-xs tracking-[0.15em] uppercase py-2.5 rounded-md transition-colors',
+              highlight
+                ? 'bg-primary text-surface hover:bg-primary/90'
+                : 'border border-border text-text-muted hover:border-primary hover:text-primary',
+            ]}
+          >
+            {cta.label}
+          </a>
+        </div>
+      ))}
+    </div>
+
+    <!-- Shared platform layer -->
+    <div data-animate class="flex items-center justify-center gap-3 flex-wrap">
+      {platformFeatures.map((feature) => (
+        <span class="font-mono text-[11px] tracking-wider text-text-muted border border-border rounded-full px-3 py-1">
+          {feature}
+        </span>
+      ))}
+    </div>
+  </div>
+</section>

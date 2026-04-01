@@ -2,9 +2,18 @@
 interface Props {
   variant?: 'hero' | 'cta' | 'footer';
   id?: string;
+  buttonText?: string;
+  source?: string;
+  successMessage?: string;
 }
 
-const { variant = 'hero', id = 'waitlist' } = Astro.props;
+const {
+  variant = 'hero',
+  id = 'waitlist',
+  buttonText = 'Get Early Access',
+  source = 'default',
+  successMessage = 'You\'re on the list. We\'ll be in touch.',
+} = Astro.props;
 const formId = `form-${id}`;
 const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist-signup';
 ---
@@ -44,7 +53,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
       type="submit"
       class="font-mono text-xs tracking-[0.2em] uppercase bg-primary text-surface px-6 py-3 hover:bg-primary/90 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed rounded-md font-semibold"
     >
-      Subscribe
+      {buttonText}
     </button>
   </div>
 
@@ -70,7 +79,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
   </div>
 </form>
 
-<script define:vars={{ formId }}>
+<script define:vars={{ formId, source, successMessage, buttonText }}>
   (function () {
     const form = document.getElementById(formId);
     if (!form) return;
@@ -113,7 +122,8 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
       }
 
       submitBtn.disabled = true;
-      submitBtn.textContent = 'SUBSCRIBING...';
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'SENDING...';
 
       try {
         const res = await fetch(endpoint, {
@@ -122,6 +132,7 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
           body: JSON.stringify({
             email,
             website: honeypot.value,
+            source,
           }),
         });
 
@@ -130,21 +141,21 @@ const endpoint = 'https://yznantjbmacbllhcyzwc.supabase.co/functions/v1/waitlist
         if (!res.ok) {
           showError(data.error || 'Something went wrong. Please try again.');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'SUBSCRIBE';
+          submitBtn.textContent = originalText;
           return;
         }
 
         if (data.already_confirmed) {
-          showSuccess("You're already subscribed.");
+          showSuccess("You're already on the list.");
         } else if (data.message) {
           showSuccess(data.message);
         } else {
-          showSuccess('Check your inbox to confirm your subscription.');
+          showSuccess(successMessage);
         }
       } catch {
         showError('Network error. Please try again.');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'SUBSCRIBE';
+        submitBtn.textContent = originalText;
       }
     });
   })();

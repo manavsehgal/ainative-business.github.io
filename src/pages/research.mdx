@@ -1,24 +1,23 @@
 ---
 layout: ../layouts/ResearchLayout.astro
-title: "Stagent: The Coordination Layer for the Agentic Enterprise"
-description: "Governed AI agent operations: dual-runtime execution, cost governance, reusable automation, and the coordination layer for enterprise AI deployment."
+title: "The AI Transformation Playbook: Building and Governing AI-Native Businesses"
+description: "How solo founders, agencies, and PE firms are building AI-native businesses with governed agent orchestration. Market analysis, competitive landscape, and practical frameworks."
 datePublished: "2026-03-01"
-dateModified: "2026-03-27"
+dateModified: "2026-03-31"
 author: "Manav"
-readingTime: "19 min read"
+readingTime: "22 min read"
 ---
 
 import Figure from '../components/research/Figure.astro'
 import BrowserFrame from '../components/ui/BrowserFrame.astro'
-import SystemArchitecture from '../components/svg/SystemArchitecture.astro'
-import DetailedArchitecture from '../components/svg/DetailedArchitecture.astro'
-import GovernanceFlow from '../components/svg/GovernanceFlow.astro'
 import MarketGrowth from '../components/svg/MarketGrowth.astro'
 import GovernanceMatrix from '../components/svg/GovernanceMatrix.astro'
+import GovernanceFlow from '../components/svg/GovernanceFlow.astro'
+import SystemArchitecture from '../components/svg/SystemArchitecture.astro'
 
-# Stagent: The Coordination Layer for the Agentic Enterprise
+# The AI Transformation Playbook
 
-**A Research Paper for Investors & Enterprise Decision Makers**
+**Building and Governing AI-Native Businesses**
 
 *Manav · March 2026*
 
@@ -26,371 +25,330 @@ import GovernanceMatrix from '../components/svg/GovernanceMatrix.astro'
 
 ## Table of Contents
 
-1. [Executive Summary](#1-executive-summary)
-2. [The Agentic Enterprise — Market Landscape](#2-the-agentic-enterprise--market-landscape)
-3. [The Problem — Why Current Approaches Fail](#3-the-problem--why-current-approaches-fail)
-4. [Product Architecture](#4-product-architecture)
-5. [Competitive Differentiation](#5-competitive-differentiation)
-6. [Current Product Coverage & Roadmap](#6-current-product-coverage--roadmap)
-7. [Cross-Industry Use Cases](#7-cross-industry-use-cases)
-8. [Risk Analysis](#8-risk-analysis)
-9. [Investment Thesis](#9-investment-thesis)
-10. [Conclusion](#10-conclusion)
-- [Appendix A: Technical Glossary](#appendix-a-technical-glossary)
-- [Appendix B: Surface Inventory](#appendix-b-surface-inventory)
-- [Appendix C: Sources & References](#appendix-c-sources--references)
+1. [The Agentic Economy is Here](#1-the-agentic-economy-is-here)
+2. [The Governance Gap](#2-the-governance-gap)
+3. [The PE Transformation Wave](#3-the-pe-transformation-wave)
+4. [Building AI-Native Businesses](#4-building-ai-native-businesses)
+5. [The Stagent Approach](#5-the-stagent-approach)
+6. [Use Cases by Industry](#6-use-cases-by-industry)
+7. [The 10x Vision](#7-the-10x-vision)
+8. [Getting Started](#8-getting-started)
+- [Sources & References](#sources--references)
 
 ---
 
-## 1. Executive Summary
+## 1. The Agentic Economy is Here
 
-Stagent is the **coordination layer for the agentic enterprise**: a local-first operations workspace where AI agents run inside a governed system of projects, workflows, documents, inbox approvals, profiles, schedules, live monitoring, and cross-runtime cost governance.
-
-The thesis is simple. Every enterprise will deploy AI agents. But production adoption will be constrained less by model quality than by whether operators can see what the agent is doing, understand which rules it is following, reuse proven behaviors, and intervene before an unsafe action lands. Stagent is built for that operating problem.
-
-Four value propositions define Stagent's current position:
-
-1. **Operational familiarity** — Stagent presents agent work through surfaces teams already understand: a home workspace, execution dashboard, project views, document library, approval inbox, and live monitor.
-2. **Governed execution** — The human-in-the-loop model is not an afterthought. Tool requests, policy decisions, and intervention points are visible, auditable, and close to the work.
-3. **Reusable automation primitives** — Profiles, workflow blueprints, and schedules convert ad hoc prompting into repeatable operational systems.
-4. **Cost accountability** — A shared usage ledger, spend guardrails, and a dedicated cost dashboard turn provider choice into something teams can supervise rather than guess at.
-
-As of March 2026, the current browser product spans **fifteen coordinated operator surfaces**: Home, Dashboard, Projects, Workflows, Documents, Profiles, Schedules, Inbox, Monitor, Cost & Usage, Chat, Environment, Playbook, Settings, and Command Palette. It is a full AI operations workspace rather than a narrow single-purpose execution screen.
-
----
-
-## 2. The Agentic Enterprise — Market Landscape
-
-### Market Size and Growth
-
-The AI agent market is undergoing explosive growth. Multiple analyst firms converge on the same conclusion: enterprise AI agents represent one of the fastest-growing segments in technology.
+The AI agent market is undergoing a transformation that will reshape how businesses are built, operated, and scaled. The numbers tell a compelling story.
 
 | Metric | Value | Source |
 |--------|-------|--------|
 | Global AI agent market (2025) | $7.63B | Grand View Research |
 | Projected market size (2030) | $52.62B | Grand View Research |
 | CAGR (2025–2030) | 46.3% | Grand View Research |
-| Enterprise apps with agents by 2026 | 40% | Gartner |
-| Agentic projects canceled by 2027 (governance failures) | >40% | Gartner |
-| Organizations reporting productivity gains from AI | 66% | Deloitte |
-| Organizations converting AI gains to financial ROI | 20–30% | IDC |
+| Surge in agentic AI inquiries | 1,445% | Gartner |
+| Solo-founded startups (H1 2025) | 36.3% of all new ventures | Carta |
+| US solopreneurs | 41.8 million | US Census |
+| Small businesses using AI tools | 60%+ | Multiple sources |
 
-<Figure number={1} caption="AI Agent Market Growth Trajectory (2025–2030)">
+<Figure number={1} caption="AI Agent Market Growth Trajectory — $7.63B to $52.62B by 2030">
   <MarketGrowth />
 </Figure>
 
-### The Governance Imperative
+### The One-Person Unicorn Thesis
 
-The numbers reveal a paradox. Enterprises increasingly believe agents can produce output, but many still cannot convert those gains into durable operating leverage. The bottleneck is no longer access to a model. It is the ability to govern model behavior in real workflows.
+Solo-founded startups surged from 23.7% to 36.3% of all new ventures between 2019 and H1 2025. Sam Altman has expressed confidence in the one-person billion-dollar company enabled by AI agents. Dario Amodei places 70–80% odds on one-person unicorns happening in 2026. Proof points already exist: Base44's solo founder hit $3.5M ARR and sold to Wix for $80M in six months. HeadshotPro reached $3.6M ARR solo.
 
-This problem intensifies as regulatory pressure increases. The EU AI Act takes full effect in August 2026, and organizations deploying agents into real operational processes will need visible oversight, clear intervention paths, and better auditability than a chat log can provide.
+The pattern is clear: AI agents are enabling individuals to operate at the scale of entire teams. But the infrastructure for doing this reliably — with oversight, cost control, and operational discipline — doesn't yet exist.
 
-### Why Coordination Becomes the Category
+### Beyond the Hype: What's Real
 
-Model vendors and agent SDKs provide execution primitives. Enterprises still need the layer that turns those primitives into a supervised operating system: where workflows can be reused, permissions can be approved, schedules can be audited, and profiles can be inspected. Stagent sits in that layer.
-
----
-
-## 3. The Problem — Why Current Approaches Fail
-
-Enterprise teams attempting to deploy AI agents today face a structural mismatch. The tools available tend to optimize for one of three goals, but rarely all three at once:
-
-- developer flexibility
-- user-facing visibility
-- governed, repeatable operations
-
-### The Missing Layer
-
-| Capability | Dev Frameworks | Agent OS | SaaS Platforms | **Stagent** |
-|------------|:---:|:---:|:---:|:---:|
-| Agent execution | Strong | Strong | Moderate | Strong |
-| Human-in-the-loop governance | Manual | Partial | Configurable | **Native** |
-| Operational visibility | Logs | Dashboard | Good | **Native** |
-| Reusable agent profiles | DIY | Partial | Vendor-defined | **Operator-visible** |
-| Reusable workflow templates | DIY | Limited | Partial | **Built-in** |
-| Scheduled automation | DIY | Partial | Vendor-defined | **Built-in** |
-| Local-first data sovereignty | Yes | Yes | No | **Yes** |
-| Non-technical user access | No | Limited | Yes | **Yes** |
-
-Stagent is the missing coordination layer. It sits between the raw agent runtime and the human organization, exposing AI work through operational surfaces humans can actually supervise.
+Not everything in the agentic AI landscape is hype. The genuine innovations are real-time agent execution, multi-provider model flexibility, and the emergence of reusable agent profiles and skills. What's missing is the operating layer — the system that turns autonomous agents into a coordinated, governed business operation.
 
 ---
 
-## 4. Product Architecture
+## 2. The Governance Gap
 
-### Design Philosophy
+### Why Most Agent Projects Fail
 
-Stagent's architecture follows three principles:
+A RAND study found that **80–90% of AI agent projects fail in production**. Gartner predicts that **more than 40% of agentic AI projects will be canceled by 2027** due to governance failures. These aren't technology failures — they're operating failures.
 
-1. **Simplicity** — Prefer a local-first, legible stack over unnecessary infrastructure sprawl.
-2. **Transparency** — Every execution should be reviewable through product surfaces built for operators, not just developers.
-3. **Governed autonomy** — Let agents work at speed, but keep trust boundaries explicit and interruptible.
+The failure pattern is consistent:
+- **No orchestration.** Agents don't talk to each other. Strategy lives in one tool, execution in another.
+- **No visibility.** Operators can't see what agents are doing, what they cost, or when they go wrong.
+- **No governance.** Enterprise platforms offer oversight; SMB tools offer none. As agents handle payments, customer communication, and financial decisions, this gap widens.
+- **No lifecycle management.** Tools optimize for one phase. Nothing covers plan → build → operate → grow.
 
-### System Architecture
+### The Tool Sprawl Problem
 
-<Figure
-  number={2}
-  caption="Stagent System Architecture — Four-Layer Stack"
->
-  <SystemArchitecture />
-</Figure>
+Solo founders and small teams cobble together 8–15 disconnected AI tools — one for content generation, another for scheduling, another for cost tracking, another for approvals. Community analysis suggests 73% of solopreneurs who try AI automation fail within 90 days — not because the technology fails, but because they collect tools instead of building systems.
 
-<Figure
-  number={3}
-  caption="Detailed System Architecture — Browser, Server, and External Layers"
-  class="figure--bleed figure--architecture"
->
-  <DetailedArchitecture />
-</Figure>
-
-The detailed architecture reveals three distinct layers working in concert. The **browser layer** runs a React 19 single-page application with 15 operator-facing surfaces — each purpose-built for a specific governance function, from the Home workspace briefing to the Chat conversational AI, Environment scanner, Monitor's real-time streaming view, and the Cost & Usage dashboard.
-
-The **server layer** runs on Next.js 16 and contains 11 service modules. The Runtime Registry abstracts provider differences behind a shared adapter interface, letting operators switch between Claude Agent SDK and OpenAI Codex without changing workflows. The Permission Gate enforces `canUseTool` at every trust boundary. The Workflow Engine supports 6 orchestration patterns — sequence, planner-executor, checkpoint, fork/join parallel, autonomous loop, and multi-agent swarm — that convert ad hoc prompting into repeatable automation. Three recent additions — the Chat Engine (context-aware workspace AI with multi-provider model selection), the Environment Scanner (health scoring, skill portfolio, and cross-project comparison), and the Cost Engine (usage metering ledger with budget guardrails) — extend the server layer from pure execution into conversational interaction, environment governance, and spend control.
-
-The **external layer** is deliberately minimal. All persistent state lives in `~/.stagent/` — a local SQLite database with WAL-mode concurrency. The only external network calls go to runtime backends (Anthropic and OpenAI) for model inference. EventSource provides real-time push to the browser via SSE, eliminating the need for polling infrastructure. Data flow follows a clear principle: Server Components handle reads with zero API overhead (direct database queries), while API Routes handle mutations only.
-
-<Figure number={4} caption="Home Workspace — Overview of Running Work, Pending Review, and Live Activity">
-  <BrowserFrame src="/screenshots/home-list.png" alt="Home workspace showing summary metrics, tasks needing attention, and live agent activity" />
-</Figure>
-
-### AI Assist in the Creation Flow
-
-The product embeds AI assistance directly into the task creation surface. The creation form
-includes an AI Assist panel that generates sub-task suggestions from the current brief.
-Operators review, accept, or dismiss suggestions before submitting. When AI generates a
-multi-step breakdown, operators can promote those steps into a reusable workflow — bridging
-ad hoc task creation and structured orchestration.
-
-<Figure number={5} caption="AI-Assisted Task Creation — Operator Reviews AI-Generated Sub-Tasks Before Submission">
-  <BrowserFrame src="/screenshots/dashboard-create-form-ai-assist.png" alt="AI Assist panel with improved description, sub-task suggestions, and Create as Workflow option" />
-</Figure>
-
-### The canUseTool Governance Pattern
-
-The centerpiece of Stagent's architecture remains the `canUseTool` pattern: the mechanism that converts autonomous execution into governed execution without hiding what the agent is doing.
-
-<Figure number={6} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
-  <GovernanceFlow />
-</Figure>
-
-<Figure number={7} caption="Permissions Inbox — Explicit Approval Controls for Agent Tool Requests">
-  <BrowserFrame src="/screenshots/inbox-permissions.png" alt="Governance command center Permissions tab with responded Write and SendEmail tool requests" />
-</Figure>
-
-1. **Agent requests a tool** — The runtime reaches a trust boundary.
-2. **Inbox item is created** — Stagent records the request with enough detail for review.
-3. **Human reviews the action** — The operator decides whether the request is safe and appropriate.
-4. **Decision is written back** — Allow, always allow, or deny becomes part of the system state.
-5. **Execution resumes or stops** — The agent proceeds according to the human decision.
-
-### Reusable Automation Layer
-
-What changed materially in the current product is the addition of reusable automation primitives:
-
-- **Profiles** make instructions, tool policy, and runtime tuning inspectable and reusable.
-- **Workflow blueprints** reduce orchestration setup time by turning common operational patterns into templates.
-- **Schedules** let teams move from one-off prompting to recurring, guardrailed automation.
-
-These primitives matter because they turn a successful experiment into an operational practice. Without them, every agent run is effectively a bespoke interaction. With them, the organization begins building an operating system for repeated AI work.
-
-### Cost & Usage Governance
-
-What changed next is that Stagent now measures and governs the economics of that automation layer instead of treating spend as invisible exhaust.
-
-- **Usage ledger** normalizes Claude and Codex activity into one cost and token record system.
-- **Budget guardrails** warn near caps and block new paid activity explicitly when a configured window is exhausted.
-- **Cost & Usage dashboard** shows spend velocity, token velocity, runtime share, and model concentration in one operator-facing surface.
-
-<Figure number={8} caption="Cost & Usage Dashboard — Shared Spend, Tokens, Runtime Share, and Model Concentration">
-  <BrowserFrame src="/screenshots/cost-codex-claude-code.png" alt="Cost and usage dashboard with budget pacing, spend metrics, runtime counts, and Anthropic/OpenAI pricing table" />
-</Figure>
-
-### Technology Stack
-
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| Framework | Next.js 16 + React 19 | Server-first rendering with a fast local operator experience |
-| Styling | Tailwind CSS v4 + shadcn/ui | Dense operational UI with consistent primitives |
-| Database | SQLite + Drizzle ORM | Local-first state, low setup cost, and audit-friendly persistence |
-| Agent Runtime | Claude Agent SDK + Codex App Server | Dual-runtime governed execution behind one shared runtime layer |
-| Monitoring | SSE + structured runtime events | Live visibility without heavyweight infrastructure |
-| Cost Governance | Usage ledger + budget guardrails + dashboard queries | Shared spend visibility, model breakdowns, and operator-facing budget control |
-
----
-
-## 5. Competitive Differentiation
-
-### Positioning Matrix
-
-The agent platform market can be mapped along two axes: **agent autonomy** and **human governance**. Most products still optimize for one at the expense of the other.
-
-<Figure number={9} caption="Competitive Positioning — Governance vs. Autonomy">
+<Figure number={2} caption="Governance vs. Autonomy — Competitive Positioning">
   <GovernanceMatrix />
 </Figure>
 
-Stagent occupies the **high-governance, high-autonomy** quadrant: the space where enterprise buyers can let agents work, but still supervise them through operator-grade interfaces.
+### The Regulatory Tailwind
 
-### Three Core Differentiators
+The EU AI Act takes full effect in August 2026. Organizations deploying agents into real operational processes will need visible oversight, clear intervention paths, and better auditability than a chat log can provide. Governance is transitioning from a nice-to-have to a compliance requirement.
 
-**1. Governance-first architecture** — Stagent treats approval paths, policy visibility, and intervention surfaces as product fundamentals rather than enterprise add-ons.
+---
 
-**2. Operational workspace UX** — The product maps agent execution onto recognizable operating surfaces: home, dashboard, projects, inbox, monitor, and settings. This lowers organizational friction far more effectively than a chat-first interface.
+## 3. The PE Transformation Wave
 
-**3. Reusable AI operations layer** — Profiles, blueprints, and schedules convert successful runs into repeatable systems. This is a key step from experimentation to production discipline.
+### Private Equity Meets AI
 
-<Figure number={10} caption="Agent Profiles — Inspectable Instructions, Tool Policies, and Runtime Tuning">
-  <BrowserFrame src="/screenshots/profiles-detail.png" alt="Code Reviewer profile detail with identity, configuration, runtime coverage, tools, and SKILL.md" />
+Private equity firms are aggressively acquiring traditional service businesses — BPOs, contact centers, insurance agencies, accounting firms — and converting them to AI-native operations.
+
+**64% of PE firms employ AI in daily operations**, yet only ~20% of portfolio companies have operationalized generative AI. This intent-execution gap represents a massive opportunity.
+
+| PE Firm | Program | Scale |
+|---------|---------|-------|
+| Vista Equity Partners | Agentic AI Factory | 4–8 billion autonomous agents across portfolio, exclusive Microsoft Azure partnership |
+| Apollo Global Management | Portfolio performance team | 40% cost reductions at Cengage, 20% productivity gains at Yahoo |
+| Hg Capital | Hg Catalyst AI Incubator | $130M+ EBITDA uplift, 40%+ new logo bookings growth in Year 1 |
+| Crete Professionals Alliance | AI accounting transformation | $500M two-year plan targeting AI-enabled accounting firms |
+
+### Deal Flow in Target Verticals
+
+The BPO market exceeds **$300B** with PE add-on transactions spiking 41.2% year-over-year in 2024. In accounting, 147 PE deals have built $200B in new value since 2020, with Blackstone acquiring Citrin Cooperman at a $2B valuation. Insurance M&A shows 26% of deals motivated by digital transformation.
+
+### The Buyer Persona: AI Operating Partner
+
+The primary buyer for AI transformation infrastructure is the **AI Operating Partner** — an emerging role at PE firms. These are ex-McKinsey/BCG consultants or former CDAOs earning $1–3M annually who need tools deployable across 10–50+ portfolio companies.
+
+Their decision criteria: demonstrable ROI within 90 days, portfolio-wide deployment capability, integration without rip-and-replace, clear EBITDA metrics, and reference cases in similar verticals.
+
+BCG explicitly recommends "buy, don't build." The ideal platform deploys agents across common business functions with minimal customization, provides portfolio-wide visibility and governance, offers rapid time-to-value, and measures EBITDA impact directly.
+
+---
+
+## 4. Building AI-Native Businesses
+
+### Five Critical Gaps Define the Opportunity
+
+**Gap 1 — The Orchestration Gap (biggest unmet need).** No product provides a unified system orchestrating AI agents across all business functions. Solo founders cobble together disconnected tools. The need is for agents that work as a coordinated system, not a collection of individual automations.
+
+**Gap 2 — The Strategy-to-Execution Gap.** ChatGPT helps with planning. Zapier helps with execution. Nothing bridges the two. Founders manually translate strategic decisions into operational workflows.
+
+**Gap 3 — The Business Lifecycle Gap.** Tools optimize for one phase. No platform covers envision → plan → build → operate → grow. Business planning tools don't connect to operational tools.
+
+**Gap 4 — The Trust/Governance Gap for Small Business.** Enterprise platforms offer governance; SMB tools offer none. As agents handle payments, customer communication, and financial decisions, this gap widens dangerously.
+
+**Gap 5 — The Distribution Gap.** Building is now easy; getting noticed is the real challenge. No agentic platform helps with the critical bottleneck of customer acquisition and growth.
+
+### The Competitive Landscape
+
+The market clusters into four segments, and **no competitor occupies the full-stack operating system position**:
+
+| Segment | Players | What They Solve | What They Miss |
+|---------|---------|----------------|----------------|
+| Developer frameworks | CrewAI ($18M+, 16K stars), LangGraph, Microsoft Agent Framework | Technical flexibility for developers | Business operations, governance UX |
+| No-code builders | Lindy.ai ($53M raised), Relevance AI ($24M Series B) | Individual task automation | End-to-end business orchestration |
+| Enterprise automation | Beam AI ($990–$3,990/mo) | BPO replacement, SOP-to-agent conversion | SMB accessibility, open source |
+| Autonomous runtimes | OpenClaw (342K stars), AutoGPT | Broad task execution across 24+ channels | Governance, cost control, workflow formalism |
+
+The structural gap: nobody owns the full-stack infrastructure for creating, operating, and scaling AI-native businesses end-to-end.
+
+### Pricing Signals from the Market
+
+- Solo founders willingly spend **$75–$500/month** on AI tool stacks
+- AI automation agency owners pay **$500–$5,000/month** for infrastructure
+- PE portfolio deployments command **$10K–$100K+/month** in enterprise pricing
+- The agency model — where agencies charge clients $297–$2,000/month for AI automation services — represents a natural channel partner opportunity
+
+---
+
+## 5. The Stagent Approach
+
+### The Operating System for AI-Native Business
+
+Stagent fills the gap between autonomous agents and governed business operations. It is a local-first workspace where AI agents run inside a governed system of projects, workflows, documents, inbox approvals, profiles, schedules, live monitoring, and cross-runtime cost governance.
+
+### Four Pillars
+
+**Orchestrate.** AI agents for every business function. 21+ specialist profiles spanning marketing, sales, support, finance, content creation, and operations coordination. Smart runtime routing across 5 AI runtimes (Claude, OpenAI, Ollama, and direct API access). Multi-channel delivery through Slack and Telegram.
+
+**Automate.** Workflows that run your business proactively. 6 workflow patterns (sequence, planner-executor, checkpoint, fork/join, autonomous loop, multi-agent swarm). Heartbeat scheduling for proactive agent execution. Natural-language scheduling — type "run my marketing report every Monday at 9am" and it works.
+
+**Govern.** Human oversight without the bottleneck. The canUseTool governance gate ensures every agent action passes through a 5-step approval flow. Risk tiers classify tools by danger level. Budget guardrails prevent cost overruns. An approval inbox surfaces everything that needs human review.
+
+<Figure number={3} caption="canUseTool Governance Flow — 5-Step Human-in-the-Loop Cycle">
+  <GovernanceFlow />
 </Figure>
 
----
+**Converse.** Talk to your business through any channel. Multi-model chat with progressive context injection (~53K token budget). Bidirectional Slack and Telegram integration. Entity detection for quick navigation. Context-aware suggested prompts that understand your workspace state.
 
-## 6. Current Product Coverage & Roadmap
+### What's Shipped Today
 
-### Current Product Coverage
+| Capability | Status |
+|-----------|--------|
+| 74 features across 15 operator surfaces | Shipped |
+| 21+ specialist agent profiles (incl. 6 business-function profiles) | Shipped |
+| 6 workflow patterns with blueprint catalog | Shipped |
+| 5 AI runtimes (Claude, OpenAI, Ollama, direct APIs) | Shipped |
+| Bidirectional Slack & Telegram chat | Shipped |
+| Heartbeat scheduling with proactive execution | Shipped |
+| Natural-language scheduling | Shipped |
+| Episodic agent memory with confidence decay | Shipped |
+| Smart runtime routing | Shipped |
+| Browser automation (Chrome DevTools + Playwright MCP) | Shipped |
+| Skills repo import with deduplication | Shipped |
+| Cross-runtime cost metering with budget guardrails | Shipped |
+| Living Book (9 chapters, self-regenerating from source code) | Shipped |
 
-The March 2026 product now covers the core surfaces an operator needs to supervise AI work in practice:
-
-| Surface | What Ships Today |
-|---------|------------------|
-| **Home** | Workspace briefing with micro-visualizations, attention queue, and live activity |
-| **Dashboard** | Status-driven execution board with AI-assisted creation and bulk operations |
-| **Projects** | Portfolio organization with working directories and scoped execution context |
-| **Workflows** | Reusable orchestration with six patterns including parallel, loop, and swarm execution |
-| **Documents** | Drag-and-drop upload, automatic text extraction, and agent context injection |
-| **Profiles** | 21 curated specialists with cross-provider support, auto-detect routing, and self-improvement |
-| **Schedules** | Human-friendly intervals, cron expressions, runtime targeting, and governed execution |
-| **Inbox** | Approval controls, ambient toasts, agent questions, and batch context proposals |
-| **Monitor** | Streaming logs with click-to-navigate, auto-pause, and event filtering |
-| **Cost & Usage** | Spend, tokens, budget enforcement, project budgets, and execution path tracking |
-| **Chat** | Conversational AI with multi-provider model selection, context-aware prompts, and entity CRUD |
-| **Environment** | Environment scanning with health scoring, artifact discovery, and cross-project comparison |
-| **Playbook** | Built-in documentation with usage-stage awareness, adoption heatmap, and guided learning journeys |
-| **Settings** | Permission presets with risk tiers, task resume, authentication, and data management |
-
-<Figure number={11} caption="Workflow Blueprints — Reusable Templates for Common Operating Patterns">
-  <BrowserFrame src="/screenshots/workflows-blueprints.png" alt="Blueprint gallery with 8 template cards, domain tabs, and Create Custom button" />
+<Figure number={4} caption="Workspace Overview — Active Tasks, Pending Approvals, Live Activity">
+  <BrowserFrame src="/screenshots/home-list.png" alt="Home workspace showing summary metrics, tasks needing attention, and live agent activity" />
 </Figure>
 
-<Figure number={12} caption="Schedules — Recurring Automation with Timing, Profile, and Firing Controls">
-  <BrowserFrame src="/screenshots/schedules-detail.png" alt="New Gadget Trends schedule detail with firings count, next fire time, and prompt" />
+<Figure number={5} caption="Agent Profiles — Specialist Agents for Every Business Function">
+  <BrowserFrame src="/screenshots/profiles-list.png" alt="Agent profiles catalog with work and personal specialist cards" />
 </Figure>
 
-<Figure number={13} caption="Chat — Conversational AI with Multi-Provider Model Selection and Workspace Context">
-  <BrowserFrame src="/screenshots/chat-list.png" alt="Chat empty state with suggested prompt categories, model selector, and conversation history sidebar" />
+<Figure number={6} caption="Chat — Conversational AI with Multi-Provider Model Selection">
+  <BrowserFrame src="/screenshots/chat-list.png" alt="Chat interface with suggested prompts, model selector, and conversation sidebar" />
 </Figure>
 
-<Figure number={14} caption="Environment — Development Environment Scanner with Health Scoring and Artifact Inventory">
-  <BrowserFrame src="/screenshots/environment-list.png" alt="Environment dashboard showing artifacts, health score, MCP servers, skills, and safety ratings" />
+<Figure number={7} caption="Cost & Usage — Cross-Runtime Spend Visibility and Budget Controls">
+  <BrowserFrame src="/screenshots/cost-usage-list.png" alt="Cost and usage dashboard with budget pacing, spend metrics, and provider pricing" />
 </Figure>
 
-### Three-Horizon Roadmap
+### What's on the Roadmap
 
-| Horizon | Timeline | Focus | Key Direction |
-|---------|----------|-------|---------------|
-| **H1** | Q2 2026 | Trust Administration | Richer policy tiers, delegated approvals, exportable audit views |
-| **H2** | Q3 2026 | Automation Depth | More blueprints, richer schedule triggers, output artifact generation |
-| **H3** | Q4 2026 | Distribution | CLI distribution hardening, broader team workflows, ecosystem expansion |
+| Capability | Timeline |
+|-----------|----------|
+| Cloud sync & backup | H1 2026 |
+| Multi-user workspaces with RBAC | H2 2026 |
+| Portfolio dashboards for PE firms | H2 2026 |
+| Agent marketplace (community profiles & blueprints) | H2 2026 |
+| API-first headless deployment mode | 2027 |
 
-The strategic pattern is clear: Stagent is moving from governed execution toward governed operations.
+### Architecture
 
----
+<Figure number={8} caption="System Architecture — Four Pillars Across Three Layers">
+  <SystemArchitecture />
+</Figure>
 
-## 7. Cross-Industry Use Cases
+Stagent follows a three-layer local-first architecture:
 
-| Industry | Use Case | Core Surface Mix | HITL Checkpoint |
-|----------|---------|------------------|-----------------|
-| **Software Engineering** | Code review, release checks, documentation generation | Workflows + Profiles + Inbox + Monitor | Approve publish or merge actions |
-| **Finance** | Portfolio analysis, daily digests, recurring watchlists | Schedules + Documents + Dashboard | Approve recommendations before execution |
-| **Legal** | Contract analysis, due diligence, clause comparison | Documents + Workflows + Inbox | Approve findings before delivery |
-| **Marketing** | Campaign audits, content variants, CTA experiments | Projects + Workflows + Schedules | Approve creative before shipping |
-| **Operations** | Support triage, reporting, escalations | Profiles + Dashboard + Inbox | Approve external write actions |
-| **Personal Productivity** | Travel planning, meal planning, tax prep | Projects + Blueprints + Schedules | Review final recommendations |
+- **Browser layer** — React 19 with 15 operator surfaces, real-time SSE streaming
+- **Server layer** — Next.js 16 with 11 service modules, 58 API endpoints
+- **External layer** — Local SQLite database (WAL mode, 16+ tables), no cloud dependency
 
----
-
-## 8. Risk Analysis
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|:---:|:---:|------------|
-| Single-runtime vendor dependency | Medium | High | Stagent’s product layer already abstracts orchestration, approvals, visibility, and cost governance across Claude and Codex runtimes |
-| Governance fatigue | Medium | Medium | Approval patterns, focused inbox tabs, and policy tuning reduce noise without removing control |
-| Automation sprawl | Medium | Medium | Profiles, schedules, and blueprints remain inspectable in dedicated surfaces instead of hiding inside scripts |
-| Regulatory shifts | Medium | Medium | Local-first architecture and operator-visible intervention paths remain advantageous under tighter oversight rules |
-| Market competition | High | Medium | Coordination UX plus reusable operational primitives create a differentiated product layer |
-| Misconfigured profiles or schedules | Medium | Medium | Explicit detail views and operator-facing controls make risky configuration inspectable before execution |
+Technology stack: TypeScript (83.8% of codebase), Tailwind CSS v4, shadcn/ui, Drizzle ORM. Open source under Apache 2.0.
 
 ---
 
-## 9. Investment Thesis
+## 6. Use Cases by Industry
 
-Five pillars support the case for Stagent:
+### Professional Services (Accounting, Legal, Consulting)
 
-1. **Market timing** — AI agent adoption is accelerating, but governance remains the gating problem.
-2. **Governance moat** — Approval paths, visibility surfaces, and trust boundaries are baked into the operating model.
-3. **Category creation** — Stagent is building a recognizable AI operations workspace, not just another framework or chatbot shell.
-4. **Reusable automation advantage** — Profiles, blueprints, and schedules turn successful experiments into repeatable organizational process.
-5. **Execution breadth** — The current product already spans fifteen interlocking operator surfaces in a coherent local-first system.
+Highest immediate fit. PE firms are acquiring these businesses at record pace. Operations are process-heavy and automatable.
 
----
+- **Agent profiles:** Financial Analyst, Operations Coordinator, Document Writer
+- **Workflows:** Client onboarding pipeline, compliance review checkpoint, reporting sequence
+- **Governance:** Approval gates on client-facing outputs, cost tracking per engagement
 
-## 10. Conclusion
+### BPO and Contact Centers
 
-The agentic enterprise is not blocked on access to models. It is blocked on operating discipline.
+$300B+ market with 41% YoY spike in PE activity. Agents can replace human agents at scale.
 
-Organizations need a way to let agents work while preserving visibility, intervention, reuse, and trust. That means more than a task queue. It requires a coordinated workspace where dashboards, projects, documents, profiles, schedules, approvals, and live monitoring all reinforce one another.
+- **Agent profiles:** Customer Support Agent, Sales Researcher, Content Creator
+- **Workflows:** Ticket triage (classify → respond → escalate), quality assurance checkpoint
+- **Governance:** Sentiment-based escalation triggers, response template approval
 
-That is what Stagent is becoming: the governed AI operations layer for teams that want real agent leverage without surrendering control.
+### Insurance Agencies
 
-**Stagent is that coordination layer.**
+26% of PE deals motivated by digital transformation. Heavily process-driven with high regulation.
 
----
+- **Agent profiles:** Research Agent, Document Writer, Operations Coordinator
+- **Workflows:** Claims processing sequence, underwriting review checkpoint
+- **Governance:** Regulatory compliance gates, audit trail for all agent decisions
 
-## Appendix A: Technical Glossary
+### Digital Marketing and Content Agencies
 
-| Term | Definition |
-|------|-----------|
-| **Agent Runtime** | The governed execution backend used to run Claude Agent SDK or Codex App Server sessions inside Stagent. |
-| **Blueprint** | Preconfigured workflow template that bootstraps a new multi-step automation. |
-| **canUseTool** | Callback invoked when the runtime reaches a tool-use trust boundary. |
-| **Drizzle ORM** | TypeScript-first ORM used for local database access. |
-| **HITL** | Human-in-the-loop decision point requiring explicit operator approval or input. |
-| **Profile** | Reusable agent definition containing instructions, tool policy, and tuning settings. |
-| **Schedule** | Recurring or one-shot automation record that generates work on a cadence. |
-| **SSE** | Server-Sent Events used for live monitor streaming. |
-| **SQLite WAL** | Write-Ahead Logging mode supporting concurrent reads in a local database. |
-| **Usage Ledger** | Normalized cross-runtime record of tokens, cost, provider, model, status, and execution linkage. |
+Natural fit for AI agents. Solo founders already building these. Agency model provides channel distribution.
 
-## Appendix B: Surface Inventory
+- **Agent profiles:** Marketing Strategist, Content Creator, Sales Researcher
+- **Workflows:** Content pipeline (research → create → review → publish), lead generation fork/join
+- **Governance:** Brand voice consistency checks, client approval gates
 
-| Surface | Purpose | Representative Outcome |
-|---------|---------|------------------------|
-| **Home** | Summarize workspace health and immediate priorities | Faster daily triage |
-| **Dashboard** | Manage task execution states | Clear operating queue |
-| **Projects** | Organize work by initiative | Shared context per effort |
-| **Workflows** | Reuse multi-step orchestration | Repeatable operational process |
-| **Documents** | Ground execution in uploaded files | Verifiable source context |
-| **Profiles** | Reuse specialist behavior and policy | More consistent agent behavior |
-| **Schedules** | Trigger recurring automation | Proactive operations |
-| **Inbox** | Review permissions and questions | Governed execution |
-| **Monitor** | Observe live runtime activity | Faster debugging and trust-building |
-| **Cost & Usage** | Review spend, tokens, and budget state | Operator-visible economic control |
-| **Chat** | Converse with workspace through natural language | Faster entity creation and discovery |
-| **Environment** | Scan and audit development environments | Configuration health and consistency |
-| **Playbook** | Guide adoption with feature tracking and journey cards | Faster onboarding and feature discovery |
-| **Settings** | Configure auth, policy defaults, and reset controls | Centralized operational control |
+### E-Commerce Operations
 
-## Appendix C: Sources & References
+Inventory, fulfillment, customer service, pricing — all agent-automatable.
 
-| Source | Data Point |
-|--------|-----------|
-| Grand View Research | AI agent market $7.63B (2025), $52.62B (2030), 46.3% CAGR |
-| Gartner | 40% enterprise apps embed agents by 2026; >40% agentic projects canceled by 2027 |
-| Deloitte | 66% of organizations report AI productivity gains |
-| IDC | 20–30% convert AI gains to financial ROI |
-| Anthropic | Claude Agent SDK and enterprise agent workflows |
-| OpenAI | Codex App Server and governed runtime infrastructure |
-| EU AI Act | Effective August 2026 — human oversight requirements for high-risk AI |
+- **Agent profiles:** Customer Support Agent, Financial Analyst, Operations Coordinator
+- **Workflows:** Order processing sequence, inventory monitoring heartbeat, customer feedback loop
+- **Governance:** Pricing change approval, refund authorization gates
 
 ---
 
-*This paper was updated on March 27, 2026. Product coverage reflects the current browser workspace with 74 completed features across 15 surfaces, including dual-runtime execution, cost governance with budget enforcement, 21 curated profiles with auto-detect routing, 6 workflow patterns, permission presets, conversational AI with multi-provider model selection, environment scanning with health scoring, a built-in playbook, and an interactive book reader with curated reading paths.*
+## 7. The 10x Vision
+
+### The Amazon of the Agentic Economy
+
+The 10x Stagent is the platform where AI-native businesses are born, built, operated, and scaled — combining the business formation capabilities of Stripe Atlas, the operational infrastructure of Shopify, the agent marketplace of an App Store, and the portfolio governance of a PE operating system.
+
+### The Marketplace Flywheel
+
+**Stage 1 — Agent Profile Marketplace.** Community-contributed specialist agent profiles with ratings, reviews, and usage data. Founders browse and deploy pre-configured agents like hiring from a talent marketplace.
+
+**Stage 2 — Workflow Blueprint Exchange.** Complete business operation templates — "AI-Native Insurance Agency in a Box," "Automated Content Marketing Pipeline," "PE Portfolio Transformation Playbook" — combining multiple agent profiles, integrations, and governance rules.
+
+**Stage 3 — Agent-to-Agent Commerce Layer.** As agents operating on Stagent need services from other agents, Stagent becomes the clearinghouse for agent-to-agent transactions. A research paper from Rothschild et al. (2025) titled "The Agentic Economy" identifies that most agents today are designed for human interaction but "few public offerings are designed to interact with each other" — a foundational infrastructure gap.
+
+**Stage 4 — Business-as-a-Service Platform.** Launching an AI-native business becomes as simple as choosing a template, customizing parameters, and clicking "Launch."
+
+### Market Sizing
+
+| Scope | TAM | SOM (Target) |
+|-------|-----|------|
+| 10x Vision: Agentic economy infrastructure | $500B+ by 2034 | $250M–$800M (5-year) |
+| Near-term: Solo founder & micro-team AI tooling | $15–25B by 2028 | $2–10M ARR (18-month) |
+
+### Physical AI: A Legitimate Future Play
+
+As robotic systems, autonomous vehicles, and IoT devices become agent-controlled, they will need the same governance primitives Stagent provides for software agents: human-in-the-loop approvals, tool permission policies, audit trails, budget guardrails, and workflow orchestration. The progression: software agents (today) → API-connected physical systems (near-term) → embodied AI agents (longer-term).
+
+---
+
+## 8. Getting Started
+
+### For Solo Founders
+
+Start free with the open-source workspace. Install with `npx stagent`, deploy your first business-function agent in under 5 minutes, and start building with AI agents that work for your business — governed, visible, and under your control.
+
+### For Agency Owners
+
+Use Stagent as the infrastructure layer for client deployments. Reusable profiles and workflow blueprints mean you build once, deploy many times. Cost tracking per project keeps engagements profitable.
+
+### For PE Operating Partners
+
+[Book a conversation](/research#advisory) about AI Transformation Advisory. We help design, deploy, and govern AI agent operations across portfolio companies — from strategy through implementation.
+
+### Pricing
+
+| Tier | Price | For |
+|------|-------|-----|
+| Starter | Free forever | Everyone — full local workspace, 21+ profiles, 6 workflow patterns, 5 runtimes |
+| Pro | $149/mo (coming soon) | Solo founders & agencies — cloud sync, advanced workflows, multi-channel, marketplace |
+| Team | $499/mo (coming soon) | Teams & portfolios — multi-user, shared governance, portfolio dashboards, RBAC |
+| Advisory | Custom | Agencies & PE firms — AI transformation consulting, governance frameworks, deployment support |
+
+---
+
+## Sources & References
+
+- Grand View Research — Autonomous AI Agents Market Report (2025–2034)
+- Gartner — Agentic AI Market Analysis (2025)
+- RAND Corporation — AI Agent Production Failure Rates
+- Carta — Startup Formation Trends (2019–2025)
+- Deloitte — State of Generative AI in the Enterprise (2025)
+- IDC — AI ROI Conversion Analysis
+- BCG — Agentic AI in Private Equity Framework
+- McKinsey — AI Transformation Value Creation Report
+- EU AI Act — Regulatory Framework (effective August 2026)
+- Rothschild et al. — "The Agentic Economy" (ACM, 2025)
+- US Census Bureau — Solopreneur Economic Data
+- Vista Equity Partners — Agentic AI Factory Announcement
+- Apollo Global Management — Portfolio AI Performance Data
+- Hg Capital — Catalyst AI Incubator Results

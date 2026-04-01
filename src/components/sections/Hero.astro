@@ -1,14 +1,16 @@
 ---
+import WaitlistForm from '../ui/WaitlistForm.astro';
+
 const slides = [
   { src: '/screenshots/home-list.png', alt: 'Workspace overview with active tasks and agent activity' },
   { src: '/screenshots/dashboard-list.png', alt: 'Dashboard analytics with project metrics' },
-  { src: '/screenshots/dashboard-create-form-ai-assist.png', alt: 'AI Assist panel with improved description, sub-task suggestions, and Create as Workflow' },
+  { src: '/screenshots/settings-channels.png', alt: 'Multi-channel delivery settings with Slack and Telegram integration' },
   { src: '/screenshots/inbox-list.png', alt: 'Governance command center with notification queue and context proposals' },
   { src: '/screenshots/workflows-blueprints.png', alt: 'Blueprint gallery with 8 template cards, domain tabs, and Create Custom button' },
   { src: '/screenshots/profiles-list.png', alt: 'Agent profiles catalog with work and personal specialist cards' },
   { src: '/screenshots/chat-list.png', alt: 'Chat interface with suggested prompts, model selector, and conversation sidebar' },
   { src: '/screenshots/environment-list.png', alt: 'Environment dashboard with health scoring, artifact inventory, and MCP servers' },
-  { src: '/screenshots/cost-codex-claude-code.png', alt: 'Cost and usage dashboard with budget pacing, spend metrics, and provider pricing' },
+  { src: '/screenshots/cost-usage-list.png', alt: 'Cost and usage dashboard with budget pacing, spend metrics, and provider pricing' },
 ];
 ---
 <section class="relative min-h-[calc(100dvh-80px)] flex items-center px-6 overflow-hidden pt-20">
@@ -31,39 +33,39 @@ const slides = [
         data-animate
         class="hero-gradient-text font-display text-[clamp(1.8rem,3.5vw,2.65rem)] font-bold leading-[1.15] mb-4"
       >
-        Govern Your AI Agents.<br/>Operate With Oversight.
+        The Operating System for<br/>AI-Native Business
       </h1>
 
       <p
         data-animate
-        class="text-[clamp(0.9rem,2vw,1.15rem)] text-text-muted leading-relaxed mb-6 mx-auto lg:mx-0"
+        class="text-[clamp(0.9rem,2vw,1.15rem)] text-text-muted leading-relaxed mb-6 mx-auto lg:mx-0 max-w-lg"
       >
-        Local-first agent operations with reusable profiles, workflow blueprints, conversational AI, environment scanning, scheduled runs, and human-in-the-loop oversight.
+        Stop cobbling together 15 disconnected tools. Stagent orchestrates AI agents across your entire business — with the governance, visibility, and cost controls that keep you in charge.
       </p>
 
-      <!-- Terminal CTA -->
+      <!-- Email CTA -->
       <div data-animate class="my-8 max-w-md mx-auto lg:mx-0">
-        <div class="relative border border-primary/30 rounded-lg primary-pulse overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-2 border-b border-primary/10">
-            <span class="font-mono text-[10px] uppercase tracking-widest text-text-muted">Terminal</span>
-            <button
-              id="hero-copy-btn"
-              class="p-1 rounded text-text-muted/50 hover:text-text-muted transition-colors"
-              aria-label="Copy to clipboard"
-            >
-              <svg id="hero-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              <svg id="hero-check-icon" class="hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-          </div>
-          <div class="bg-surface-raised px-4 py-3">
-            <pre class="font-mono text-lg sm:text-xl leading-relaxed text-text-muted"><span class="text-primary">$</span> <code id="hero-code">npx stagent</code><span class="hero-cursor">▌</span></pre>
-          </div>
-        </div>
+        <WaitlistForm
+          variant="hero"
+          id="hero-waitlist"
+          source="hero"
+          buttonText="Get Early Access"
+        />
+      </div>
+
+      <!-- Secondary: GitHub -->
+      <div data-animate class="mb-6 mx-auto lg:mx-0 max-w-md">
+        <a
+          href="https://github.com/manavsehgal/stagent.github.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-xs font-mono text-text-muted/60 hover:text-primary transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          View on GitHub · Apache 2.0
+        </a>
       </div>
 
       <!-- Value proposition pills -->
@@ -71,9 +73,10 @@ const slides = [
         data-animate
         class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mb-4"
       >
+        <span class="font-mono text-[11px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1">Open Source</span>
         <span class="font-mono text-[11px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1">Local-First</span>
+        <span class="font-mono text-[11px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1">Multi-Runtime</span>
         <span class="font-mono text-[11px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1">Human-in-the-Loop</span>
-        <span class="font-mono text-[11px] tracking-wider text-success border border-success/20 bg-success/5 rounded-full px-3 py-1">Open Source</span>
       </div>
 
     </div>
@@ -130,16 +133,6 @@ const slides = [
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-
-  /* ── Blinking cursor ── */
-  .hero-cursor {
-    animation: hero-blink 1s step-end infinite;
-    color: var(--color-primary);
-  }
-  @keyframes hero-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
   }
 
   /* ── Carousel wrapper - relative for dot positioning ── */
@@ -229,20 +222,6 @@ const slides = [
 
 <script>
   function initHero() {
-    // ── Copy button ──
-    document.getElementById('hero-copy-btn')?.addEventListener('click', async () => {
-      const code = document.getElementById('hero-code')?.textContent ?? '';
-      await navigator.clipboard.writeText(code);
-      const copyIcon = document.getElementById('hero-copy-icon');
-      const checkIcon = document.getElementById('hero-check-icon');
-      copyIcon?.classList.add('hidden');
-      checkIcon?.classList.remove('hidden');
-      setTimeout(() => {
-        copyIcon?.classList.remove('hidden');
-        checkIcon?.classList.add('hidden');
-      }, 2000);
-    });
-
     // ── Carousel slide manager ──
     const slides = document.querySelectorAll<HTMLImageElement>('.hero-slide');
     const dots = document.querySelectorAll<HTMLButtonElement>('.hero-dot');

@@ -2,7 +2,7 @@ export const SITE = {
   name: 'Stagent',
   url: 'https://stagent.io',
   description:
-    'AI agent operations workspace with governed execution, reusable profiles, workflow blueprints, schedules, and local-first oversight.',
+    'The operating system for AI-native business. Orchestrate AI agents across marketing, sales, support, and operations — governed, auditable, and under your control.',
   logo: 'https://stagent.io/stagent-s-128.png',
   ogImage: 'https://stagent.io/og-image.png',
   themeColor: '#0f172a',

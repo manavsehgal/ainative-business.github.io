@@ -1,35 +1,31 @@
 ---
 import AmberRule from '../ui/AmberRule.astro';
+import WaitlistForm from '../ui/WaitlistForm.astro';
 ---
 <section class="py-32 px-6">
   <AmberRule />
 
   <div class="max-w-3xl mx-auto text-center">
     <p data-animate class="font-mono text-xs tracking-widest text-text-muted uppercase mb-6">
-      The coordination layer for the agentic enterprise
+      The operating system for the agentic economy
     </p>
 
-    <h2 data-animate class="mb-6" style="transition-delay: 80ms">Need a closer look before you install?</h2>
+    <h2 data-animate class="mb-6" style="transition-delay: 80ms">Ready to build an AI-native business?</h2>
 
     <p data-animate class="text-text-muted mb-10 max-w-lg mx-auto" style="transition-delay: 160ms">
-      Review the docs, research, and open-source repo to see how Stagent handles governed agent operations end to end.
+      Start free with the open-source workspace. Get early access to Pro features, advisory services, and the growing agent ecosystem.
     </p>
 
-    <div data-animate-stagger class="flex flex-col sm:flex-row items-center justify-center gap-4" style="transition-delay: 240ms">
-      <a
-        data-animate
-        href="/docs"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-primary border border-primary/40 px-8 py-3 hover:bg-primary/10 transition-colors rounded-md"
-      >
-        Documentation
-      </a>
-      <a
-        data-animate
-        href="/research"
-        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors rounded-md"
-      >
-        Research Paper
-      </a>
+    <div data-animate class="max-w-md mx-auto mb-10" style="transition-delay: 200ms">
+      <WaitlistForm
+        variant="cta"
+        id="cta-footer-waitlist"
+        source="footer"
+        buttonText="Get Early Access"
+      />
+    </div>
+
+    <div data-animate-stagger class="flex flex-col sm:flex-row items-center justify-center gap-4" style="transition-delay: 280ms">
       <a
         data-animate
         href="https://github.com/manavsehgal/stagent.github.io"
@@ -38,6 +34,20 @@ import AmberRule from '../ui/AmberRule.astro';
         class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors rounded-md"
       >
         GitHub
+      </a>
+      <a
+        data-animate
+        href="/docs"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors rounded-md"
+      >
+        Documentation
+      </a>
+      <a
+        data-animate
+        href="/research"
+        class="font-mono text-xs tracking-[0.2em] uppercase text-text-muted border border-border px-8 py-3 hover:border-text-muted transition-colors rounded-md"
+      >
+        Playbook
       </a>
     </div>
   </div>

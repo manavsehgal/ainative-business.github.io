@@ -1,0 +1,172 @@
+---
+import SectionLabel from '../ui/SectionLabel.astro';
+import WaitlistForm from '../ui/WaitlistForm.astro';
+
+const tiers = [
+  {
+    name: 'Starter',
+    price: 'Free',
+    period: 'forever · open source',
+    target: 'For everyone',
+    features: [
+      'Full local workspace',
+      '21+ agent profiles',
+      '6 workflow patterns',
+      'Human-in-the-loop',
+      '5 AI runtimes',
+      'Community support',
+    ],
+    cta: { type: 'command' as const, text: 'npx stagent' },
+  },
+  {
+    name: 'Pro',
+    price: '$149',
+    period: '/mo',
+    target: 'For solo founders & agencies',
+    badge: 'Coming Soon',
+    highlight: true,
+    features: [
+      'Everything in Starter',
+      'Cloud sync & backup',
+      'Advanced workflows',
+      'Multi-channel delivery',
+      'Priority support',
+      'Skills marketplace access',
+    ],
+    cta: { type: 'waitlist' as const, text: 'Join Waitlist' },
+  },
+  {
+    name: 'Team',
+    price: '$499',
+    period: '/mo',
+    target: 'For teams & portfolios',
+    badge: 'Coming Soon',
+    features: [
+      'Everything in Pro',
+      'Multi-user workspaces',
+      'Shared governance',
+      'Portfolio dashboards',
+      'Role-based access',
+      'Dedicated support',
+    ],
+    cta: { type: 'waitlist' as const, text: 'Join Waitlist' },
+  },
+];
+
+const advisoryServices = [
+  'AI operations strategy',
+  'Agent workflow design',
+  'Portfolio-wide deployment',
+  'Governance framework setup',
+  'Team training & enablement',
+  'ROI measurement & reporting',
+];
+---
+<section id="pricing" class="py-24 px-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14">
+      <SectionLabel text="Pricing" />
+      <h2 data-animate class="mt-4 mb-4">Start Free. Scale When You're Ready.</h2>
+      <p data-animate class="text-text-muted" style="transition-delay: 80ms">
+        Open-source foundation. Premium capabilities as you grow.
+      </p>
+    </div>
+
+    <!-- Product tiers -->
+    <div data-animate-stagger class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+      {tiers.map(({ name, price, period, target, badge, highlight, features, cta }) => (
+        <div
+          data-animate
+          class:list={[
+            'relative rounded-xl border p-6 flex flex-col',
+            highlight ? 'border-primary/40 bg-primary/[0.03]' : 'border-border bg-surface-raised',
+          ]}
+        >
+          {badge && (
+            <span
+              class:list={[
+                'absolute -top-2.5 right-4 text-[10px] font-mono tracking-wider uppercase px-2.5 py-0.5 rounded-full',
+                highlight ? 'bg-primary text-surface' : 'bg-text-muted/20 text-text-muted',
+              ]}
+            >
+              {badge}
+            </span>
+          )}
+
+          <div class="mb-5">
+            <div class="text-xs font-mono tracking-widest uppercase text-text-muted/60 mb-1">{name}</div>
+            <div class="flex items-baseline gap-1">
+              <span class="text-3xl font-bold">{price}</span>
+              {period && <span class="text-sm text-text-muted">{period}</span>}
+            </div>
+            <div class="text-xs text-text-muted mt-1">{target}</div>
+          </div>
+
+          <ul class="flex-1 space-y-2.5 mb-6">
+            {features.map((feature) => (
+              <li class="flex items-center gap-2 text-sm text-text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary shrink-0">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                {feature}
+              </li>
+            ))}
+          </ul>
+
+          {cta.type === 'command' ? (
+            <div class="font-mono text-sm text-center py-2.5 rounded-md border border-primary/30 bg-primary/[0.06] text-primary">
+              {cta.text}
+            </div>
+          ) : (
+            <a
+              href="#"
+              onclick="event.preventDefault(); this.closest('section').querySelector('input[type=email]')?.focus();"
+              class:list={[
+                'block text-center font-mono text-xs tracking-[0.15em] uppercase py-2.5 rounded-md transition-colors',
+                highlight
+                  ? 'bg-primary text-surface hover:bg-primary/90'
+                  : 'border border-border text-text-muted hover:border-primary hover:text-primary',
+              ]}
+            >
+              {cta.text}
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <!-- Advisory block -->
+    <div id="advisory" data-animate class="rounded-2xl bg-[--color-text] text-[--color-surface] p-8 md:p-10">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-start">
+        <div>
+          <span class="inline-block font-mono text-[10px] tracking-[0.2em] uppercase text-[--color-surface]/50 mb-3">Advisory Services</span>
+          <h3 class="text-xl font-semibold mb-3 text-[--color-surface]">AI Transformation Advisory</h3>
+          <p class="text-sm text-[--color-surface]/70 leading-relaxed mb-5">
+            We help agencies and PE-backed companies design, deploy, and govern AI agent operations. From strategy to implementation — using the same platform we build.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {advisoryServices.map((service) => (
+              <div class="flex items-center gap-2 text-sm text-[--color-surface]/60">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                {service}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="w-full md:w-72 rounded-xl bg-[--color-surface]/10 p-5">
+          <p class="text-xs font-mono text-[--color-surface]/50 text-center mb-3 tracking-wider uppercase">Get in touch</p>
+          <WaitlistForm
+            variant="cta"
+            id="advisory-form"
+            source="pricing-advisory"
+            buttonText="Book a Conversation"
+            successMessage="We'll reach out shortly to schedule a conversation."
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
