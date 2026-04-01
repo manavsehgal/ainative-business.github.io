@@ -3,7 +3,7 @@
 // Gradient tint + pill badge style, designed for light-first with dark mode support
 ---
 <div class="notification-bar border-b border-border/50 py-2">
-  <div class="max-w-7xl mx-auto px-6 flex items-center justify-center gap-3 text-sm">
+  <a href="/book" class="max-w-7xl mx-auto px-6 flex items-center justify-center gap-3 text-sm hover:opacity-80 transition-opacity">
     <span class="inline-flex items-center gap-1.5 bg-success-dim px-2.5 py-0.5 rounded-full">
       <span class="h-1.5 w-1.5 rounded-full bg-success animate-pulse" aria-hidden="true"></span>
       <span class="font-mono text-[10px] tracking-wider font-semibold text-success uppercase">
@@ -13,14 +13,8 @@
     <span class="text-text">
       Read <strong class="font-semibold">AI Native</strong> — free online book
     </span>
-    <a
-      href="/book"
-      class="text-primary hover:text-text transition-colors font-medium"
-      aria-label="Read AI Native book"
-    >
-      →
-    </a>
-  </div>
+    <span class="text-primary font-medium">→</span>
+  </a>
 </div>
 
 <style>

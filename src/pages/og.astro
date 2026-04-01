@@ -3,9 +3,7 @@
  * OG Image page — rendered at 1200×630 then screenshotted to public/og-image.png
  * Standalone page with no layout wrapper, fixed dimensions, no overflow.
  *
- * Design: "Command Center" split layout (light theme)
- *   Left  — Brand identity: wordmark, subtitle, tagline, value pills, stats
- *   Right — Abstract operational dashboard: status counters, kanban cards, workflow dots
+ * Design: Centered logo + wordmark + title on dark background
  */
 import "@fontsource/geist-sans/700.css";
 import "@fontsource-variable/geist-mono";
@@ -23,291 +21,84 @@ import "@fontsource-variable/geist-mono";
       width: 1200px;
       height: 630px;
       overflow: hidden;
-      background: oklch(0.97 0.006 260);
-      color: oklch(0.15 0.02 260);
+      background: oklch(0.13 0.02 250);
+      color: oklch(0.93 0.01 250);
     }
 
-    /* ── Layout ── */
     .og {
       position: relative;
       width: 1200px;
       height: 630px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    /* ── Left panel: Brand ── */
-    .brand {
-      padding: 48px 52px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      border-right: 1px solid oklch(0.82 0.02 260 / 0.4);
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+    /* Ambient glow behind logo */
+    .og::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -55%);
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        oklch(0.65 0.18 250 / 0.12) 0%,
+        oklch(0.65 0.18 250 / 0.04) 40%,
+        transparent 70%
+      );
+      pointer-events: none;
+    }
+
+    .logo {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 20px;
       position: relative;
       z-index: 1;
     }
 
     .wordmark {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 66px;
-      font-weight: 400;
-      letter-spacing: 0.14em;
-      color: oklch(0.48 0.2 260);
+      font-family: "Geist Sans", system-ui, sans-serif;
+      font-size: 72px;
+      font-weight: 700;
+      color: oklch(0.65 0.18 250);
+      letter-spacing: -0.01em;
       line-height: 1;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
     }
 
-    .subtitle {
+    .title {
+      font-family: "Geist Sans", system-ui, sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: oklch(0.93 0.01 250);
+      line-height: 1.3;
+      text-align: center;
+      max-width: 720px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .url {
+      position: absolute;
+      bottom: 28px;
+      right: 40px;
       font-family: "Geist Mono Variable", monospace;
       font-size: 15px;
-      letter-spacing: 0.1em;
-      color: oklch(0.5 0.04 260);
-      margin-top: 10px;
-    }
-
-    .tagline {
-      font-family: "Geist Sans", system-ui, sans-serif;
-      font-size: 33px;
-      font-weight: 700;
-      line-height: 1.28;
-      color: oklch(0.15 0.02 260);
-      margin-bottom: 20px;
-    }
-
-    .pills {
-      display: flex;
-      gap: 10px;
-      flex-wrap: nowrap;
-    }
-
-    .pill {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 14px;
-      letter-spacing: 0.03em;
-      padding: 7px 16px;
-      border-radius: 6px;
-      border: 1.5px solid oklch(0.52 0.18 260 / 0.35);
-      color: oklch(0.48 0.18 260);
-      background: oklch(0.55 0.18 260 / 0.06);
-    }
-
-    .pill--teal {
-      border-color: oklch(0.42 0.15 170 / 0.4);
-      color: oklch(0.38 0.15 170);
-      background: oklch(0.45 0.15 170 / 0.07);
-    }
-
-    .stats {
-      display: flex;
-      gap: 36px;
-    }
-
-    .stat-value {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 38px;
-      font-weight: 700;
-      color: oklch(0.48 0.2 260);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 12px;
-      letter-spacing: 0.1em;
-      color: oklch(0.5 0.04 260);
-      margin-top: 5px;
-    }
-
-    /* ── Right panel: Dashboard ── */
-    .dashboard {
-      padding: 28px 36px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      position: relative;
-      background: oklch(0.95 0.008 260);
-    }
-
-    /* Ambient glow */
-    .dashboard::before {
-      content: "";
-      position: absolute;
-      top: 30%;
-      right: 0;
-      width: 380px;
-      height: 380px;
-      border-radius: 50%;
-      background: radial-gradient(circle, oklch(0.55 0.18 260 / 0.08) 0%, transparent 65%);
-      pointer-events: none;
-    }
-
-    /* ── Status counters ── */
-    .counters {
-      display: flex;
-      gap: 14px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .counter {
-      flex: 1;
-      text-align: center;
-      padding: 12px 0;
-      background: oklch(0.99 0.003 260);
-      border-radius: 10px;
-      border: 1px solid oklch(0.85 0.015 260 / 0.5);
-      box-shadow: 0 1px 3px oklch(0.5 0.02 260 / 0.06);
-    }
-
-    .counter--active {
-      border-color: oklch(0.45 0.15 170 / 0.4);
-      box-shadow: 0 1px 6px oklch(0.45 0.15 170 / 0.1);
-    }
-
-    .counter-label {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      color: oklch(0.5 0.04 260);
-    }
-
-    .counter--active .counter-label {
-      color: oklch(0.4 0.15 170);
-    }
-
-    .counter-value {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 32px;
-      color: oklch(0.48 0.2 260);
-      margin-top: 2px;
-    }
-
-    .counter--active .counter-value {
-      color: oklch(0.38 0.15 170);
-    }
-
-    /* ── Kanban columns ── */
-    .kanban {
-      display: flex;
-      gap: 12px;
-      flex: 1;
-      position: relative;
-      z-index: 1;
-    }
-
-    .kanban-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* Abstract card */
-    .card {
-      background: oklch(0.99 0.003 260);
-      border: 1px solid oklch(0.85 0.015 260 / 0.5);
-      border-radius: 9px;
-      padding: 16px;
-      border-left: 3px solid oklch(0.52 0.18 260);
-      box-shadow: 0 1px 3px oklch(0.5 0.02 260 / 0.05);
-    }
-
-    .card--running {
-      border-color: oklch(0.45 0.15 170 / 0.35);
-      border-left-color: oklch(0.42 0.15 170);
-      box-shadow: 0 1px 4px oklch(0.45 0.15 170 / 0.08);
-    }
-
-    .card--done {
-      background: oklch(0.97 0.005 260);
-      border-color: oklch(0.88 0.012 260 / 0.4);
-      border-left-color: transparent;
-      box-shadow: none;
-    }
-
-    /* Placeholder text bars */
-    .bar {
-      border-radius: 3px;
-    }
-
-    .bar--title {
-      height: 8px;
-      background: oklch(0.78 0.02 260);
-      margin-bottom: 10px;
-    }
-
-    .bar--sub {
-      height: 6px;
-      background: oklch(0.88 0.01 260);
-    }
-
-    /* Progress indicator */
-    .progress-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .progress-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: oklch(0.45 0.15 170);
-      flex-shrink: 0;
-    }
-
-    .progress-track {
-      flex: 1;
-      height: 6px;
-      background: oklch(0.9 0.01 260);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: oklch(0.5 0.15 170 / 0.65);
-      border-radius: 3px;
-    }
-
-    .progress-fill--done {
-      background: oklch(0.55 0.18 260 / 0.2);
-    }
-
-    /* ── Footer row ── */
-    .dash-footer {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .pattern-dots {
-      display: flex;
-      gap: 5px;
-    }
-
-    .pattern-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-
-    .dash-footer-text {
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 13px;
-      color: oklch(0.55 0.03 260);
-    }
-
-    .dash-url {
-      margin-left: auto;
-      font-family: "Geist Mono Variable", monospace;
-      font-size: 16px;
       letter-spacing: 0.06em;
-      color: oklch(0.52 0.18 260 / 0.5);
+      color: oklch(0.5 0.02 250);
+      z-index: 1;
     }
 
-    /* ── Accent line ── */
+    /* Accent line */
     .accent-line {
       position: absolute;
       bottom: 0;
@@ -317,9 +108,9 @@ import "@fontsource-variable/geist-mono";
       background: linear-gradient(
         90deg,
         transparent 5%,
-        oklch(0.55 0.18 260 / 0.2) 30%,
-        oklch(0.55 0.18 260 / 0.45) 50%,
-        oklch(0.55 0.18 260 / 0.2) 70%,
+        oklch(0.65 0.18 250 / 0.15) 30%,
+        oklch(0.65 0.18 250 / 0.4) 50%,
+        oklch(0.65 0.18 250 / 0.15) 70%,
         transparent 95%
       );
       z-index: 3;
@@ -328,145 +119,10 @@ import "@fontsource-variable/geist-mono";
 </head>
 <body>
   <div class="og">
-
-    <!-- ─── LEFT: Brand identity ─── -->
-    <div class="brand">
-      <div>
-        <div class="wordmark">STAGENT</div>
-        <div class="subtitle">AI AGENT OPERATIONS</div>
-      </div>
-
-      <div>
-        <div class="tagline">Govern your agents.<br/>Operate with oversight.</div>
-        <div class="pills">
-          <span class="pill pill--teal">Human-in-the-Loop</span>
-          <span class="pill">Local-First</span>
-          <span class="pill">Open Source</span>
-        </div>
-      </div>
-
-      <div class="stats">
-        <div>
-          <div class="stat-value">51</div>
-          <div class="stat-label">FEATURES</div>
-        </div>
-        <div>
-          <div class="stat-value">11</div>
-          <div class="stat-label">SURFACES</div>
-        </div>
-        <div>
-          <div class="stat-value">6</div>
-          <div class="stat-label">PATTERNS</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ─── RIGHT: Abstract dashboard ─── -->
-    <div class="dashboard">
-
-      <!-- Status counters -->
-      <div class="counters">
-        <div class="counter">
-          <div class="counter-label">PLANNED</div>
-          <div class="counter-value">4</div>
-        </div>
-        <div class="counter counter--active">
-          <div class="counter-label">RUNNING</div>
-          <div class="counter-value">2</div>
-        </div>
-        <div class="counter">
-          <div class="counter-label">DONE</div>
-          <div class="counter-value">8</div>
-        </div>
-      </div>
-
-      <!-- Abstract kanban cards -->
-      <div class="kanban">
-
-        <!-- Planned column -->
-        <div class="kanban-col">
-          <div class="card" style="flex:1">
-            <div class="bar bar--title" style="width:72%"></div>
-            <div class="bar bar--sub" style="width:48%"></div>
-          </div>
-          <div class="card" style="flex:1">
-            <div class="bar bar--title" style="width:88%"></div>
-            <div class="bar bar--sub" style="width:38%"></div>
-          </div>
-          <div class="card" style="flex:0.75">
-            <div class="bar bar--title" style="width:58%"></div>
-            <div class="bar bar--sub" style="width:32%"></div>
-          </div>
-        </div>
-
-        <!-- Running column -->
-        <div class="kanban-col">
-          <div class="card card--running" style="flex:1.15">
-            <div class="bar bar--title" style="width:78%"></div>
-            <div class="progress-row">
-              <div class="progress-dot"></div>
-              <div class="progress-track">
-                <div class="progress-fill" style="width:58%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="card card--running" style="flex:1">
-            <div class="bar bar--title" style="width:64%"></div>
-            <div class="progress-row">
-              <div class="progress-dot"></div>
-              <div class="progress-track">
-                <div class="progress-fill" style="width:28%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Done column -->
-        <div class="kanban-col">
-          <div class="card card--done" style="flex:1;opacity:0.65">
-            <div class="bar bar--title" style="width:82%"></div>
-            <div class="progress-row">
-              <div class="progress-track">
-                <div class="progress-fill progress-fill--done" style="width:100%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="card card--done" style="flex:0.9;opacity:0.55">
-            <div class="bar bar--title" style="width:56%"></div>
-            <div class="progress-row">
-              <div class="progress-track">
-                <div class="progress-fill progress-fill--done" style="width:100%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="card card--done" style="flex:0.7;opacity:0.45">
-            <div class="bar bar--title" style="width:68%"></div>
-            <div class="progress-row">
-              <div class="progress-track">
-                <div class="progress-fill progress-fill--done" style="width:100%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Workflow pattern dots + URL -->
-      <div class="dash-footer">
-        <div class="pattern-dots">
-          <div class="pattern-dot" style="background:oklch(0.52 0.18 260)"></div>
-          <div class="pattern-dot" style="background:oklch(0.45 0.15 170)"></div>
-          <div class="pattern-dot" style="background:oklch(0.6 0.17 75)"></div>
-          <div class="pattern-dot" style="background:oklch(0.58 0.17 340)"></div>
-          <div class="pattern-dot" style="background:oklch(0.48 0.17 300)"></div>
-          <div class="pattern-dot" style="background:oklch(0.55 0.17 195)"></div>
-        </div>
-        <span class="dash-footer-text">6 workflow patterns</span>
-        <span class="dash-url">stagent.io</span>
-      </div>
-
-    </div>
-
+    <img src="/stagent-s-128.png" alt="" class="logo" />
+    <div class="wordmark">Stagent</div>
+    <div class="title">The Operating System<br/>for AI-Native Business</div>
+    <span class="url">stagent.io</span>
     <div class="accent-line"></div>
   </div>
 </body>
