@@ -212,7 +212,7 @@ export const timeline: TimelineItem[] = [
   {
     year: '2026',
     project: 'Stagent',
-    role: 'The operating system for AI-native business',
+    role: 'Your business, run by AI',
     description:
       'Shipped a local-first AI business operating system that orchestrates agents across your entire company — with 5-runtime execution, smart routing, governance, cost controls, chat UI, multi-channel delivery (Slack/Telegram), 25 workflow patterns, and a living book documenting the journey.',
     achievements: [

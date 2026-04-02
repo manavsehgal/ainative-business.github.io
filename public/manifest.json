@@ -1,7 +1,7 @@
 {
   "name": "Stagent",
   "short_name": "Stagent",
-  "description": "AI agent operations workspace with governed execution, reusable profiles, workflow blueprints, schedules, and local-first oversight.",
+  "description": "Your business, run by AI. Orchestrate AI agents across marketing, sales, and operations — governed, auditable, and under your control.",
   "start_url": "/",
   "display": "browser",
   "background_color": "#0f172a",
