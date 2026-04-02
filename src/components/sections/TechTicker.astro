@@ -44,20 +44,20 @@ const groups = [
 <div class="absolute bottom-6 left-0 right-0 z-10 overflow-hidden ticker-fade-mask">
   <div class="ticker-track">
     {/* Render content twice for seamless loop */}
-    {[0, 1].map(() => (
-      <div class="flex items-center gap-8 shrink-0" aria-hidden={true}>
+    {[0, 1].map((i) => (
+      <div class="flex items-center gap-12 shrink-0" aria-hidden={i === 1 ? true : undefined}>
         {groups.map((group, gi) => (
           <>
-            {gi > 0 && <div class="w-px h-4 bg-border shrink-0" />}
-            <span class="font-mono text-[9px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-2 py-0.5 shrink-0 select-none">
+            {gi > 0 && <div class="w-px h-6 bg-border shrink-0" />}
+            <span class="font-mono text-[14px] tracking-wider text-primary border border-primary/20 bg-primary/5 rounded-full px-3 py-1 shrink-0 select-none">
               {group.label}
             </span>
             {group.items.map((item) => (
-              <div class="flex items-center gap-1.5 shrink-0 select-none">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-text-dim shrink-0">
+              <div class="flex items-center gap-2 shrink-0 select-none">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="text-text-dim shrink-0" aria-hidden="true">
                   <path d={item.path} />
                 </svg>
-                <span class="text-[11px] text-text-dim font-body whitespace-nowrap">{item.name}</span>
+                <span class="text-[16px] text-text-dim font-body whitespace-nowrap">{item.name}</span>
               </div>
             ))}
           </>
@@ -75,7 +75,7 @@ const groups = [
 
   .ticker-track {
     display: flex;
-    gap: 2rem;
+    gap: 3rem;
     width: max-content;
     animation: ticker-scroll 40s linear infinite;
   }
