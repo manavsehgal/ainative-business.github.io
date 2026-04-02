@@ -3,7 +3,7 @@ layout: ../layouts/ResearchLayout.astro
 title: "AI Transformation Research: Building and Governing AI-Native Businesses"
 description: "How solo founders, agencies, and PE firms are building AI-native businesses with governed agent orchestration. Market analysis, competitive landscape, and practical frameworks."
 datePublished: "2026-03-01"
-dateModified: "2026-03-31"
+dateModified: "2026-04-02"
 author: "Manav"
 readingTime: "22 min read"
 ---
@@ -162,7 +162,7 @@ Stagent fills the gap between autonomous agents and governed business operations
 
 **Orchestrate.** AI agents for every business function. Technical and business-function profiles spanning marketing, sales, support, finance, content creation, and operations coordination. Smart runtime routing across 5 AI runtimes (Claude Code, OpenAI Codex, Anthropic Direct API, OpenAI Direct API, and Ollama). Multi-channel delivery through Slack and Telegram with bidirectional chat.
 
-**Automate.** Workflows that run your business proactively. 6 workflow patterns (sequence, planner-executor, checkpoint, fork/join, autonomous loop, multi-agent swarm). Heartbeat scheduling for proactive agent execution. Natural-language scheduling — type "run my marketing report every Monday at 9am" and it works.
+**Automate.** Workflows that run your business proactively. 25 workflow patterns (sequence, planner-executor, checkpoint, fork/join, autonomous loop, multi-agent swarm, and more). Heartbeat scheduling for proactive agent execution. Natural-language scheduling — type "run my marketing report every Monday at 9am" and it works.
 
 **Govern.** Human oversight without the bottleneck. The canUseTool governance gate ensures every agent action passes through a 5-step approval flow. Risk tiers classify tools by danger level. Budget guardrails prevent cost overruns. An approval inbox surfaces everything that needs human review.
 
@@ -172,13 +172,27 @@ Stagent fills the gap between autonomous agents and governed business operations
 
 **Converse.** Talk to your business through any channel. Multi-model chat with progressive context injection (~53K token budget). Bidirectional Slack and Telegram integration. Entity detection for quick navigation. Context-aware suggested prompts that understand your workspace state.
 
+### Architecture
+
+<Figure number={4} caption="System Architecture — Four Pillars Across Three Layers" class="figure--wide figure--architecture">
+  <SystemArchitecture />
+</Figure>
+
+Stagent follows a three-layer local-first architecture:
+
+- **Browser layer** — React 19 with 34 operator surfaces, real-time SSE streaming
+- **Server layer** — Next.js 16 with 20 service modules, 114 API endpoints
+- **External layer** — Local SQLite database (WAL mode, 30+ tables), no cloud dependency
+
+Technology stack: TypeScript (85% of codebase), Tailwind CSS v4, shadcn/ui, Drizzle ORM. Open source under Apache 2.0.
+
 ### What's Shipped Today
 
 | Capability | Status |
 |-----------|--------|
-| 103 features across 15 operator surfaces | Shipped |
-| 21+ specialist agent profiles (incl. 6 business-function profiles) | Shipped |
-| 6 workflow patterns with blueprint catalog | Shipped |
+| 110 features across 34 operator surfaces | Shipped |
+| 52+ specialist agent profiles (incl. 6 business-function profiles) | Shipped |
+| 25 workflow patterns with blueprint catalog | Shipped |
 | 5 AI runtimes (Claude, OpenAI, Ollama, direct APIs) | Shipped |
 | Bidirectional Slack & Telegram chat | Shipped |
 | Heartbeat scheduling with proactive execution | Shipped |
@@ -192,19 +206,19 @@ Stagent fills the gap between autonomous agents and governed business operations
 | Provider-agnostic tool layer across all runtimes | Shipped |
 | Living Book (9 chapters, self-regenerating from source code) | Shipped |
 
-<Figure number={4} caption="Workspace Overview — Active Tasks, Pending Approvals, Live Activity">
+<Figure number={5} caption="Workspace Overview — Active Tasks, Pending Approvals, Live Activity">
   <BrowserFrame src="/screenshots/home-list.png" alt="Home workspace showing summary metrics, tasks needing attention, and live agent activity" />
 </Figure>
 
-<Figure number={5} caption="Agent Profiles — Specialist Agents for Every Business Function">
+<Figure number={6} caption="Agent Profiles — Specialist Agents for Every Business Function">
   <BrowserFrame src="/screenshots/profiles-list.png" alt="Profiles catalog with Start from Template, Import, Create Profile buttons, search, and specialist cards" />
 </Figure>
 
-<Figure number={6} caption="Chat — Conversational AI with Multi-Provider Model Selection">
+<Figure number={7} caption="Chat — Conversational AI with Multi-Provider Model Selection">
   <BrowserFrame src="/screenshots/chat-conversation.png" alt="Chat conversation showing multi-turn AI interaction with headline generation and copywriting" />
 </Figure>
 
-<Figure number={7} caption="Cost & Usage — Cross-Runtime Spend Visibility and Budget Controls">
+<Figure number={8} caption="Cost & Usage — Cross-Runtime Spend Visibility and Budget Controls">
   <BrowserFrame src="/screenshots/cost-usage-list.png" alt="Cost and usage dashboard with budget pacing, spend metrics, provider counts, and pricing tables" />
 </Figure>
 
@@ -217,20 +231,6 @@ Stagent fills the gap between autonomous agents and governed business operations
 | Portfolio dashboards for PE firms | H2 2026 |
 | Agent marketplace (community profiles & blueprints) | H2 2026 |
 | API-first headless deployment mode | 2027 |
-
-### Architecture
-
-<Figure number={8} caption="System Architecture — Four Pillars Across Three Layers" class="figure--wide figure--architecture">
-  <SystemArchitecture />
-</Figure>
-
-Stagent follows a three-layer local-first architecture:
-
-- **Browser layer** — React 19 with 15 operator surfaces, real-time SSE streaming
-- **Server layer** — Next.js 16 with 11 service modules, 58 API endpoints
-- **External layer** — Local SQLite database (WAL mode, 16+ tables), no cloud dependency
-
-Technology stack: TypeScript (83.8% of codebase), Tailwind CSS v4, shadcn/ui, Drizzle ORM. Open source under Apache 2.0.
 
 ---
 

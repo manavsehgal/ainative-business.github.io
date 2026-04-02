@@ -21,7 +21,7 @@ export interface TimelineItem {
 }
 
 export const metrics = [
-  { label: 'Lines of Code', target: 300, suffix: 'K+' },
+  { label: 'Lines of Code', target: 305, suffix: 'K+' },
   { label: 'AI Agents', target: 52, suffix: '+' },
   { label: 'Production Systems', target: 8, suffix: '' },
   { label: 'Projects', target: 18, suffix: '+' },
@@ -214,13 +214,13 @@ export const timeline: TimelineItem[] = [
     project: 'Stagent',
     role: 'The operating system for AI-native business',
     description:
-      'Shipped a local-first AI business operating system that orchestrates agents across your entire company — with 5-runtime execution, smart routing, governance, cost controls, chat UI, multi-channel delivery (Slack/Telegram), and a living book documenting the journey.',
+      'Shipped a local-first AI business operating system that orchestrates agents across your entire company — with 5-runtime execution, smart routing, governance, cost controls, chat UI, multi-channel delivery (Slack/Telegram), 25 workflow patterns, and a living book documenting the journey.',
     achievements: [
-      'Shipped 97 features across 11 operator surfaces in 25 days — open source, local-first',
-      '5-runtime architecture with smart router, 21+ agent profiles, and 6 workflow patterns',
+      'Shipped 102 features across 34 operator surfaces in 27 days — open source, local-first',
+      '5-runtime architecture with smart router, 52+ agent profiles, and 25 workflow patterns',
       'Full chat system, heartbeat scheduling, multi-channel delivery, and human-in-the-loop governance',
     ],
-    stats: '93.2K LOC · 409 tests · 97/103 features shipped',
+    stats: '98K LOC · 426 tests · 102/110 features shipped',
     techWave: 'The Harness Layer',
     techCategories: [
       { label: 'Frontend', items: ['Next.js 16', 'React 19', 'Tailwind v4', 'shadcn/ui'] },

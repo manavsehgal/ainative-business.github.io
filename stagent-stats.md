@@ -186,3 +186,50 @@
 - Production LOC = all .ts/.tsx in src/ minus test files
 - Feature scope nearly doubled (53 → 103) with vision alignment initiatives
 - 5-runtime architecture is the most significant platform evolution since the Next.js rewrite
+
+## [2026-04-02 14:00] Metrics Snapshot
+
+| Category | Metric | Value |
+|----------|--------|-------|
+| LOC | TypeScript (production) | 75,662 |
+| LOC | TypeScript (tests) | 7,289 |
+| LOC | **Total** | **98,189** |
+| Tests | Vitest | 426 |
+| Tests | **Total** | **426** |
+| Git | Commits | 226 |
+| Git | Hours elapsed | 639.2 |
+| Git | Commits/hour | 0.35 |
+| Git | LOC/hour | 153.6 |
+| Features | Completed | 102/110 |
+| Infra | API routes | 114 |
+| Infra | DB tables | 30 |
+| Infra | UI components | 244 |
+| Infra | Pages | 34 |
+| Infra | Agent profiles | 52 |
+| Infra | Service modules | 20 |
+| Infra | Workflow patterns | 25 |
+
+### Feature Status
+- 102 completed, 4 in-progress, 1 deferred, 3 planned
+- In-progress: chat-settings-tool, dynamic-slash-commands, runtime-validation-hardening, profile-environment-sync
+- Deferred: npm-publish-readiness
+- Planned: workflow-document-pool, direct-runtime-prompt-caching, direct-runtime-advanced-capabilities
+- Feature scope expanded from 103 → 110 with new chat tooling, runtime hardening, and document workflow features
+
+### Trend (vs previous snapshot — 13 days of development)
+- ↑ +5,007 LOC (93,182 → 98,189)
+- ↑ +17 tests (409 → 426)
+- ↑ +13 commits (213 → 226)
+- ↑ +5 features completed (97/103 → 102/110)
+- ↑ +2 API routes (112 → 114)
+- ↑ +3 DB tables (27 → 30)
+- → no change UI components (244)
+- → no change pages (34)
+- → no change agent profiles (52)
+- ↑ +9 service modules (11 → 20)
+- ↑ +19 workflow patterns (6 → 25)
+
+### Notes
+- LOC now counted via `tokei` (previously used `find + wc -l`)
+- TypeScript is 85.0% of codebase (TS+TSX code / total code)
+- Velocity stabilizing as project matures: 0.35 commits/hour sustained over 639 hours
