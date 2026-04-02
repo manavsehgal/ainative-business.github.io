@@ -3,7 +3,7 @@ import WaitlistForm from '../ui/WaitlistForm.astro';
 import BusinessConstellation from '../svg/BusinessConstellation.astro';
 import TechTicker from './TechTicker.astro';
 ---
-<section class="relative min-h-[calc(100dvh-80px)] flex items-center px-6 overflow-x-clip pt-20">
+<section class="relative min-h-[calc(100dvh-80px)] flex items-center px-6 overflow-x-clip pt-28">
   <!-- Dual atmospheric glow -->
   <div class="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
     <div class="absolute w-[800px] h-[800px] rounded-full bg-primary/[0.10] blur-[180px]"></div>
@@ -14,7 +14,7 @@ import TechTicker from './TechTicker.astro';
   <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style="background: linear-gradient(to bottom, transparent, var(--color-surface-raised));"></div>
 
   <!-- Two-column grid — diagram-dominant -->
-  <div class="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-[1fr_1.75fr] gap-8 lg:gap-10 items-center py-12 lg:py-0">
+  <div class="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-[1fr_1.75fr] gap-8 lg:gap-10 items-center py-16 lg:py-4">
 
     <!-- Left column: Content (compact to give diagram more room) -->
     <div class="text-center lg:text-left" data-animate-stagger>
@@ -30,7 +30,7 @@ import TechTicker from './TechTicker.astro';
         data-animate
         class="text-[clamp(0.85rem,1.8vw,1.05rem)] text-text-muted leading-relaxed mb-5 mx-auto lg:mx-0 max-w-sm"
       >
-        Every function automated. Every decision informed. Every risk governed.
+        AI agents that grow revenue, cut costs, and govern themselves. Every function automated. Every decision informed. Every risk governed.
       </p>
 
       <!-- Email CTA -->
