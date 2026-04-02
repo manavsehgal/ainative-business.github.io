@@ -37,13 +37,21 @@ import TechTicker from './TechTicker.astro';
       <p data-animate class="font-mono text-[10px] tracking-[0.2em] uppercase text-text-muted mt-10 mb-2 max-w-sm mx-auto lg:mx-0">
         Get early access to Pro features, advisory services
       </p>
-      <div data-animate class="mb-6 max-w-sm mx-auto lg:mx-0 primary-pulse rounded-lg">
-        <WaitlistForm
-          variant="hero"
-          id="hero-waitlist"
-          source="hero"
-          buttonText="Get Early Access"
-        />
+      <div data-animate class="mb-6 max-w-sm mx-auto lg:mx-0">
+        <div class="relative border border-primary/30 rounded-lg primary-pulse overflow-hidden">
+          <div class="flex items-center px-4 py-2 border-b border-primary/10">
+            <span class="font-mono text-[10px] uppercase tracking-widest text-text-muted">Email</span>
+          </div>
+          <div class="bg-surface-raised px-4 py-3">
+            <WaitlistForm
+              variant="hero"
+              id="hero-waitlist"
+              source="hero"
+              buttonText="Get Early Access"
+              iconOnly
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Value proposition pills -->
