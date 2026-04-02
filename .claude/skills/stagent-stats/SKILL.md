@@ -224,14 +224,42 @@ Update the architecture bullets:
 Technology stack: TypeScript (<TS_PERCENT>% of codebase), Tailwind CSS v4, shadcn/ui, Drizzle ORM.
 ```
 
-### Update Target 5: Homepage FAQ (JSON-LD Structured Data)
+### Update Target 5: Architecture Glance SVG (Homepage)
+
+**File:** `src/components/svg/ArchitectureGlance.astro`
+
+This is a simplified 4-pillar architecture diagram on the homepage Proof section. Update text elements containing stats:
+- Orchestrate pillar: `<AGENT_PROFILES>+ Agent Profiles` (search for `Agent Profiles`)
+- Automate pillar: `<WORKFLOW_PATTERNS> Workflow Patterns` (search for `Workflow Patterns`)
+
+### Update Target 6: System Architecture SVG (Research Page)
+
+**File:** `src/components/svg/SystemArchitecture.astro`
+
+This is the detailed 4-column × 3-row architecture diagram in the research page. Update text elements containing stats:
+- Row label: `<OPERATOR_SURFACES> screens` (search for `screens`)
+- Row label: `<API_ENDPOINTS> APIs` (search for `APIs`)
+- Orchestrate surfaces cell: `Profiles (<AGENT_PROFILES>+)` (search for `Profiles (`)
+- Automate infra cell: `SQLite (<DB_TABLES>+ tables)` (search for `SQLite (`)
+
+### Update Target 7: Detailed Architecture SVG (Research Page)
+
+**File:** `src/components/svg/DetailedArchitecture.astro`
+
+This is the 3-layer detailed architecture diagram. Update text elements containing stats:
+- Browser subtitle: `<OPERATOR_SURFACES> operator-facing surfaces across 3 workspace categories`
+- Workflow Engine card: `<WORKFLOW_PATTERNS> orchestration patterns` (search for `orchestration patterns`)
+- Server subtitle: `<SERVICE_MODULES> service modules` (search for `service modules`)
+- External storage: `SQLite DB (<DB_TABLES>+ tables)` (search for `SQLite DB (`)
+
+### Update Target 8: Homepage FAQ (JSON-LD Structured Data)
 
 **File:** `src/pages/index.astro` (~lines 60-80)
 
 Update the stat references in FAQ answers:
 - "supports **<AI_RUNTIMES> AI runtimes**, **<AGENT_PROFILES>+ specialist agent profiles**, **<WORKFLOW_PATTERNS> workflow patterns**"
 
-### Update Target 6: Stagent Timeline Entry
+### Update Target 9: Stagent Timeline Entry
 
 **File:** `src/data/timeline.ts` (Stagent entry near bottom of timeline array)
 
