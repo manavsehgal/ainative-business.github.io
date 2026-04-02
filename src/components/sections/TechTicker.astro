@@ -42,10 +42,10 @@ const groups = [
 ---
 
 <div class="absolute bottom-6 left-0 right-0 z-10 overflow-hidden ticker-fade-mask">
-  <div class="ticker-track">
-    {/* Render content twice for seamless loop */}
+  <div class="ticker-track" aria-label="Technologies powering Stagent">
+    {/* Two identical halves — each with pr-12 so the seam gap matches internal gap */}
     {[0, 1].map((i) => (
-      <div class="flex items-center gap-12 shrink-0" aria-hidden={i === 1 ? true : undefined}>
+      <div class="ticker-half" aria-hidden={i === 1 ? 'true' : undefined}>
         {groups.map((group, gi) => (
           <>
             {gi > 0 && <div class="w-px h-6 bg-border shrink-0" />}
@@ -62,8 +62,6 @@ const groups = [
             ))}
           </>
         ))}
-        {/* Trailing divider so the seam between halves matches internal rhythm */}
-        <div class="w-px h-6 bg-border shrink-0" />
       </div>
     ))}
   </div>
@@ -77,10 +75,20 @@ const groups = [
 
   .ticker-track {
     display: flex;
-    gap: 3rem;
     width: max-content;
     animation: ticker-scroll 40s linear infinite;
     will-change: transform;
+  }
+
+  /* Each half is identical: same content + same padding-right.
+     Because both halves have equal pixel width, translateX(-50%)
+     lands exactly at the start of the second half → seamless loop. */
+  .ticker-half {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    padding-right: 3rem;
+    flex-shrink: 0;
   }
 
   @keyframes ticker-scroll {
