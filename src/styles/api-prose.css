@@ -1,0 +1,224 @@
+/* ── API Docs Method Badges ── */
+.api-method-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 1.4;
+}
+
+.api-method-get {
+  color: oklch(0.65 0.18 250);
+  background: oklch(0.65 0.18 250 / 0.12);
+}
+
+.api-method-post {
+  color: oklch(0.65 0.15 170);
+  background: oklch(0.65 0.15 170 / 0.12);
+}
+
+.api-method-patch {
+  color: oklch(0.7 0.15 85);
+  background: oklch(0.7 0.15 85 / 0.12);
+}
+
+.api-method-delete {
+  color: oklch(0.65 0.2 25);
+  background: oklch(0.65 0.2 25 / 0.12);
+}
+
+.api-method-sse {
+  color: oklch(0.6 0.15 300);
+  background: oklch(0.6 0.15 300 / 0.12);
+}
+
+/* ── Light mode adjustments ── */
+html[data-theme="light"] .api-method-get {
+  color: oklch(0.45 0.18 250);
+  background: oklch(0.45 0.18 250 / 0.08);
+}
+
+html[data-theme="light"] .api-method-post {
+  color: oklch(0.4 0.15 170);
+  background: oklch(0.4 0.15 170 / 0.08);
+}
+
+html[data-theme="light"] .api-method-patch {
+  color: oklch(0.5 0.15 85);
+  background: oklch(0.5 0.15 85 / 0.08);
+}
+
+html[data-theme="light"] .api-method-delete {
+  color: oklch(0.48 0.2 25);
+  background: oklch(0.48 0.2 25 / 0.08);
+}
+
+html[data-theme="light"] .api-method-sse {
+  color: oklch(0.42 0.15 300);
+  background: oklch(0.42 0.15 300 / 0.08);
+}
+
+/* ── Status Badges ── */
+.api-status-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+}
+
+.api-status-2xx {
+  color: oklch(0.65 0.15 170);
+  background: oklch(0.65 0.15 170 / 0.1);
+}
+
+.api-status-3xx {
+  color: oklch(0.65 0.18 250);
+  background: oklch(0.65 0.18 250 / 0.1);
+}
+
+.api-status-4xx {
+  color: oklch(0.7 0.15 85);
+  background: oklch(0.7 0.15 85 / 0.1);
+}
+
+.api-status-5xx {
+  color: oklch(0.65 0.2 25);
+  background: oklch(0.65 0.2 25 / 0.1);
+}
+
+/* ── API Prose Overrides ── */
+.api-prose h3 {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+}
+
+.api-prose h4 {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+/* Endpoint card body inherits prose but resets some spacing */
+.api-endpoint-body .api-schema-table {
+  font-size: 0.8rem;
+}
+
+.api-endpoint-body h4 {
+  margin-top: 1rem;
+}
+
+.api-endpoint-body p {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Code example wrapper — dark background to match code blocks */
+.api-code-example {
+  background: oklch(0.18 0.02 250);
+  border: 1px solid oklch(0.28 0.03 250 / 0.5);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Header: tabs left, copy button right */
+.api-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid oklch(0.25 0.02 250);
+  padding-right: 0.5rem;
+}
+
+.api-code-example .api-code-tab {
+  color: oklch(0.55 0.02 250);
+  border-bottom-color: transparent;
+}
+
+.api-code-example .api-code-tab.active {
+  color: oklch(0.85 0.01 250);
+  border-bottom-color: oklch(0.65 0.18 250);
+}
+
+.api-code-example .api-code-tab:hover:not(.active) {
+  color: oklch(0.75 0.01 250);
+}
+
+/* Copy button */
+.api-code-copy {
+  color: oklch(0.5 0.02 250);
+  padding: 0.35rem;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.api-code-copy:hover {
+  color: oklch(0.85 0.01 250);
+  background: oklch(0.25 0.02 250);
+}
+
+.api-code-copy .api-check-icon {
+  color: oklch(0.65 0.15 170);
+}
+
+/* Remove redundant border/radius from nested pre and code bg */
+.api-code-example pre,
+.api-code-example .astro-code {
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+
+/* Wider table handling */
+.api-prose table {
+  display: block;
+  overflow-x: auto;
+}
+
+/* Domain card grid on index */
+.api-domain-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  transition: border-color 0.2s, background-color 0.2s;
+  background: var(--color-surface-raised);
+}
+
+.api-domain-card:hover {
+  border-color: oklch(0.65 0.18 250 / 0.4);
+  background: var(--color-surface-overlay);
+}
+
+.api-domain-card .api-domain-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+}
+
+.api-domain-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: var(--color-text);
+}
+
+.api-domain-card p {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}

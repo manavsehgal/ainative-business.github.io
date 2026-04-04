@@ -1,0 +1,352 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Notifications API"
+description: "Query, manage, and stream real-time notifications including pending approval requests that require human-in-the-loop decisions."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Notifications API
+
+Notifications track system events, task completions, errors, and approval requests. The pending-approvals stream provides real-time SSE updates so the UI can surface human-in-the-loop decisions without polling.
+
+## Quick Start
+
+List pending notifications, approve a tool request, and stream approvals in real time:
+
+<CodeExample ts={`// 1. Check for unread notifications
+const res1: Response = await fetch('/api/notifications?unread=true');
+const notifications: Array<{ id: string; type: string; title: string }> = await res1.json();
+console.log(\`\${notifications.length} unread notifications\`);
+
+// 2. List pending approval requests (agents waiting for permission)
+const res2: Response = await fetch('/api/notifications/pending-approvals');
+const approvals: Array<{ id: string; taskId: string; toolName: string }> = await res2.json();
+
+if (approvals.length > 0) {
+  console.log(\`\${approvals.length} approvals waiting\`);
+
+  // 3. Approve the first pending request (via Tasks API respond endpoint)
+  const approval = approvals[0];
+  await fetch(\`/api/tasks/\${approval.taskId}/respond\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      notificationId: approval.id,
+      behavior: 'allow',
+    }),
+  });
+}
+
+// 4. Stream approvals in real time so the UI can react instantly
+const source: EventSource = new EventSource('/api/notifications/pending-approvals/stream');
+source.onmessage = (event: MessageEvent) => {
+  const pending: Array<{ id: string; taskId: string }> = JSON.parse(event.data);
+  console.log(\`\${pending.length} approval(s) pending\`);
+};
+
+// 5. Mark everything as read when done
+await fetch('/api/notifications/mark-all-read', { method: 'PATCH' });`} python={`import requests
+
+# 1. Check for unread notifications
+res1 = requests.get(
+    "http://localhost:3000/api/notifications",
+    params={"unread": "true"},
+)
+notifications: list[dict] = res1.json()
+print(f"{len(notifications)} unread notifications")
+
+# 2. List pending approval requests (agents waiting for permission)
+res2 = requests.get("http://localhost:3000/api/notifications/pending-approvals")
+approvals: list[dict] = res2.json()
+
+if approvals:
+    print(f"{len(approvals)} approvals waiting")
+
+    # 3. Approve the first pending request (via Tasks API respond endpoint)
+    approval = approvals[0]
+    requests.post(
+        f"http://localhost:3000/api/tasks/{approval['taskId']}/respond",
+        json={
+            "notificationId": approval["id"],
+            "behavior": "allow",
+        },
+    )
+
+# 4. Stream approvals in real time so the UI can react instantly
+res_stream = requests.get(
+    "http://localhost:3000/api/notifications/pending-approvals/stream",
+    stream=True,
+)
+import json
+for line in res_stream.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        pending: list[dict] = json.loads(line[6:])
+        print(f"{len(pending)} approval(s) pending")
+
+# 5. Mark everything as read when done
+requests.patch("http://localhost:3000/api/notifications/mark-all-read")`} />
+
+## Base URL
+
+```
+/api/notifications
+```
+
+## Endpoints
+
+### List Notifications
+
+<EndpointCard method="GET" path="/api/notifications" description="Retrieve notifications with optional filtering. Returns up to 100 results, newest first.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'unread', type: 'string', required: false, description: 'Filter to unread only when set to "true"' },
+  { name: 'type', type: 'string', required: false, description: 'Filter by notification type' },
+  { name: 'countOnly', type: 'string', required: false, description: 'When "true", return only the unread count' },
+]} />
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Notification identifier' },
+  { name: 'type', type: 'enum', required: true, description: 'Notification type (task_complete, error, approval, etc.)' },
+  { name: 'title', type: 'string', required: true, description: 'Notification title' },
+  { name: 'message', type: 'string', required: false, description: 'Notification body text' },
+  { name: 'read', type: 'boolean', required: true, description: 'Whether the notification has been read' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+]} />
+
+<SchemaTable title="Response Body (countOnly)" fields={[
+  { name: 'count', type: 'number', required: true, description: 'Count of unread notifications' },
+]} />
+
+Fetch unread notifications to power a notification badge or dropdown in the UI:
+
+<CodeExample ts={`// Fetch unread notifications for the UI badge
+const res: Response = await fetch('http://localhost:3000/api/notifications?unread=true');
+const notifications: Array<{ type: string; title: string; message: string }> = await res.json();
+
+notifications.forEach((n) => {
+  const icon: string = n.type === 'error' ? '!' : n.type === 'approval' ? '?' : 'i';
+  console.log(\`[\${icon}] \${n.title} — \${n.message}\`);
+});
+
+// Or just get the count for a badge
+const countRes: Response = await fetch('http://localhost:3000/api/notifications?countOnly=true');
+const { count }: { count: number } = await countRes.json();
+console.log(\`\${count} unread\`);`} python={`import requests
+
+# Fetch unread notifications for the UI badge
+res: requests.Response = requests.get(
+    "http://localhost:3000/api/notifications",
+    params={"unread": "true"},
+)
+notifications: list[dict] = res.json()
+
+for n in notifications:
+    icon: str = "!" if n["type"] == "error" else "?" if n["type"] == "approval" else "i"
+    print(f"[{icon}] {n['title']} — {n['message']}")
+
+# Or just get the count for a badge
+count_res: requests.Response = requests.get(
+    "http://localhost:3000/api/notifications",
+    params={"countOnly": "true"},
+)
+print(f"{count_res.json()['count']} unread")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "notif-8a3b-2c1d",
+    "type": "task_complete",
+    "title": "Task completed",
+    "message": "Analyze Q4 revenue trends finished successfully",
+    "read": false,
+    "createdAt": "2026-04-03T10:32:44.000Z"
+  },
+  {
+    "id": "notif-7b4c-3d2e",
+    "type": "approval",
+    "title": "Permission required",
+    "message": "Agent wants to write to /reports/q4-analysis.md",
+    "read": false,
+    "createdAt": "2026-04-03T10:31:20.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Mark Notification Read
+
+<EndpointCard method="PATCH" path="/api/notifications/{id}" description="Update the read status of a single notification.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'read', type: 'boolean', required: false, description: 'Read status (defaults to true)' },
+]} />
+
+**Response** `200` — Updated notification object
+
+Mark a notification as read after the user has seen it:
+
+<CodeExample ts={`// Mark as read when the user clicks on it
+await fetch('http://localhost:3000/api/notifications/notif-8a3b-2c1d', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ read: true }),
+});`} python={`import requests
+
+# Mark as read when the user clicks on it
+requests.patch(
+    "http://localhost:3000/api/notifications/notif-8a3b-2c1d",
+    json={"read": True},
+)`} />
+
+**Errors:** `404` — Notification not found
+
+</EndpointCard>
+
+### Delete Notification
+
+<EndpointCard method="DELETE" path="/api/notifications/{id}" description="Permanently delete a single notification.">
+
+**Response** `200` — `{ "success": true }`
+
+<CodeExample ts={`// Permanently delete a notification
+await fetch('http://localhost:3000/api/notifications/notif-8a3b-2c1d', { method: 'DELETE' });`} python={`import requests
+
+# Permanently delete a notification
+requests.delete("http://localhost:3000/api/notifications/notif-8a3b-2c1d")`} />
+
+</EndpointCard>
+
+### Mark All Read
+
+<EndpointCard method="PATCH" path="/api/notifications/mark-all-read" description="Mark all unread notifications as read in a single operation.">
+
+**Response** `200` — `{ "success": true }`
+
+Clear the notification badge by marking everything as read:
+
+<CodeExample ts={`// Clear the notification badge
+await fetch('http://localhost:3000/api/notifications/mark-all-read', { method: 'PATCH' });`} python={`import requests
+
+# Clear the notification badge
+requests.patch("http://localhost:3000/api/notifications/mark-all-read")`} />
+
+</EndpointCard>
+
+---
+
+## Pending Approvals
+
+### List Pending Approvals
+
+<EndpointCard method="GET" path="/api/notifications/pending-approvals" description="List all pending approval payloads that require human-in-the-loop decisions.">
+
+**Response** `200` — Array of approval payload objects
+
+Fetch pending approvals to show a queue of agent requests waiting for human decisions:
+
+<CodeExample ts={`// List approval requests waiting for human decision
+const res: Response = await fetch('http://localhost:3000/api/notifications/pending-approvals');
+const approvals: Array<{ taskId: string; toolName: string; message: string }> = await res.json();
+
+approvals.forEach((a) => {
+  console.log(\`Task \${a.taskId}: \${a.toolName} — \${a.message}\`);
+});`} python={`import requests
+
+# List approval requests waiting for human decision
+res: requests.Response = requests.get("http://localhost:3000/api/notifications/pending-approvals")
+approvals: list[dict] = res.json()
+
+for a in approvals:
+    print(f"Task {a['taskId']}: {a['toolName']} — {a['message']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "notif-7b4c-3d2e",
+    "taskId": "task-9d4e-a1b2",
+    "toolName": "Write",
+    "toolInput": { "file_path": "/reports/q4-analysis.md" },
+    "message": "Agent wants to write to /reports/q4-analysis.md",
+    "createdAt": "2026-04-03T10:31:20.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Stream Pending Approvals (SSE)
+
+<EndpointCard method="SSE" path="/api/notifications/pending-approvals/stream" description="Server-Sent Events stream that pushes real-time updates whenever the pending approvals list changes. Polls the database every 750ms and only emits when the set changes. Sends keepalive comments every 15 seconds.">
+
+**Event format:** `data: [<approval>, ...]`
+
+**Keepalive:** `: keepalive`
+
+Connect to the SSE stream to get instant updates when agents request permissions — no polling needed:
+
+<CodeExample ts={`// Real-time approval stream — UI can react instantly
+const source: EventSource = new EventSource('http://localhost:3000/api/notifications/pending-approvals/stream');
+
+source.onmessage = (event: MessageEvent) => {
+  const approvals: Array<{ taskId: string; toolName: string; message: string }> = JSON.parse(event.data);
+
+  if (approvals.length === 0) {
+    console.log('No pending approvals');
+    return;
+  }
+
+  // Show each pending approval in the UI
+  approvals.forEach((a) => {
+    console.log(\`[\${a.taskId}] \${a.toolName}: \${a.message}\`);
+  });
+};
+
+source.onerror = () => {
+  console.error('SSE connection lost — will auto-reconnect');
+};`} python={`import requests
+
+# Stream approvals in real time (SSE)
+res: requests.Response = requests.get(
+    "http://localhost:3000/api/notifications/pending-approvals/stream",
+    stream=True,
+)
+
+for line in res.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        import json
+        approvals: list[dict] = json.loads(line[6:])
+        if not approvals:
+            print("No pending approvals")
+            continue
+        for a in approvals:
+            print(f"[{a['taskId']}] {a['toolName']}: {a['message']}")`} />
+
+Example stream events:
+
+```
+data: [{"id":"notif-7b4c-3d2e","taskId":"task-9d4e-a1b2","toolName":"Write","message":"Agent wants to write to /reports/q4-analysis.md"}]
+
+: keepalive
+
+data: []
+```
+
+</EndpointCard>
+
+## Notification Types
+
+| Type | Description |
+|------|-------------|
+| **task_complete** | A task finished execution successfully. |
+| **error** | An error occurred during task or workflow execution. |
+| **approval** | A tool invocation requires human approval before proceeding. |
+| **system** | System-level events (budget warnings, runtime changes). |

@@ -1,0 +1,19 @@
+---
+interface Props {
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT' | 'SSE';
+}
+
+const { method } = Astro.props;
+
+const colors: Record<string, string> = {
+  GET:    'api-method-get',
+  POST:   'api-method-post',
+  PATCH:  'api-method-patch',
+  PUT:    'api-method-patch',
+  DELETE: 'api-method-delete',
+  SSE:    'api-method-sse',
+};
+---
+<span class:list={["api-method-badge", colors[method] ?? 'api-method-get']}>
+  {method}
+</span>

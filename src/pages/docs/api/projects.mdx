@@ -1,0 +1,434 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Projects API"
+description: "Manage project workspaces with working directories, document bindings, and cascading resource cleanup."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Projects API
+
+Projects organize tasks, workflows, documents, and tables into workspaces. Each project can optionally point to a filesystem working directory, which agents use as their execution context.
+
+## Quick Start
+
+Create a project, attach documents as default context, and list tasks within it — the typical setup flow:
+
+<CodeExample ts={`// 1. Create a project with a working directory
+interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  workingDirectory?: string;
+  status: string;
+  taskCount: number;
+}
+
+const projectRes: Response = await fetch("http://localhost:3000/api/projects", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "Marketing Site Redesign",
+    description: "Q2 redesign of the company marketing site",
+    workingDirectory: "/Users/team/projects/marketing-site",
+  }),
+});
+const project: Project = await projectRes.json();
+// → { id: "proj-8f3a-4b2c", name: "Marketing Site Redesign", status: "active", ... }
+
+// 2. Upload documents, then bind them as project defaults
+//    (any task in this project will receive these files as context)
+await fetch(\`http://localhost:3000/api/projects/\${project.id}/documents\`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    documentIds: ["doc-brand-guidelines-v3", "doc-sitemap-current"],
+  }),
+});
+// → { updated: 2, projectId: "proj-8f3a-4b2c" }
+
+// 3. Create a task inside this project
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+}
+
+const taskRes: Response = await fetch("http://localhost:3000/api/tasks", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title: "Audit current homepage for accessibility",
+    projectId: project.id,
+    priority: 1,
+    assignedAgent: "claude-code",
+  }),
+});
+const task: Task = await taskRes.json();
+
+// 4. List all tasks in this project to see progress
+const tasksRes: Response = await fetch(\`http://localhost:3000/api/tasks?projectId=\${project.id}\`);
+const tasks: Task[] = await tasksRes.json();
+
+console.log(\`\${tasks.length} tasks in \${project.name}\`);
+tasks.forEach((t: Task) => console.log(\`  [\${t.status}] \${t.title}\`));`} python={`import requests
+
+# 1. Create a project with a working directory
+project_res = requests.post("http://localhost:3000/api/projects", json={
+    "name": "Marketing Site Redesign",
+    "description": "Q2 redesign of the company marketing site",
+    "workingDirectory": "/Users/team/projects/marketing-site",
+})
+project: dict = project_res.json()
+# → { "id": "proj-8f3a-4b2c", "name": "Marketing Site Redesign", "status": "active", ... }
+
+# 2. Upload documents, then bind them as project defaults
+#    (any task in this project will receive these files as context)
+requests.put(f"http://localhost:3000/api/projects/{project['id']}/documents", json={
+    "documentIds": ["doc-brand-guidelines-v3", "doc-sitemap-current"],
+})
+# → { "updated": 2, "projectId": "proj-8f3a-4b2c" }
+
+# 3. Create a task inside this project
+task_res = requests.post("http://localhost:3000/api/tasks", json={
+    "title": "Audit current homepage for accessibility",
+    "projectId": project["id"],
+    "priority": 1,
+    "assignedAgent": "claude-code",
+})
+task: dict = task_res.json()
+
+# 4. List all tasks in this project to see progress
+tasks_res = requests.get(f"http://localhost:3000/api/tasks?projectId={project['id']}")
+tasks: list[dict] = tasks_res.json()
+
+print(f"{len(tasks)} tasks in {project['name']}")
+for t in tasks:
+    print(f"  [{t['status']}] {t['title']}")`} />
+
+## Base URL
+
+```
+/api/projects
+```
+
+## Endpoints
+
+### List Projects
+
+<EndpointCard method="GET" path="/api/projects" description="Retrieve all projects with task count aggregation.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Project identifier' },
+  { name: 'name', type: 'string', required: true, description: 'Project name' },
+  { name: 'description', type: 'string', required: false, description: 'Project description' },
+  { name: 'workingDirectory', type: 'string', required: false, description: 'Filesystem path for agent execution' },
+  { name: 'status', type: 'enum', required: true, description: 'active, paused, or completed' },
+  { name: 'taskCount', type: 'number', required: true, description: 'Total tasks in this project' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification' },
+]} />
+
+Fetch all projects to build a workspace selector or dashboard overview:
+
+<CodeExample ts={`// List all projects with their task counts
+const response: Response = await fetch("http://localhost:3000/api/projects");
+const projects: Project[] = await response.json();
+
+// Show active projects with pending work
+const active: Project[] = projects.filter((p) => p.status === "active" && p.taskCount > 0);
+active.forEach((p) => console.log(\`\${p.name}: \${p.taskCount} tasks\`));`} python={`import requests
+
+# List all projects with their task counts
+response = requests.get("http://localhost:3000/api/projects")
+projects: list[dict] = response.json()
+
+# Show active projects with pending work
+active = [p for p in projects if p["status"] == "active" and p["taskCount"] > 0]
+for p in active:
+    print(f"{p['name']}: {p['taskCount']} tasks")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "proj-8f3a-4b2c",
+    "name": "Marketing Site Redesign",
+    "description": "Q2 redesign of the company marketing site",
+    "workingDirectory": "/Users/team/projects/marketing-site",
+    "status": "active",
+    "taskCount": 12,
+    "createdAt": "2026-03-15T09:00:00.000Z",
+    "updatedAt": "2026-04-02T14:22:00.000Z"
+  },
+  {
+    "id": "proj-c7d1-9e4f",
+    "name": "API Integration Tests",
+    "description": "Automated test suite for third-party API integrations",
+    "workingDirectory": "/Users/team/projects/api-tests",
+    "status": "active",
+    "taskCount": 5,
+    "createdAt": "2026-03-20T11:30:00.000Z",
+    "updatedAt": "2026-04-01T16:45:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Project
+
+<EndpointCard method="POST" path="/api/projects" description="Create a new project. If a working directory is provided, an environment scan runs automatically in the background.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Project name (1–100 characters)' },
+  { name: 'description', type: 'string', required: false, description: 'Project description (max 500 characters)' },
+  { name: 'workingDirectory', type: 'string', required: false, description: 'Filesystem path (max 500 characters)' },
+]} />
+
+**Response** `201 Created` — New project with `status: "active"`
+
+**Errors:** `400` — Zod validation failure
+
+Create a project pointing to a local codebase — Stagent automatically scans the directory for environment details (language, framework, dependencies):
+
+<CodeExample ts={`// Create a project with a working directory
+// The environment scan starts automatically in the background
+const response: Response = await fetch("http://localhost:3000/api/projects", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "Marketing Site Redesign",
+    description: "Q2 redesign initiative",
+    workingDirectory: "/Users/team/projects/marketing-site",
+  }),
+});
+const project: Project = await response.json();
+
+console.log(project.id);     // "proj-8f3a-4b2c"
+console.log(project.status); // "active"`} python={`import requests
+
+# Create a project with a working directory
+# The environment scan starts automatically in the background
+response = requests.post("http://localhost:3000/api/projects", json={
+    "name": "Marketing Site Redesign",
+    "description": "Q2 redesign initiative",
+    "workingDirectory": "/Users/team/projects/marketing-site",
+})
+project: dict = response.json()
+
+print(project["id"])     # "proj-8f3a-4b2c"
+print(project["status"]) # "active"`} />
+
+Example response:
+
+```json
+{
+  "id": "proj-8f3a-4b2c",
+  "name": "Marketing Site Redesign",
+  "description": "Q2 redesign initiative",
+  "workingDirectory": "/Users/team/projects/marketing-site",
+  "status": "active",
+  "taskCount": 0,
+  "createdAt": "2026-04-03T10:00:00.000Z",
+  "updatedAt": "2026-04-03T10:00:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Get Project
+
+<EndpointCard method="GET" path="/api/projects/{id}" description="Retrieve a single project by ID.">
+
+**Response** `200` — Project object
+
+**Errors:** `404` — `{ "error": "Not found" }`
+
+Fetch a specific project to display its details or check status before creating tasks:
+
+<CodeExample ts={`// Fetch a project and check if it's ready for work
+const response: Response = await fetch("http://localhost:3000/api/projects/proj-8f3a-4b2c");
+const project: Project = await response.json();
+
+if (project.status === "active") {
+  console.log(\`\${project.name} is active with \${project.taskCount} tasks\`);
+}`} python={`import requests
+
+# Fetch a project and check if it's ready for work
+response = requests.get("http://localhost:3000/api/projects/proj-8f3a-4b2c")
+project: dict = response.json()
+
+if project["status"] == "active":
+    print(f"{project['name']} is active with {project['taskCount']} tasks")`} />
+
+</EndpointCard>
+
+### Update Project
+
+<EndpointCard method="PATCH" path="/api/projects/{id}" description="Update project fields and optionally replace document bindings. Documents are replaced atomically — the old set is removed and the new set is linked.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'name', type: 'string', required: false, description: 'Updated name (1–100 chars)' },
+  { name: 'description', type: 'string', required: false, description: 'Updated description (max 500 chars)' },
+  { name: 'workingDirectory', type: 'string', required: false, description: 'Updated path (max 500 chars)' },
+  { name: 'status', type: 'enum', required: false, description: 'active, paused, or completed' },
+  { name: 'documentIds', type: 'string[]', required: false, description: 'Replace all default document bindings' },
+]} />
+
+**Response** `200` — Updated project object
+
+**Errors:** `400` — Validation failure, `404` — Not found
+
+Pause a project to prevent task auto-execution while keeping all resources intact:
+
+<CodeExample ts={`// Pause a project — tasks remain but won't auto-execute
+await fetch("http://localhost:3000/api/projects/proj-8f3a-4b2c", {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ status: "paused" }),
+});`} python={`import requests
+
+# Pause a project — tasks remain but won't auto-execute
+requests.patch("http://localhost:3000/api/projects/proj-8f3a-4b2c", json={
+    "status": "paused",
+})`} />
+
+</EndpointCard>
+
+### Delete Project
+
+<EndpointCard method="DELETE" path="/api/projects/{id}" description="Permanently delete a project and all related resources. Cascades through environment scans, chat data, usage records, tasks, workflows, schedules, documents, and tables.">
+
+**Response** `200` — `{ "success": true }`
+
+**Errors:** `404` — Not found, `500` — Cascade delete failure
+
+The cascade deletion order ensures foreign key safety:
+1. Environment data (scans, checkpoints, artifacts, sync ops)
+2. Chat data (messages, conversations)
+3. Usage ledger entries
+4. Task children (logs, notifications, documents, context)
+5. Document defaults, user tables (with rows, columns, triggers, charts)
+6. Direct children (documents, tasks, workflows, schedules)
+7. Project record
+
+Delete a project and everything inside it — this is irreversible:
+
+<CodeExample ts={`// WARNING: Cascade deletes all tasks, workflows, schedules, and documents
+const res: Response = await fetch("http://localhost:3000/api/projects/proj-8f3a-4b2c", {
+  method: "DELETE",
+});
+const { success }: { success: boolean } = await res.json();
+console.log(success ? "Project deleted" : "Delete failed");`} python={`import requests
+
+# WARNING: Cascade deletes all tasks, workflows, schedules, and documents
+res = requests.delete("http://localhost:3000/api/projects/proj-8f3a-4b2c")
+data: dict = res.json()
+print("Project deleted" if data["success"] else "Delete failed")`} />
+
+</EndpointCard>
+
+### List Project Documents
+
+<EndpointCard method="GET" path="/api/projects/{id}/documents" description="List all default document bindings for a project with full document metadata.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Document ID' },
+  { name: 'originalName', type: 'string', required: true, description: 'Original filename' },
+  { name: 'filename', type: 'string', required: true, description: 'Stored filename' },
+  { name: 'mimeType', type: 'string', required: true, description: 'MIME type' },
+  { name: 'size', type: 'number', required: true, description: 'File size in bytes' },
+  { name: 'direction', type: 'string', required: true, description: 'input or output' },
+  { name: 'status', type: 'string', required: true, description: 'Processing status' },
+  { name: 'category', type: 'string', required: false, description: 'Document category' },
+]} />
+
+Retrieve all documents bound to a project — these are automatically available as context for every task in the project:
+
+<CodeExample ts={`// List project documents to verify context is configured
+const response: Response = await fetch("http://localhost:3000/api/projects/proj-8f3a-4b2c/documents");
+const docs: { direction: string; originalName: string; size: number }[] = await response.json();
+
+docs.forEach((d) => {
+  const sizeKB: string = (d.size / 1024).toFixed(1);
+  console.log(\`[\${d.direction}] \${d.originalName} (\${sizeKB} KB)\`);
+});`} python={`import requests
+
+# List project documents to verify context is configured
+response = requests.get("http://localhost:3000/api/projects/proj-8f3a-4b2c/documents")
+docs: list[dict] = response.json()
+
+for d in docs:
+    size_kb = d["size"] / 1024
+    print(f"[{d['direction']}] {d['originalName']} ({size_kb:.1f} KB)")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "doc-brand-guidelines-v3",
+    "originalName": "brand-guidelines-v3.pdf",
+    "filename": "brand-guidelines-v3-1712145600.pdf",
+    "mimeType": "application/pdf",
+    "size": 245760,
+    "direction": "input",
+    "status": "processed",
+    "category": "reference"
+  }
+]
+```
+
+</EndpointCard>
+
+### Replace Project Documents
+
+<EndpointCard method="PUT" path="/api/projects/{id}/documents" description="Replace all default document bindings for a project. Previous bindings are removed and new ones are created atomically.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'documentIds', type: 'string[]', required: true, description: 'Array of document UUIDs to bind' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'updated', type: 'number', required: true, description: 'Count of new bindings created' },
+  { name: 'projectId', type: 'string (UUID)', required: true, description: 'Project ID' },
+]} />
+
+**Errors:** `400` — documentIds not an array, `404` — Project not found
+
+Replace the entire set of default documents — previous bindings are removed first, then new ones are created:
+
+<CodeExample ts={`// Atomically replace project document bindings
+const response: Response = await fetch("http://localhost:3000/api/projects/proj-8f3a-4b2c/documents", {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    documentIds: ["doc-brand-guidelines-v3", "doc-sitemap-current"],
+  }),
+});
+const { updated }: { updated: number } = await response.json();
+
+console.log(\`Bound \${updated} documents to project\`);`} python={`import requests
+
+# Atomically replace project document bindings
+response = requests.put("http://localhost:3000/api/projects/proj-8f3a-4b2c/documents", json={
+    "documentIds": ["doc-brand-guidelines-v3", "doc-sitemap-current"],
+})
+data: dict = response.json()
+
+print(f"Bound {data['updated']} documents to project")`} />
+
+</EndpointCard>
+
+## Project Statuses
+
+| Status | Description |
+|--------|-------------|
+| **active** | Default state. Tasks can be executed. |
+| **paused** | Work suspended. Tasks remain but won't auto-execute. |
+| **completed** | Work finished. Project archived. |

@@ -1,0 +1,414 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Snapshots API"
+description: "Create, list, restore, and configure automatic database snapshots for disaster recovery and safe rollbacks."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Snapshots API
+
+Snapshots provide full database backup and restore capabilities. Manual snapshots can be created on demand, and automatic backups can be scheduled with configurable retention policies. Restore is a destructive operation that replaces the current database and requires a server restart.
+
+## Quick Start
+
+Create a snapshot before a risky operation, list available snapshots, and restore if needed:
+
+<CodeExample ts={`// 1. Create a manual snapshot before a major change
+interface Snapshot {
+  id: string;
+  label: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+const snapshot: Snapshot = await fetch('/api/snapshots', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ label: 'Before schema migration' }),
+}).then((r: Response) => r.json());
+
+console.log(\`Snapshot \${snapshot.id} created (\${(snapshot.sizeBytes / 1024).toFixed(0)} KB)\`);
+
+// 2. List all snapshots with disk usage stats
+const { snapshots, totalBytes, snapshotCount }: {
+  snapshots: Snapshot[];
+  totalBytes: number;
+  snapshotCount: number;
+} = await fetch('/api/snapshots').then((r: Response) => r.json());
+console.log(\`\${snapshotCount} snapshots using \${(totalBytes / 1024 / 1024).toFixed(1)} MB\`);
+
+// 3. If something goes wrong, restore from the snapshot
+const restore: {
+  success: boolean;
+  requiresRestart: boolean;
+  preRestoreSnapshotId: string;
+} = await fetch(\`/api/snapshots/\${snapshot.id}/restore\`, {
+  method: 'POST',
+}).then((r: Response) => r.json());
+
+if (restore.requiresRestart) {
+  console.log(\`Restored! Pre-restore backup: \${restore.preRestoreSnapshotId}\`);
+  console.log('Restart the server to load the restored database');
+}
+
+// 4. Enable automatic daily backups with retention policy
+await fetch('/api/snapshots/settings', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    enabled: true,
+    interval: '1d',
+    maxCount: 10,
+    maxAgeWeeks: 4,
+  }),
+});`} python={`import requests
+
+# 1. Create a manual snapshot before a major change
+response = requests.post(
+    "http://localhost:3000/api/snapshots",
+    json={"label": "Before schema migration"},
+)
+snapshot: dict = response.json()
+
+print(f"Snapshot {snapshot['id']} created ({snapshot['sizeBytes'] / 1024:.0f} KB)")
+
+# 2. List all snapshots with disk usage stats
+list_res = requests.get("http://localhost:3000/api/snapshots")
+data: dict = list_res.json()
+print(f"{data['snapshotCount']} snapshots using {data['totalBytes'] / 1024 / 1024:.1f} MB")
+
+# 3. If something goes wrong, restore from the snapshot
+restore_res = requests.post(
+    f"http://localhost:3000/api/snapshots/{snapshot['id']}/restore"
+)
+restore: dict = restore_res.json()
+
+if restore["requiresRestart"]:
+    print(f"Restored! Pre-restore backup: {restore['preRestoreSnapshotId']}")
+    print("Restart the server to load the restored database")
+
+# 4. Enable automatic daily backups with retention policy
+requests.put(
+    "http://localhost:3000/api/snapshots/settings",
+    json={
+        "enabled": True,
+        "interval": "1d",
+        "maxCount": 10,
+        "maxAgeWeeks": 4,
+    },
+)`} />
+
+## Base URL
+
+```
+/api/snapshots
+```
+
+## Endpoints
+
+### List Snapshots
+
+<EndpointCard method="GET" path="/api/snapshots" description="List all snapshots with aggregate disk usage statistics.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'snapshots', type: 'object[]', required: true, description: 'Array of snapshot records' },
+  { name: 'totalBytes', type: 'number', required: true, description: 'Total disk usage of all snapshots in bytes' },
+  { name: 'snapshotCount', type: 'number', required: true, description: 'Number of snapshots on disk' },
+]} />
+
+List all snapshots to see what backups are available and how much disk they use:
+
+<CodeExample ts={`// List snapshots with disk usage
+interface SnapshotList {
+  snapshots: { label: string; sizeBytes: number; createdAt: string }[];
+  totalBytes: number;
+  snapshotCount: number;
+}
+
+const { snapshots, totalBytes, snapshotCount }: SnapshotList =
+  await fetch('/api/snapshots').then((r: Response) => r.json());
+
+console.log(\`\${snapshotCount} snapshots, \${(totalBytes / 1024 / 1024).toFixed(1)} MB total\`);
+snapshots.forEach((s) => {
+  console.log(\`  \${s.label} — \${(s.sizeBytes / 1024).toFixed(0)} KB — \${s.createdAt}\`);
+});`} python={`import requests
+
+# List snapshots with disk usage
+response = requests.get("http://localhost:3000/api/snapshots")
+data: dict = response.json()
+
+print(f"{data['snapshotCount']} snapshots, {data['totalBytes'] / 1024 / 1024:.1f} MB total")
+for s in data["snapshots"]:
+    print(f"  {s['label']} — {s['sizeBytes'] / 1024:.0f} KB — {s['createdAt']}")`} />
+
+Example response:
+
+```json
+{
+  "snapshots": [
+    {
+      "id": "snap-2a3b-4c5d",
+      "label": "Before schema migration",
+      "type": "manual",
+      "sizeBytes": 1482752,
+      "createdAt": "2026-04-03T10:00:00.000Z"
+    },
+    {
+      "id": "snap-6e7f-8g9h",
+      "label": "Auto backup",
+      "type": "auto",
+      "sizeBytes": 1478400,
+      "createdAt": "2026-04-02T00:00:00.000Z"
+    }
+  ],
+  "totalBytes": 2961152,
+  "snapshotCount": 2
+}
+```
+
+</EndpointCard>
+
+### Create Snapshot
+
+<EndpointCard method="POST" path="/api/snapshots" description="Create a manual database snapshot. Fails with 409 if another snapshot operation is in progress.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'label', type: 'string', required: false, description: 'Snapshot label (defaults to "Manual snapshot")' },
+]} />
+
+**Response** `201 Created` — Snapshot record
+
+Create a labeled snapshot before risky operations so you can rollback if needed:
+
+<CodeExample ts={`// Create a manual snapshot before risky changes
+interface Snapshot {
+  id: string;
+  label: string;
+  sizeBytes: number;
+}
+
+const snapshot: Snapshot = await fetch('/api/snapshots', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ label: 'Before schema migration' }),
+}).then((r: Response) => r.json());
+
+console.log(\`Snapshot \${snapshot.id}: \${snapshot.label}\`);
+console.log(\`Size: \${(snapshot.sizeBytes / 1024).toFixed(0)} KB\`);`} python={`import requests
+
+# Create a manual snapshot before risky changes
+response = requests.post(
+    "http://localhost:3000/api/snapshots",
+    json={"label": "Before schema migration"},
+)
+snapshot: dict = response.json()
+
+print(f"Snapshot {snapshot['id']}: {snapshot['label']}")
+print(f"Size: {snapshot['sizeBytes'] / 1024:.0f} KB")`} />
+
+Example response:
+
+```json
+{
+  "id": "snap-2a3b-4c5d",
+  "label": "Before schema migration",
+  "type": "manual",
+  "sizeBytes": 1482752,
+  "createdAt": "2026-04-03T10:00:00.000Z"
+}
+```
+
+**Errors:** `409` — Another snapshot operation in progress, `500` — Creation failure
+
+</EndpointCard>
+
+### Get Snapshot
+
+<EndpointCard method="GET" path="/api/snapshots/{id}" description="Retrieve details of a single snapshot.">
+
+**Response** `200` — Snapshot record
+
+<CodeExample ts={`const snapshot: { label: string; sizeBytes: number; createdAt: string } =
+  await fetch('/api/snapshots/snap-2a3b-4c5d').then((r: Response) => r.json());
+console.log(\`\${snapshot.label} — \${(snapshot.sizeBytes / 1024).toFixed(0)} KB — \${snapshot.createdAt}\`);`} python={`import requests
+
+response = requests.get("http://localhost:3000/api/snapshots/snap-2a3b-4c5d")
+snapshot: dict = response.json()
+print(f"{snapshot['label']} — {snapshot['sizeBytes'] / 1024:.0f} KB — {snapshot['createdAt']}")`} />
+
+**Errors:** `404` — Snapshot not found
+
+</EndpointCard>
+
+### Delete Snapshot
+
+<EndpointCard method="DELETE" path="/api/snapshots/{id}" description="Permanently delete a snapshot and its backup files from disk.">
+
+**Response** `200` — `{ "success": true }`
+
+<CodeExample ts={`// Delete an old snapshot to reclaim disk space
+await fetch('/api/snapshots/snap-2a3b-4c5d', { method: 'DELETE' });`} python={`import requests
+
+# Delete an old snapshot to reclaim disk space
+requests.delete("http://localhost:3000/api/snapshots/snap-2a3b-4c5d")`} />
+
+**Errors:** `404` — Snapshot not found
+
+</EndpointCard>
+
+### Restore from Snapshot
+
+<EndpointCard method="POST" path="/api/snapshots/{id}/restore" description="Restore the database from a snapshot. This is a destructive operation that replaces the current database. A pre-restore snapshot is automatically created for safety. Fails if any tasks are currently running.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'success', type: 'boolean', required: true, description: 'Whether the restore completed' },
+  { name: 'requiresRestart', type: 'boolean', required: true, description: 'Whether a server restart is needed' },
+  { name: 'preRestoreSnapshotId', type: 'string', required: true, description: 'ID of the auto-created pre-restore backup' },
+  { name: 'message', type: 'string', required: true, description: 'Instruction to restart the server' },
+]} />
+
+Restore from a snapshot — a pre-restore backup is automatically created so you can undo the restore if needed:
+
+<CodeExample ts={`// Restore the database from a snapshot
+interface RestoreResult {
+  success: boolean;
+  requiresRestart: boolean;
+  preRestoreSnapshotId: string;
+  message: string;
+}
+
+const result: RestoreResult = await fetch('/api/snapshots/snap-2a3b-4c5d/restore', {
+  method: 'POST',
+}).then((r: Response) => r.json());
+
+if (result.success) {
+  console.log(\`Restored! Pre-restore backup: \${result.preRestoreSnapshotId}\`);
+  if (result.requiresRestart) {
+    console.log('Restart the server to load the restored database');
+  }
+} else {
+  console.error('Restore failed');
+}`} python={`import requests
+
+# Restore the database from a snapshot
+response = requests.post("http://localhost:3000/api/snapshots/snap-2a3b-4c5d/restore")
+result: dict = response.json()
+
+if result["success"]:
+    print(f"Restored! Pre-restore backup: {result['preRestoreSnapshotId']}")
+    if result["requiresRestart"]:
+        print("Restart the server to load the restored database")
+else:
+    print("Restore failed")`} />
+
+Example response:
+
+```json
+{
+  "success": true,
+  "requiresRestart": true,
+  "preRestoreSnapshotId": "snap-8h9i-0j1k",
+  "message": "Database restored. Restart the server to load the restored database."
+}
+```
+
+**Errors:** `409` — Another snapshot operation in progress or tasks are running, `500` — Restore failure
+
+</EndpointCard>
+
+---
+
+## Snapshot Settings
+
+### Get Settings
+
+<EndpointCard method="GET" path="/api/snapshots/settings" description="Read auto-backup and retention configuration.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'enabled', type: 'string', required: true, description: 'Auto-backup enabled ("true" or "false", default: "false")' },
+  { name: 'interval', type: 'string', required: true, description: 'Backup interval (e.g., "1d", "12h", default: "1d")' },
+  { name: 'maxCount', type: 'string', required: true, description: 'Maximum snapshots to retain (default: "10")' },
+  { name: 'maxAgeWeeks', type: 'string', required: true, description: 'Maximum age before pruning (default: "4")' },
+]} />
+
+Check the current auto-backup and retention configuration:
+
+<CodeExample ts={`// Check auto-backup configuration
+interface SnapshotSettings {
+  enabled: string;
+  interval: string;
+  maxCount: string;
+  maxAgeWeeks: string;
+}
+
+const settings: SnapshotSettings = await fetch('/api/snapshots/settings')
+  .then((r: Response) => r.json());
+
+console.log(\`Auto-backup: \${settings.enabled === 'true' ? 'ON' : 'OFF'}\`);
+console.log(\`Interval: \${settings.interval}\`);
+console.log(\`Retention: \${settings.maxCount} snapshots, max \${settings.maxAgeWeeks} weeks\`);`} python={`import requests
+
+# Check auto-backup configuration
+response = requests.get("http://localhost:3000/api/snapshots/settings")
+settings: dict = response.json()
+
+print(f"Auto-backup: {'ON' if settings['enabled'] == 'true' else 'OFF'}")
+print(f"Interval: {settings['interval']}")
+print(f"Retention: {settings['maxCount']} snapshots, max {settings['maxAgeWeeks']} weeks")`} />
+
+Example response:
+
+```json
+{
+  "enabled": "true",
+  "interval": "1d",
+  "maxCount": "10",
+  "maxAgeWeeks": "4"
+}
+```
+
+</EndpointCard>
+
+### Update Settings
+
+<EndpointCard method="PUT" path="/api/snapshots/settings" description="Update auto-backup and retention settings. All fields are optional — only provided fields are updated.">
+
+<SchemaTable title="Request Body (all optional)" fields={[
+  { name: 'enabled', type: 'boolean | string', required: false, description: 'Toggle auto-backup' },
+  { name: 'interval', type: 'string', required: false, description: 'Backup interval (e.g., "1d", "6h")' },
+  { name: 'maxCount', type: 'number | string', required: false, description: 'Maximum snapshots to retain' },
+  { name: 'maxAgeWeeks', type: 'number | string', required: false, description: 'Maximum snapshot age in weeks' },
+]} />
+
+**Response** `200` — `{ "success": true }`
+
+Enable automatic backups with a 12-hour interval and retain up to 20 snapshots:
+
+<CodeExample ts={`// Enable auto-backup with custom retention
+await fetch('/api/snapshots/settings', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    enabled: true,
+    interval: '12h',
+    maxCount: 20,
+    maxAgeWeeks: 8,
+  }),
+});`} python={`import requests
+
+# Enable auto-backup with custom retention
+requests.put(
+    "http://localhost:3000/api/snapshots/settings",
+    json={
+        "enabled": True,
+        "interval": "12h",
+        "maxCount": 20,
+        "maxAgeWeeks": 8,
+    },
+)`} />
+
+</EndpointCard>

@@ -1,0 +1,280 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Uploads API"
+description: "Upload files via multipart form data, download stored files, delete uploads, and clean up orphaned files."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Uploads API
+
+The Uploads API handles direct file uploads via multipart form data, primarily used by the browser UI. Files are stored in Stagent's managed uploads directory, a document record is created in the database, and asynchronous processing (text extraction, thumbnails) begins automatically. For programmatic file ingestion from the local filesystem, see the [Documents API](/docs/api/documents/).
+
+## Quick Start
+
+Upload a file, retrieve its metadata, then run a cleanup to remove orphaned files:
+
+<CodeExample ts={`// 1. Upload a file via multipart form data
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+formData.append('taskId', 'task-9d4e-a1b2');
+
+const upload: { id: string; filename: string; originalName: string; size: number } =
+  await fetch('/api/uploads', {
+    method: 'POST',
+    body: formData,
+  }).then((r) => r.json());
+// → { id: "doc-3f8a-...", filename: "3f8a...pdf", originalName: "report.pdf", size: 184320 }
+
+// 2. Download the file by its ID
+const downloadUrl: string = \`/api/uploads/\${upload.id}\`;
+window.open(downloadUrl); // triggers attachment download
+
+// 3. When done, delete the upload
+await fetch(\`/api/uploads/\${upload.id}\`, { method: 'DELETE' });
+// → 204 No Content
+
+// 4. Periodically clean up orphaned files (no matching DB record)
+const cleanup: { deleted: number; errors: number } = await fetch('/api/uploads/cleanup', {
+  method: 'POST',
+}).then((r) => r.json());
+console.log(\`Cleaned \${cleanup.deleted} orphans, \${cleanup.errors} errors\`);`} python={`import requests
+from pathlib import Path
+
+# 1. Upload a file via multipart form data
+file_path: str = "/path/to/report.pdf"
+with open(file_path, "rb") as f:
+    response: requests.Response = requests.post(
+        "http://localhost:3000/api/uploads",
+        files={"file": (Path(file_path).name, f)},
+        data={"taskId": "task-9d4e-a1b2"},
+    )
+upload: dict = response.json()
+# -> { "id": "doc-3f8a-...", "filename": "3f8a...pdf", "originalName": "report.pdf", "size": 184320 }
+
+# 2. Download the file by its ID
+download_res: requests.Response = requests.get(
+    f"http://localhost:3000/api/uploads/{upload['id']}"
+)
+with open("report.pdf", "wb") as f:
+    f.write(download_res.content)
+
+# 3. When done, delete the upload
+requests.delete(f"http://localhost:3000/api/uploads/{upload['id']}")
+# -> 204 No Content
+
+# 4. Periodically clean up orphaned files (no matching DB record)
+cleanup: dict = requests.post(
+    "http://localhost:3000/api/uploads/cleanup"
+).json()
+print(f"Cleaned {cleanup['deleted']} orphans, {cleanup['errors']} errors")`} />
+
+## Base URL
+
+```
+/api/uploads
+```
+
+## Endpoints
+
+### Upload File
+
+<EndpointCard method="POST" path="/api/uploads" description="Upload a file via multipart/form-data. Creates a document record and triggers asynchronous processing (text extraction, thumbnail generation). Maximum file size is 50 MB.">
+
+<SchemaTable title="Form Data Fields" fields={[
+  { name: 'file', type: 'File', required: true, description: 'The file to upload (max 50 MB)' },
+  { name: 'taskId', type: 'string (UUID)', required: false, description: 'Link the upload to a task' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Document ID (also serves as the upload ID)' },
+  { name: 'filename', type: 'string', required: true, description: 'Stored filename (UUID-based with original extension)' },
+  { name: 'originalName', type: 'string', required: true, description: 'Original filename from the upload' },
+  { name: 'size', type: 'number', required: true, description: 'File size in bytes' },
+  { name: 'type', type: 'string', required: true, description: 'MIME type from the uploaded file' },
+  { name: 'taskId', type: 'string | null', required: true, description: 'Linked task ID if provided' },
+]} />
+
+**Response** `201 Created`
+
+**Errors:** `400` — No file provided or file exceeds 50 MB
+
+Upload a file from a browser form or programmatically attach it to a task:
+
+<CodeExample ts={`// Upload a file from a browser file input
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+formData.append('taskId', 'task-9d4e-a1b2');
+
+const upload: { id: string; originalName: string; size: number } = await fetch('/api/uploads', {
+  method: 'POST',
+  body: formData, // no Content-Type header — browser sets multipart boundary
+}).then((r) => r.json());
+
+console.log(\`Uploaded: \${upload.originalName} (\${upload.size} bytes)\`);
+console.log(\`Document ID: \${upload.id}\`);`} python={`import requests
+from pathlib import Path
+
+# Upload a standalone file
+file_path: str = "/path/to/report.pdf"
+with open(file_path, "rb") as f:
+    response: requests.Response = requests.post(
+        "http://localhost:3000/api/uploads",
+        files={"file": (Path(file_path).name, f)},
+        data={"taskId": "task-9d4e-a1b2"},
+    )
+upload: dict = response.json()
+
+print(f"Uploaded: {upload['originalName']} ({upload['size']} bytes)")
+print(f"Document ID: {upload['id']}")`} />
+
+Example response:
+
+```json
+{
+  "id": "doc-3f8a-2b1c",
+  "filename": "3f8a2b1c-report.pdf",
+  "originalName": "report.pdf",
+  "size": 184320,
+  "type": "application/pdf",
+  "taskId": "task-9d4e-a1b2"
+}
+```
+
+</EndpointCard>
+
+### Download Upload
+
+<EndpointCard method="GET" path="/api/uploads/{id}" description="Download an uploaded file by its ID. Files are served as attachment downloads with X-Content-Type-Options: nosniff to prevent stored XSS.">
+
+**Response** `200` — Raw file bytes with `Content-Type` and `Content-Disposition: attachment` headers
+
+**Security:** All files are forced to download (never rendered inline) to prevent stored XSS via attacker-controlled HTML, SVG, or JavaScript content.
+
+Download an uploaded file — the browser will prompt a save dialog because all files are served as attachments:
+
+<CodeExample ts={`// Trigger a download in the browser
+const link: HTMLAnchorElement = document.createElement('a');
+link.href = '/api/uploads/doc-3f8a-2b1c';
+link.download = '';
+link.click();
+
+// Or fetch the raw bytes for processing
+const res: Response = await fetch('/api/uploads/doc-3f8a-2b1c');
+const blob: Blob = await res.blob();
+console.log(\`Downloaded \${blob.size} bytes (\${blob.type})\`);`} python={`import requests
+
+# Download the file
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/uploads/doc-3f8a-2b1c"
+)
+
+# Save to disk
+with open("report.pdf", "wb") as f:
+    f.write(response.content)
+
+print(f"Downloaded {len(response.content)} bytes ({response.headers['Content-Type']})")`} />
+
+**Errors:** `404` — File not found
+
+</EndpointCard>
+
+### Delete Upload
+
+<EndpointCard method="DELETE" path="/api/uploads/{id}" description="Delete an uploaded file from disk and remove its document record from the database.">
+
+**Response** `204 No Content`
+
+Remove an upload when it is no longer needed — deletes both the file on disk and the database record:
+
+<CodeExample ts={`// Delete an upload
+const res: Response = await fetch('/api/uploads/doc-3f8a-2b1c', { method: 'DELETE' });
+
+if (res.status === 204) {
+  console.log('Upload deleted successfully');
+} else if (res.status === 404) {
+  console.log('Upload not found — may already be deleted');
+}`} python={`import requests
+
+# Delete an upload
+response: requests.Response = requests.delete(
+    "http://localhost:3000/api/uploads/doc-3f8a-2b1c"
+)
+
+if response.status_code == 204:
+    print("Upload deleted successfully")
+elif response.status_code == 404:
+    print("Upload not found — may already be deleted")`} />
+
+**Errors:** `404` — File not found, `500` — Deletion failure
+
+</EndpointCard>
+
+### Cleanup Orphaned Uploads
+
+<EndpointCard method="POST" path="/api/uploads/cleanup" description="Scan the uploads directory and remove files that no longer have a matching document record in the database. Returns a summary of cleaned files.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'deleted', type: 'number', required: true, description: 'Number of orphaned files removed' },
+  { name: 'errors', type: 'number', required: true, description: 'Number of files that failed to delete' },
+  { name: 'skipped', type: 'number', required: true, description: 'Number of files still linked to documents' },
+]} />
+
+Run cleanup periodically to reclaim disk space from orphaned files — files whose database records were deleted but the physical file remained:
+
+<CodeExample ts={`// Run orphan cleanup and log results
+const result: { deleted: number; errors: number; skipped: number } = await fetch(
+  '/api/uploads/cleanup',
+  { method: 'POST' }
+).then((r) => r.json());
+
+console.log(\`Deleted: \${result.deleted} orphaned files\`);
+console.log(\`Errors: \${result.errors} files failed to delete\`);
+console.log(\`Skipped: \${result.skipped} files still linked\`);`} python={`import requests
+
+# Run orphan cleanup and log results
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/uploads/cleanup"
+)
+result: dict = response.json()
+
+print(f"Deleted: {result['deleted']} orphaned files")
+print(f"Errors: {result['errors']} files failed to delete")
+print(f"Skipped: {result['skipped']} files still linked")`} />
+
+Example response:
+
+```json
+{
+  "deleted": 7,
+  "errors": 0,
+  "skipped": 43
+}
+```
+
+</EndpointCard>
+
+## Supported MIME Types
+
+The following types are detected by file extension for the Content-Type response header:
+
+| Extension | MIME Type |
+|-----------|-----------|
+| `.txt` | text/plain |
+| `.md` | text/markdown |
+| `.json` | application/json |
+| `.js` | text/javascript |
+| `.ts` | text/typescript |
+| `.py` | text/x-python |
+| `.html` | text/html |
+| `.css` | text/css |
+| `.png` | image/png |
+| `.jpg` / `.jpeg` | image/jpeg |
+| `.gif` | image/gif |
+| `.svg` | image/svg+xml |
+| `.pdf` | application/pdf |
+
+All other extensions are served as `application/octet-stream`.

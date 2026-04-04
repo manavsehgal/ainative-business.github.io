@@ -1,0 +1,764 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Chat API"
+description: "Manage conversations, send messages with SSE streaming, resolve permission requests, search entities, and discover available models."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Chat API
+
+The Chat API powers Stagent's conversational interface. Conversations are scoped to agent runtimes and optionally linked to projects. User messages are streamed back as Server-Sent Events with real-time deltas, permission requests, and structured questions from the executing agent.
+
+## Quick Start
+
+Create a conversation, send a message with SSE streaming, handle a permission request, and discover available models:
+
+<CodeExample ts={`// 1. Create a conversation linked to a project
+const conversation: Conversation = await fetch('/api/chat/conversations', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    runtimeId: 'claude-code',
+    projectId: 'proj-8f3a-4b2c',
+    title: 'Debug auth flow',
+    modelId: 'sonnet',
+  }),
+}).then(r => r.json());
+// → { id: "conv-d4e2-7b1a", runtimeId: "claude-code", status: "active", ... }
+
+// 2. Send a message and stream the response via SSE
+const res: Response = await fetch(\`/api/chat/conversations/\${conversation.id}/messages\`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ content: 'Why is the login endpoint returning 403?' }),
+});
+
+const reader = res.body!.getReader();
+const decoder = new TextDecoder();
+let pendingPermission: string | null = null;
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  for (const line of decoder.decode(value).split('\\n')) {
+    if (!line.startsWith('data: ')) continue;
+    const event = JSON.parse(line.slice(6));
+
+    switch (event.type) {
+      case 'delta':
+        process.stdout.write(event.content);
+        break;
+      case 'permission_request':
+        // Agent wants to read a file — save the requestId to respond
+        pendingPermission = event.requestId;
+        console.log(\`\\nPermission: \${event.toolName}(\${JSON.stringify(event.toolInput)})\`);
+        break;
+      case 'done':
+        console.log(\`\\nMessage ID: \${event.messageId}\`);
+        break;
+    }
+  }
+}
+
+// 3. If the agent requested permission, approve it
+if (pendingPermission) {
+  await fetch(\`/api/chat/conversations/\${conversation.id}/respond\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      requestId: pendingPermission,
+      behavior: 'allow',
+      alwaysAllow: true,
+    }),
+  });
+}
+
+// 4. Discover available models for the model picker
+const models: ChatModelOption[] = await fetch('/api/chat/models').then(r => r.json());
+models.forEach(m => console.log(\`\${m.label} (\${m.provider}) — \${m.costLabel}\`));`} python={`import requests
+import json
+
+# 1. Create a conversation linked to a project
+response = requests.post(
+    "http://localhost:3000/api/chat/conversations",
+    json={
+        "runtimeId": "claude-code",
+        "projectId": "proj-8f3a-4b2c",
+        "title": "Debug auth flow",
+        "modelId": "sonnet",
+    },
+)
+conversation = response.json()
+# → { "id": "conv-d4e2-7b1a", "runtimeId": "claude-code", "status": "active", ... }
+
+# 2. Send a message and stream the response via SSE
+conv_id = conversation["id"]
+response = requests.post(
+    f"http://localhost:3000/api/chat/conversations/{conv_id}/messages",
+    json={"content": "Why is the login endpoint returning 403?"},
+    stream=True,
+)
+
+pending_permission = None
+
+for line in response.iter_lines(decode_unicode=True):
+    if not line or not line.startswith("data: "):
+        continue
+    event = json.loads(line[6:])
+
+    if event["type"] == "delta":
+        print(event["content"], end="", flush=True)
+    elif event["type"] == "permission_request":
+        pending_permission = event["requestId"]
+        print(f"\\nPermission: {event['toolName']}({json.dumps(event['toolInput'])})")
+    elif event["type"] == "done":
+        print(f"\\nMessage ID: {event['messageId']}")
+
+# 3. If the agent requested permission, approve it
+if pending_permission:
+    requests.post(
+        f"http://localhost:3000/api/chat/conversations/{conv_id}/respond",
+        json={
+            "requestId": pending_permission,
+            "behavior": "allow",
+            "alwaysAllow": True,
+        },
+    )
+
+# 4. Discover available models for the model picker
+models = requests.get("http://localhost:3000/api/chat/models").json()
+for m in models:
+    print(f"{m['label']} ({m['provider']}) — {m['costLabel']}")`} />
+
+## Base URL
+
+```
+/api/chat
+```
+
+## Endpoints
+
+### List Conversations
+
+<EndpointCard method="GET" path="/api/chat/conversations" description="Retrieve conversations with optional filtering by status, project, and result limit. Results are ordered by most recent first.">
+
+<ParamTable params={[
+  { name: 'status', type: 'enum', required: false, description: 'Filter by conversation status: active or archived' },
+  { name: 'projectId', type: 'string', required: false, description: 'Filter conversations by project UUID' },
+  { name: 'limit', type: 'number', required: false, description: 'Maximum number of conversations to return' },
+]} />
+
+**Response** `200` — Array of conversation objects
+
+<SchemaTable title="Conversation Object" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Conversation identifier' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Associated project' },
+  { name: 'title', type: 'string', required: false, description: 'Conversation title' },
+  { name: 'runtimeId', type: 'enum', required: true, description: 'Agent runtime: claude-code or openai-codex-app-server' },
+  { name: 'modelId', type: 'string', required: false, description: 'Model used for responses (e.g., haiku, sonnet, gpt-5.4)' },
+  { name: 'status', type: 'enum', required: true, description: 'active or archived' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification timestamp' },
+]} />
+
+Fetch recent active conversations for a project — useful for displaying a conversation sidebar:
+
+<CodeExample ts={`// Fetch active conversations for a project
+const conversations: Conversation[] = await fetch(
+  '/api/chat/conversations?status=active&projectId=proj-8f3a-4b2c&limit=20'
+).then(r => r.json());
+
+conversations.forEach(c => {
+  const age: number = Math.round((Date.now() - new Date(c.updatedAt).getTime()) / 3600000);
+  console.log(\`\${c.title || 'Untitled'} (\${c.runtimeId}) — \${age}h ago\`);
+});`} python={`import requests
+from datetime import datetime, timezone
+
+# Fetch active conversations for a project
+response = requests.get(
+    "http://localhost:3000/api/chat/conversations",
+    params={"status": "active", "projectId": "proj-8f3a-4b2c", "limit": 20},
+)
+conversations: list[dict] = response.json()
+
+for c in conversations:
+    updated = datetime.fromisoformat(c["updatedAt"].replace("Z", "+00:00"))
+    age_hours = int((datetime.now(timezone.utc) - updated).total_seconds() / 3600)
+    title = c.get("title") or "Untitled"
+    print(f"{title} ({c['runtimeId']}) — {age_hours}h ago")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "conv-d4e2-7b1a",
+    "projectId": "proj-8f3a-4b2c",
+    "title": "Debug auth flow",
+    "runtimeId": "claude-code",
+    "modelId": "sonnet",
+    "status": "active",
+    "createdAt": "2026-04-03T10:00:00.000Z",
+    "updatedAt": "2026-04-03T10:45:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Conversation
+
+<EndpointCard method="POST" path="/api/chat/conversations" description="Start a new conversation. Requires an agent runtime. Optionally link to a project (triggers an automatic environment scan) and select a model.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'runtimeId', type: 'enum', required: true, description: 'Agent runtime: claude-code or openai-codex-app-server' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Project to associate with (triggers auto environment scan)' },
+  { name: 'title', type: 'string', required: false, description: 'Conversation title' },
+  { name: 'modelId', type: 'string', required: false, description: 'Model ID for responses' },
+]} />
+
+**Response** `201 Created` — The created conversation object
+
+**Errors:** `400` — Missing or invalid runtimeId
+
+Start a conversation linked to a project — the agent receives the project's working directory and environment context automatically:
+
+<CodeExample ts={`// Create a conversation with a specific model
+const conversation: Conversation = await fetch('/api/chat/conversations', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    runtimeId: 'claude-code',
+    projectId: 'proj-8f3a-4b2c',
+    title: 'Debug auth flow',
+    modelId: 'sonnet',
+  }),
+}).then(r => r.json());
+
+console.log(conversation.id);     // "conv-d4e2-7b1a"
+console.log(conversation.status); // "active"`} python={`import requests
+
+# Create a conversation with a specific model
+response = requests.post(
+    "http://localhost:3000/api/chat/conversations",
+    json={
+        "runtimeId": "claude-code",
+        "projectId": "proj-8f3a-4b2c",
+        "title": "Debug auth flow",
+        "modelId": "sonnet",
+    },
+)
+conversation: dict = response.json()
+
+print(conversation["id"])      # "conv-d4e2-7b1a"
+print(conversation["status"])  # "active"`} />
+
+Example response:
+
+```json
+{
+  "id": "conv-d4e2-7b1a",
+  "projectId": "proj-8f3a-4b2c",
+  "title": "Debug auth flow",
+  "runtimeId": "claude-code",
+  "modelId": "sonnet",
+  "status": "active",
+  "createdAt": "2026-04-03T10:00:00.000Z",
+  "updatedAt": "2026-04-03T10:00:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Get Conversation
+
+<EndpointCard method="GET" path="/api/chat/conversations/{id}" description="Retrieve a single conversation with its message count.">
+
+**Response** `200` — Conversation object with `messageCount` field
+
+<SchemaTable title="Additional Fields" fields={[
+  { name: 'messageCount', type: 'number', required: true, description: 'Total messages in the conversation' },
+]} />
+
+**Errors:** `404` — Conversation not found
+
+<CodeExample ts={`// Get conversation with message count
+const conv: Conversation & { messageCount: number } = await fetch('/api/chat/conversations/conv-d4e2-7b1a')
+  .then(r => r.json());
+
+console.log(\`\${conv.title}: \${conv.messageCount} messages\`);`} python={`import requests
+
+# Get conversation with message count
+response = requests.get("http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a")
+conv: dict = response.json()
+
+print(f"{conv['title']}: {conv['messageCount']} messages")`} />
+
+</EndpointCard>
+
+### Update Conversation
+
+<EndpointCard method="PATCH" path="/api/chat/conversations/{id}" description="Update conversation title, status, model, or runtime.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'title', type: 'string', required: false, description: 'Updated conversation title' },
+  { name: 'status', type: 'enum', required: false, description: 'New status: active or archived' },
+  { name: 'modelId', type: 'string', required: false, description: 'Change model for future messages' },
+  { name: 'runtimeId', type: 'string', required: false, description: 'Change agent runtime' },
+]} />
+
+**Errors:** `400` — Invalid status value, `404` — Not found
+
+Archive a completed conversation or switch to a different model mid-conversation:
+
+<CodeExample ts={`// Switch to a faster model for quick follow-up questions
+await fetch('/api/chat/conversations/conv-d4e2-7b1a', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ modelId: 'haiku' }),
+});`} python={`import requests
+
+# Switch to a faster model for quick follow-up questions
+requests.patch(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a",
+    json={"modelId": "haiku"},
+)`} />
+
+</EndpointCard>
+
+### Delete Conversation
+
+<EndpointCard method="DELETE" path="/api/chat/conversations/{id}" description="Permanently delete a conversation and all its messages.">
+
+**Response** `204 No Content`
+
+**Errors:** `404` — Conversation not found
+
+<CodeExample ts={`// Permanently delete a conversation and its messages
+await fetch('/api/chat/conversations/conv-d4e2-7b1a', { method: 'DELETE' });`} python={`import requests
+
+# Permanently delete a conversation and its messages
+requests.delete("http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a")`} />
+
+</EndpointCard>
+
+### Get Messages
+
+<EndpointCard method="GET" path="/api/chat/conversations/{id}/messages" description="Fetch message history for a conversation. Supports cursor-based pagination for reconnection scenarios.">
+
+<ParamTable params={[
+  { name: 'after', type: 'string', required: false, description: 'Message ID cursor — return messages after this ID' },
+  { name: 'limit', type: 'number', required: false, description: 'Maximum number of messages to return' },
+]} />
+
+**Response** `200` — Array of message objects
+
+**Errors:** `404` — Conversation not found
+
+Fetch message history with pagination — use the `after` cursor to resume from where you left off:
+
+<CodeExample ts={`// Fetch the last 50 messages
+const messages: Message[] = await fetch(
+  '/api/chat/conversations/conv-d4e2-7b1a/messages?limit=50'
+).then(r => r.json());
+
+// Use cursor-based pagination to load more
+if (messages.length === 50) {
+  const lastId: string = messages[messages.length - 1].id;
+  const older: Message[] = await fetch(
+    \`/api/chat/conversations/conv-d4e2-7b1a/messages?after=\${lastId}&limit=50\`
+  ).then(r => r.json());
+}`} python={`import requests
+
+# Fetch the last 50 messages
+response = requests.get(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/messages",
+    params={"limit": 50},
+)
+messages: list[dict] = response.json()
+
+# Use cursor-based pagination to load more
+if len(messages) == 50:
+    last_id: str = messages[-1]["id"]
+    older_response = requests.get(
+        "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/messages",
+        params={"after": last_id, "limit": 50},
+    )
+    older: list[dict] = older_response.json()`} />
+
+</EndpointCard>
+
+### Send Message (SSE Stream)
+
+<EndpointCard method="SSE" path="/api/chat/conversations/{id}/messages" description="Send a user message and receive the assistant response as a Server-Sent Events stream. Supports @-mentions to inject entity context. The stream emits deltas, status updates, permission requests, and a final done event.">
+
+<SchemaTable title="Request Body (POST)" fields={[
+  { name: 'content', type: 'string', required: true, description: 'User message text' },
+  { name: 'mentions', type: 'object[]', required: false, description: 'Array of @-mention references to inject as context' },
+]} />
+
+**Response** — `text/event-stream` with JSON event objects
+
+<SchemaTable title="Stream Event Types" fields={[
+  { name: 'delta', type: 'event', required: false, description: 'Incremental text content from the assistant' },
+  { name: 'status', type: 'event', required: false, description: 'Phase update (e.g., thinking, tool_use) with a human-readable message' },
+  { name: 'permission_request', type: 'event', required: false, description: 'Agent is requesting permission to use a tool — includes requestId, toolName, toolInput' },
+  { name: 'question', type: 'event', required: false, description: 'Agent is asking structured questions — includes requestId and questions array' },
+  { name: 'screenshot', type: 'event', required: false, description: 'Screenshot attachment with documentId, thumbnailUrl, dimensions' },
+  { name: 'done', type: 'event', required: false, description: 'Stream complete — includes final messageId and quickAccess entity links' },
+  { name: 'error', type: 'event', required: false, description: 'Error message — stream terminates after this event' },
+]} />
+
+**Errors:** `400` — Missing or invalid content, `404` — Conversation not found
+
+Send a message and handle all SSE event types — the stream contains text deltas, status updates, permission requests, and a final completion event:
+
+<CodeExample ts={`// Send a message and process the SSE stream
+const res: Response = await fetch('/api/chat/conversations/conv-d4e2-7b1a/messages', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ content: 'What tasks are running right now?' }),
+});
+
+const reader = res.body!.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  for (const line of decoder.decode(value).split('\\n')) {
+    if (!line.startsWith('data: ')) continue;
+    const event = JSON.parse(line.slice(6));
+
+    switch (event.type) {
+      case 'delta':
+        process.stdout.write(event.content);
+        break;
+      case 'status':
+        console.log(\`[status] \${event.phase}: \${event.message}\`);
+        break;
+      case 'permission_request':
+        console.log(\`[permission] \${event.toolName}: \${JSON.stringify(event.toolInput)}\`);
+        // Respond via /respond endpoint
+        break;
+      case 'done':
+        console.log(\`\\nComplete: \${event.messageId}\`);
+        break;
+      case 'error':
+        console.error(\`Error: \${event.message}\`);
+        break;
+    }
+  }
+}`} python={`import requests
+import json
+
+# Send a message and process the SSE stream
+response = requests.post(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/messages",
+    json={"content": "What tasks are running right now?"},
+    stream=True,
+)
+
+for line in response.iter_lines(decode_unicode=True):
+    if not line or not line.startswith("data: "):
+        continue
+    event: dict = json.loads(line[6:])
+
+    match event["type"]:
+        case "delta":
+            print(event["content"], end="", flush=True)
+        case "status":
+            print(f"[status] {event['phase']}: {event['message']}")
+        case "permission_request":
+            print(f"[permission] {event['toolName']}: {json.dumps(event['toolInput'])}")
+            # Respond via /respond endpoint
+        case "done":
+            print(f"\\nComplete: {event['messageId']}")
+        case "error":
+            print(f"Error: {event['message']}")`} />
+
+Example stream events:
+
+```
+data: {"type":"status","phase":"thinking","message":"Analyzing the request..."}
+
+data: {"type":"delta","content":"Let me check the running tasks. "}
+
+data: {"type":"status","phase":"tool_use","message":"Querying tasks API..."}
+
+data: {"type":"delta","content":"There are 3 tasks currently running:\n\n1. **Analyze Q4 revenue trends** — started 5 minutes ago\n2. **Code review for auth module** — started 2 minutes ago\n3. **Generate test fixtures** — started 1 minute ago"}
+
+data: {"type":"done","messageId":"msg-a8f3-4c2e","quickAccess":[{"entityType":"task","entityId":"task-9d4e-a1b2","label":"Analyze Q4 revenue trends"}]}
+```
+
+</EndpointCard>
+
+### Respond to Permission Request
+
+<EndpointCard method="POST" path="/api/chat/conversations/{id}/respond" description="Allow or deny a pending permission or question request from an active chat turn. Resolves the in-memory promise that blocks the agent SDK's tool callback. Optionally save an always-allow rule.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'requestId', type: 'string', required: true, description: 'ID of the pending permission request' },
+  { name: 'behavior', type: 'enum', required: true, description: 'allow or deny' },
+  { name: 'messageId', type: 'string', required: false, description: 'Message ID to update status in the UI' },
+  { name: 'updatedInput', type: 'object', required: false, description: 'Modified tool input (only applied on allow)' },
+  { name: 'message', type: 'string', required: false, description: 'Message back to the agent (used on deny)' },
+  { name: 'alwaysAllow', type: 'boolean', required: false, description: 'Persist as a permanent permission rule' },
+  { name: 'permissionPattern', type: 'string', required: false, description: 'Pattern for the always-allow rule' },
+  { name: 'toolName', type: 'string', required: false, description: 'Tool name for auto-building the permission pattern' },
+  { name: 'toolInput', type: 'object', required: false, description: 'Tool input for auto-building the permission pattern' },
+]} />
+
+**Response** `200` — `{ "ok": true, "stale": false }`
+
+The `stale` field is `true` if the in-memory request had already expired (timeout, HMR restart). The DB and UI are still updated regardless.
+
+**Errors:** `400` — Missing requestId or behavior, `500` — Failed to resolve
+
+Allow a tool use request and save it as a permanent rule so the agent won't ask again:
+
+<CodeExample ts={`// Approve a permission request and save a permanent rule
+await fetch('/api/chat/conversations/conv-d4e2-7b1a/respond', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    requestId: 'req-b7c3-2e4f',
+    behavior: 'allow',
+    alwaysAllow: true,
+    toolName: 'Read',
+    toolInput: { file_path: '/src/auth/login.ts' },
+  }),
+});
+
+// Deny a permission with an explanation
+await fetch('/api/chat/conversations/conv-d4e2-7b1a/respond', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    requestId: 'req-c8d4-3f5a',
+    behavior: 'deny',
+    message: 'Do not modify production config files',
+  }),
+});`} python={`import requests
+
+# Approve a permission request and save a permanent rule
+requests.post(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/respond",
+    json={
+        "requestId": "req-b7c3-2e4f",
+        "behavior": "allow",
+        "alwaysAllow": True,
+        "toolName": "Read",
+        "toolInput": {"file_path": "/src/auth/login.ts"},
+    },
+)
+
+# Deny a permission with an explanation
+requests.post(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/respond",
+    json={
+        "requestId": "req-c8d4-3f5a",
+        "behavior": "deny",
+        "message": "Do not modify production config files",
+    },
+)`} />
+
+</EndpointCard>
+
+### Search Entities
+
+<EndpointCard method="GET" path="/api/chat/entities/search" description="Search across all entity types (projects, tasks, workflows, documents, schedules, tables, profiles) for @-mention autocomplete. Returns results from all types in parallel, capped per type.">
+
+<ParamTable params={[
+  { name: 'q', type: 'string', required: false, description: 'Search query — LIKE match against entity names. Empty returns recent entities.' },
+  { name: 'limit', type: 'number', required: false, description: 'Maximum total results (default 20, max 30)' },
+]} />
+
+**Response** `200` — `{ "results": EntityResult[] }`
+
+<SchemaTable title="EntityResult" fields={[
+  { name: 'entityType', type: 'enum', required: true, description: 'project, task, workflow, document, schedule, table, or profile' },
+  { name: 'entityId', type: 'string', required: true, description: 'Entity identifier' },
+  { name: 'label', type: 'string', required: true, description: 'Display name' },
+  { name: 'status', type: 'string', required: false, description: 'Entity status or domain (for profiles)' },
+  { name: 'description', type: 'string', required: false, description: 'Truncated description (max 120 chars)' },
+]} />
+
+Search entities for @-mention autocomplete — returns matches from all entity types:
+
+<CodeExample ts={`// Power @-mention autocomplete with entity search
+const { results }: { results: EntityResult[] } = await fetch('/api/chat/entities/search?q=revenue&limit=10')
+  .then(r => r.json());
+
+// Group results by entity type for the autocomplete dropdown
+const grouped = Object.groupBy(results, r => r.entityType);
+for (const [type, items] of Object.entries(grouped)) {
+  console.log(\`\${type}:\`);
+  items.forEach(item => console.log(\`  @\${item.label} (\${item.entityId})\`));
+}`} python={`import requests
+from itertools import groupby
+from operator import itemgetter
+
+# Power @-mention autocomplete with entity search
+response = requests.get(
+    "http://localhost:3000/api/chat/entities/search",
+    params={"q": "revenue", "limit": 10},
+)
+results: list[dict] = response.json()["results"]
+
+# Group results by entity type for the autocomplete dropdown
+sorted_results = sorted(results, key=itemgetter("entityType"))
+for entity_type, items in groupby(sorted_results, key=itemgetter("entityType")):
+    print(f"{entity_type}:")
+    for item in items:
+        print(f"  @{item['label']} ({item['entityId']})")`} />
+
+Example response:
+
+```json
+{
+  "results": [
+    {
+      "entityType": "task",
+      "entityId": "task-9d4e-a1b2",
+      "label": "Analyze Q4 revenue trends",
+      "status": "completed",
+      "description": "Review revenue data and produce a summary report with charts"
+    },
+    {
+      "entityType": "document",
+      "entityId": "doc-revenue-q4-csv",
+      "label": "revenue-q4-2025.csv",
+      "status": "processed"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### List Models
+
+<EndpointCard method="GET" path="/api/chat/models" description="Return available chat models discovered from configured SDKs. Falls back to a hardcoded catalog if SDKs are unreachable.">
+
+**Response** `200` — Array of model objects
+
+<SchemaTable title="ChatModelOption" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Model identifier (e.g., haiku, sonnet, gpt-5.4)' },
+  { name: 'label', type: 'string', required: true, description: 'Display name' },
+  { name: 'provider', type: 'enum', required: true, description: 'anthropic, openai, or ollama' },
+  { name: 'tier', type: 'string', required: true, description: 'Performance tier: Fast, Balanced, or Best' },
+  { name: 'costLabel', type: 'string', required: true, description: 'Relative cost: $, $$, $$$, or Free' },
+]} />
+
+Fetch available models to populate a model selector — shows capabilities and pricing tier:
+
+<CodeExample ts={`// Build a model picker grouped by provider
+const models: ChatModelOption[] = await fetch('/api/chat/models').then(r => r.json());
+
+const byProvider = Object.groupBy(models, m => m.provider);
+for (const [provider, providerModels] of Object.entries(byProvider)) {
+  console.log(\`\${provider}:\`);
+  providerModels.forEach(m => {
+    console.log(\`  \${m.label} [\${m.tier}] \${m.costLabel}\`);
+  });
+}`} python={`import requests
+from itertools import groupby
+from operator import itemgetter
+
+# Build a model picker grouped by provider
+response = requests.get("http://localhost:3000/api/chat/models")
+models: list[dict] = response.json()
+
+# Group by provider
+sorted_models = sorted(models, key=itemgetter("provider"))
+for provider, provider_models in groupby(sorted_models, key=itemgetter("provider")):
+    print(f"{provider}:")
+    for m in provider_models:
+        print(f"  {m['label']} [{m['tier']}] {m['costLabel']}")`} />
+
+Example response:
+
+```json
+[
+  { "id": "haiku", "label": "Haiku", "provider": "anthropic", "tier": "Fast", "costLabel": "$" },
+  { "id": "sonnet", "label": "Sonnet", "provider": "anthropic", "tier": "Balanced", "costLabel": "$$" },
+  { "id": "opus", "label": "Opus", "provider": "anthropic", "tier": "Best", "costLabel": "$$$" },
+  { "id": "gpt-5.4-mini", "label": "GPT-5.4 Mini", "provider": "openai", "tier": "Fast", "costLabel": "$" },
+  { "id": "gpt-5.3-codex", "label": "Codex 5.3", "provider": "openai", "tier": "Balanced", "costLabel": "$$" },
+  { "id": "gpt-5.4", "label": "GPT-5.4", "provider": "openai", "tier": "Best", "costLabel": "$$$" }
+]
+```
+
+</EndpointCard>
+
+### Suggested Prompts
+
+<EndpointCard method="GET" path="/api/chat/suggested-prompts" description="Return context-aware prompt categories with expandable sub-prompts for the chat input.">
+
+**Response** `200` — Array of prompt categories
+
+<SchemaTable title="PromptCategory" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Category identifier' },
+  { name: 'label', type: 'string', required: true, description: 'Category display name' },
+  { name: 'icon', type: 'string', required: true, description: 'Lucide icon name' },
+  { name: 'prompts', type: 'SuggestedPrompt[]', required: true, description: 'Array of prompts in this category' },
+]} />
+
+<SchemaTable title="SuggestedPrompt" fields={[
+  { name: 'label', type: 'string', required: true, description: 'Short display text (~40 chars)' },
+  { name: 'prompt', type: 'string', required: true, description: 'Full detailed prompt text' },
+]} />
+
+Fetch suggested prompts to display quick-action buttons in the chat input area:
+
+<CodeExample ts={`// Populate the chat input with suggested prompt categories
+const categories: PromptCategory[] = await fetch('/api/chat/suggested-prompts')
+  .then(r => r.json());
+
+categories.forEach(cat => {
+  console.log(\`\${cat.label} (\${cat.icon}):\`);
+  cat.prompts.forEach(p => console.log(\`  \${p.label}\`));
+});`} python={`import requests
+
+# Populate the chat input with suggested prompt categories
+response = requests.get("http://localhost:3000/api/chat/suggested-prompts")
+categories: list[dict] = response.json()
+
+for cat in categories:
+    print(f"{cat['label']} ({cat['icon']}):")
+    for p in cat["prompts"]:
+        print(f"  {p['label']}")`} />
+
+</EndpointCard>
+
+## Stream Event Reference
+
+The Send Message endpoint emits these SSE event types:
+
+| Event Type | Key Fields | Description |
+|------------|-----------|-------------|
+| **delta** | `content` | Incremental assistant text |
+| **status** | `phase`, `message` | Phase transition (thinking, tool_use, etc.) |
+| **permission_request** | `requestId`, `toolName`, `toolInput` | Agent needs tool approval |
+| **question** | `requestId`, `questions[]` | Agent asking structured questions |
+| **screenshot** | `documentId`, `thumbnailUrl`, `width`, `height` | Screenshot attachment |
+| **done** | `messageId`, `quickAccess[]` | Stream complete with entity links |
+| **error** | `message` | Terminal error — stream closes |
+
+## Default Models
+
+| Provider | Model ID | Label | Tier | Cost |
+|----------|----------|-------|------|------|
+| Anthropic | haiku | Haiku | Fast | $ |
+| Anthropic | sonnet | Sonnet | Balanced | $$ |
+| Anthropic | opus | Opus | Best | $$$ |
+| OpenAI | gpt-5.4-mini | GPT-5.4 Mini | Fast | $ |
+| OpenAI | gpt-5.3-codex | Codex 5.3 | Balanced | $$ |
+| OpenAI | gpt-5.4 | GPT-5.4 | Best | $$$ |

@@ -1,0 +1,202 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Context API"
+description: "Batch approve or reject learned context proposals generated during agent workflow execution."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Context API
+
+The Context API enables batch review of learned context proposals. During workflow execution, agents generate context proposals — knowledge snippets discovered while performing tasks. These proposals accumulate in `proposal` status until a human or automated reviewer approves or rejects them via this endpoint.
+
+## Quick Start
+
+Batch approve context proposals after a workflow completes:
+
+<CodeExample ts={`// 1. After a workflow finishes, fetch pending proposals from the UI
+//    (proposals are surfaced in the batch review panel)
+const proposalIds: string[] = [
+  'ctx-a1b2c3d4-e5f6',  // "Use snake_case for DB column names"
+  'ctx-f7a8b9c0-d1e2',  // "API responses include ISO 8601 timestamps"
+  'ctx-c3d4e5f6-a7b8',  // "Max file upload size is 10MB"
+];
+
+// 2. Approve all proposals in one request
+const result: { success: boolean; action: string; count: number } = await fetch('/api/context/batch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    proposalIds,
+    action: 'approve',
+  }),
+}).then((r: Response) => r.json());
+console.log(\`\${result.count} proposals approved\`);
+// -> "3 proposals approved"
+
+// 3. Reject low-quality proposals separately
+const rejected: { success: boolean; action: string; count: number } = await fetch('/api/context/batch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    proposalIds: ['ctx-d5e6f7a8-b9c0'],
+    action: 'reject',
+  }),
+}).then((r: Response) => r.json());
+console.log(\`\${rejected.count} proposals rejected\`);
+// -> "1 proposals rejected"`} python={`import requests
+
+# 1. After a workflow finishes, fetch pending proposals from the UI
+#    (proposals are surfaced in the batch review panel)
+proposal_ids = [
+    "ctx-a1b2c3d4-e5f6",  # "Use snake_case for DB column names"
+    "ctx-f7a8b9c0-d1e2",  # "API responses include ISO 8601 timestamps"
+    "ctx-c3d4e5f6-a7b8",  # "Max file upload size is 10MB"
+]
+
+# 2. Approve all proposals in one request
+result: dict = requests.post(
+    "http://localhost:3000/api/context/batch",
+    json={"proposalIds": proposal_ids, "action": "approve"},
+).json()
+print(f"{result['count']} proposals approved")
+# -> "3 proposals approved"
+
+# 3. Reject low-quality proposals separately
+rejected: dict = requests.post(
+    "http://localhost:3000/api/context/batch",
+    json={"proposalIds": ["ctx-d5e6f7a8-b9c0"], "action": "reject"},
+).json()
+print(f"{rejected['count']} proposals rejected")
+# -> "1 proposals rejected"`} />
+
+## Base URL
+
+```
+/api/context
+```
+
+## Endpoints
+
+### Batch Review Proposals
+
+<EndpointCard method="POST" path="/api/context/batch" description="Approve or reject multiple context proposals in a single request. Used by the batch proposal review UI after workflow completion.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'proposalIds', type: 'string[]', required: true, description: 'Array of learned_context row IDs to act on (minimum 1)' },
+  { name: 'action', type: 'enum', required: true, description: 'Batch action: approve or reject' },
+]} />
+
+**Response** `200` — Operation result
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'success', type: 'boolean', required: true, description: 'Whether the operation succeeded' },
+  { name: 'action', type: 'string', required: true, description: 'The action that was performed (approve or reject)' },
+  { name: 'count', type: 'number', required: true, description: 'Number of proposals affected' },
+]} />
+
+**Errors:**
+- `400` — Validation failure (missing or empty proposalIds, invalid action)
+- `500` — Batch operation failed
+
+Approve multiple proposals at once — accepted proposals become part of the agent's active context for future sessions:
+
+<CodeExample ts={`// Approve a batch of context proposals
+const response: Response = await fetch('/api/context/batch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    proposalIds: ['ctx-a1b2c3d4-e5f6', 'ctx-f7a8b9c0-d1e2', 'ctx-c3d4e5f6-a7b8'],
+    action: 'approve',
+  }),
+});
+const { success, action, count }: { success: boolean; action: string; count: number } =
+  await response.json();
+
+console.log(\`\${action}d \${count} proposals\`); // "approved 3 proposals"`} python={`import requests
+
+# Approve a batch of context proposals
+response = requests.post(
+    "http://localhost:3000/api/context/batch",
+    json={
+        "proposalIds": ["ctx-a1b2c3d4-e5f6", "ctx-f7a8b9c0-d1e2", "ctx-c3d4e5f6-a7b8"],
+        "action": "approve",
+    },
+)
+data: dict = response.json()
+
+print(f"{data['action']}d {data['count']} proposals")  # "approved 3 proposals"`} />
+
+Example response:
+
+```json
+{
+  "success": true,
+  "action": "approve",
+  "count": 3
+}
+```
+
+Reject proposals that are inaccurate or too noisy — rejected proposals will not be used in future agent sessions:
+
+<CodeExample ts={`// Reject low-quality proposals
+const response: Response = await fetch('/api/context/batch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    proposalIds: ['ctx-d5e6f7a8-b9c0'],
+    action: 'reject',
+  }),
+});
+const result: { success: boolean; action: string; count: number } = await response.json();
+
+console.log(\`\${result.action}ed \${result.count} proposals\`); // "rejected 1 proposals"`} python={`import requests
+
+# Reject low-quality proposals
+response = requests.post(
+    "http://localhost:3000/api/context/batch",
+    json={
+        "proposalIds": ["ctx-d5e6f7a8-b9c0"],
+        "action": "reject",
+    },
+)
+result: dict = response.json()
+
+print(f"{result['action']}ed {result['count']} proposals")  # "rejected 1 proposals"`} />
+
+Example response:
+
+```json
+{
+  "success": true,
+  "action": "reject",
+  "count": 1
+}
+```
+
+</EndpointCard>
+
+## Context Proposal Lifecycle
+
+Proposals move through these change types in the `learned_context` table:
+
+| Change Type | Description |
+|-------------|-------------|
+| **proposal** | Agent-generated context awaiting review |
+| **approved** | Accepted into the profile's active context |
+| **rejected** | Declined — will not be used in future sessions |
+| **rollback** | Previously approved context that was reverted |
+| **summarization** | Auto-condensed context from periodic summarization |
+
+## Validation
+
+Request bodies are validated with Zod. Invalid requests return `400`:
+
+```json
+{
+  "error": "proposalIds (string[]) and action ('approve'|'reject') are required"
+}
+```

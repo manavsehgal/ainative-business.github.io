@@ -1,0 +1,38 @@
+---
+import MethodBadge from './MethodBadge.astro';
+
+interface Props {
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT' | 'SSE';
+  path: string;
+  description?: string;
+}
+
+const { method, path, description } = Astro.props;
+
+const borderClass: Record<string, string> = {
+  GET:    'border-l-[oklch(0.65_0.18_250)]',
+  POST:   'border-l-[oklch(0.65_0.15_170)]',
+  PATCH:  'border-l-[oklch(0.7_0.15_85)]',
+  PUT:    'border-l-[oklch(0.7_0.15_85)]',
+  DELETE: 'border-l-[oklch(0.65_0.2_25)]',
+  SSE:    'border-l-[oklch(0.6_0.15_300)]',
+};
+
+const anchorId = `${method.toLowerCase()}-${path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')}`;
+---
+<div
+  id={anchorId}
+  class:list={[
+    "api-endpoint-card border-l-4 border border-border rounded-lg bg-surface-raised/50 p-6 mb-6 scroll-mt-32",
+    borderClass[method] ?? borderClass.GET,
+  ]}
+>
+  <div class="flex items-center gap-3 mb-2 flex-wrap">
+    <MethodBadge method={method} />
+    <code class="font-mono text-sm text-text font-medium">{path}</code>
+  </div>
+  {description && <p class="text-text-muted text-sm mt-1 mb-4">{description}</p>}
+  <div class="api-endpoint-body">
+    <slot />
+  </div>
+</div>

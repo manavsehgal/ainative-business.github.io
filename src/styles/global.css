@@ -329,6 +329,45 @@ main img.img-zoomed {
   transform: scale(1.5);
 }
 
+/* ── Always-dark code blocks (both themes) ── */
+/* Dual-theme blocks (from markdown fenced code) have --shiki-dark vars.
+   Force dark colors so they render dark in both light and dark mode. */
+.astro-code.astro-code-themes span {
+  color: var(--shiki-dark) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* All code block spans get transparent bg to avoid per-line highlight stripes */
+.astro-code span {
+  background-color: transparent !important;
+}
+
+/* Code block container styling */
+.astro-code {
+  background-color: oklch(0.16 0.02 250) !important;
+  border: 1px solid oklch(0.25 0.02 250) !important;
+  border-radius: 6px;
+}
+
+html[data-theme="light"] .astro-code {
+  background-color: oklch(0.18 0.02 250) !important;
+  border-color: oklch(0.28 0.03 250 / 0.5) !important;
+}
+
+/* Prose pre inherits from astro-code, override for consistency */
+html[data-theme="light"] .prose pre {
+  background: oklch(0.18 0.02 250);
+  border-color: oklch(0.28 0.03 250 / 0.5);
+}
+
+/* Inline code stays theme-aware (light bg in light mode) */
+html[data-theme="light"] .prose code:not(.astro-code code) {
+  background: oklch(0.93 0.015 250);
+  color: oklch(0.35 0.15 260);
+}
+
 /* ── Focus accessibility ── */
 :focus-visible {
   outline: 2px solid var(--color-primary);

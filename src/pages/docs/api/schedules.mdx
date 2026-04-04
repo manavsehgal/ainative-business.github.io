@@ -1,0 +1,608 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Schedules API"
+description: "Create, manage, and monitor recurring scheduled tasks and heartbeat monitors with natural language interval parsing, active hours, and budget controls."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Schedules API
+
+Schedules automate recurring task execution. Each schedule defines a prompt, an interval (cron, shorthand, or natural language), and an optional agent assignment. Stagent supports two schedule types: standard **scheduled** tasks that fire on a cron cadence, and **heartbeat** monitors that evaluate a checklist and only act when conditions warrant. The Schedules API supports CRUD operations, interval parsing preview, and heartbeat history retrieval.
+
+## Quick Start
+
+Preview how an interval parses, create a recurring schedule, and check its firing history:
+
+<CodeExample ts={`// 1. Parse the interval to preview how it resolves before committing
+const parsed: ParseResult = await fetch('/api/schedules/parse', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ expression: 'every weekday at 9am' }),
+}).then(r => r.json());
+
+console.log(parsed.cronExpression);  // "0 9 * * 1-5"
+console.log(parsed.description);     // "At 09:00 AM, Monday through Friday"
+console.log(parsed.nextFireTimes);   // ["2026-04-06T09:00:00Z", ...]
+console.log(parsed.confidence);      // 0.95
+
+// 2. Create the schedule — it starts firing immediately
+const schedule: Schedule = await fetch('/api/schedules', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Daily standup summary',
+    prompt: 'Review all open tasks, summarize blockers, and draft a standup message',
+    interval: 'every weekday at 9am',
+    projectId: 'proj-8f3a-4b2c',
+    assignedAgent: 'claude-code',
+    agentProfile: 'project-manager',
+  }),
+}).then(r => r.json());
+// → { id: "sched-e7b2-1f4a", status: "active", nextFireAt: "2026-04-06T09:00:00Z", ... }
+
+// 3. Check the schedule detail to see past firings
+const detail: ScheduleDetail = await fetch(\`/api/schedules/\${schedule.id}\`)
+  .then(r => r.json());
+
+console.log(\`Fired \${detail.firingCount} times\`);
+detail.firingHistory.forEach(task => {
+  console.log(\`  [\${task.status}] \${task.title} — \${task.createdAt}\`);
+});`} python={`import requests
+
+# 1. Parse the interval to preview how it resolves before committing
+parsed: dict = requests.post(
+    "http://localhost:3000/api/schedules/parse",
+    json={"expression": "every weekday at 9am"},
+).json()
+
+print(parsed["cronExpression"])  # "0 9 * * 1-5"
+print(parsed["description"])     # "At 09:00 AM, Monday through Friday"
+print(parsed["nextFireTimes"])   # ["2026-04-06T09:00:00Z", ...]
+print(parsed["confidence"])      # 0.95
+
+# 2. Create the schedule — it starts firing immediately
+schedule: dict = requests.post(
+    "http://localhost:3000/api/schedules",
+    json={
+        "name": "Daily standup summary",
+        "prompt": "Review all open tasks, summarize blockers, and draft a standup message",
+        "interval": "every weekday at 9am",
+        "projectId": "proj-8f3a-4b2c",
+        "assignedAgent": "claude-code",
+        "agentProfile": "project-manager",
+    },
+).json()
+# → { "id": "sched-e7b2-1f4a", "status": "active", "nextFireAt": "2026-04-06T09:00:00Z", ... }
+
+# 3. Check the schedule detail to see past firings
+detail: dict = requests.get(f"http://localhost:3000/api/schedules/{schedule['id']}").json()
+
+print(f"Fired {detail['firingCount']} times")
+for task in detail["firingHistory"]:
+    print(f"  [{task['status']}] {task['title']} — {task['createdAt']}")`} />
+
+## Base URL
+
+```
+/api/schedules
+```
+
+## Endpoints
+
+### List Schedules
+
+<EndpointCard method="GET" path="/api/schedules" description="Retrieve all schedules ordered by newest first.">
+
+**Response** `200` — Array of schedule objects
+
+<SchemaTable title="Schedule Object" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Schedule identifier' },
+  { name: 'name', type: 'string', required: true, description: 'Schedule display name' },
+  { name: 'prompt', type: 'string', required: true, description: 'Task prompt executed on each firing' },
+  { name: 'cronExpression', type: 'string', required: true, description: 'Parsed cron expression' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Associated project' },
+  { name: 'assignedAgent', type: 'string', required: false, description: 'Agent runtime ID' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Profile ID for execution' },
+  { name: 'type', type: 'enum', required: true, description: 'scheduled or heartbeat' },
+  { name: 'status', type: 'enum', required: true, description: 'active, paused, or exhausted' },
+  { name: 'recurs', type: 'boolean', required: true, description: 'Whether the schedule repeats' },
+  { name: 'maxFirings', type: 'number', required: false, description: 'Maximum number of firings before auto-exhaust' },
+  { name: 'firingCount', type: 'number', required: true, description: 'Total firings so far' },
+  { name: 'nextFireAt', type: 'ISO 8601', required: false, description: 'Next scheduled fire time (null when paused)' },
+  { name: 'expiresAt', type: 'ISO 8601', required: false, description: 'Expiration timestamp' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification timestamp' },
+]} />
+
+Fetch all schedules to build a scheduling dashboard — shows active, paused, and exhausted schedules:
+
+<CodeExample ts={`// List schedules and show when each will next fire
+const schedules: Schedule[] = await fetch('/api/schedules').then(r => r.json());
+
+const active = schedules.filter(s => s.status === 'active');
+active.forEach(s => {
+  const next = s.nextFireAt ? new Date(s.nextFireAt).toLocaleString() : 'none';
+  console.log(\`\${s.name} — next: \${next} (fired \${s.firingCount}x)\`);
+});`} python={`import requests
+
+# List schedules and show when each will next fire
+response = requests.get("http://localhost:3000/api/schedules")
+schedules: list[dict] = response.json()
+
+active = [s for s in schedules if s["status"] == "active"]
+for s in active:
+    next_fire = s.get("nextFireAt", "none")
+    print(f"{s['name']} — next: {next_fire} (fired {s['firingCount']}x)")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "sched-e7b2-1f4a",
+    "name": "Daily standup summary",
+    "prompt": "Review all open tasks, summarize blockers, and draft a standup message",
+    "cronExpression": "0 9 * * 1-5",
+    "projectId": "proj-8f3a-4b2c",
+    "assignedAgent": "claude-code",
+    "agentProfile": "project-manager",
+    "type": "scheduled",
+    "status": "active",
+    "recurs": true,
+    "firingCount": 14,
+    "nextFireAt": "2026-04-04T09:00:00.000Z",
+    "createdAt": "2026-03-15T10:00:00.000Z",
+    "updatedAt": "2026-04-03T09:00:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Schedule
+
+<EndpointCard method="POST" path="/api/schedules" description="Create a new schedule. The interval field accepts natural language (e.g. 'every weekday at 9am'), shorthand ('5m', '2h', '1d'), or raw cron expressions. Heartbeat schedules require a checklist.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Schedule name' },
+  { name: 'prompt', type: 'string', required: true, description: 'Task prompt (required for scheduled type, optional for heartbeat)' },
+  { name: 'interval', type: 'string', required: true, description: 'Interval expression: natural language, shorthand, or cron' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Project to associate with' },
+  { name: 'assignedAgent', type: 'enum', required: false, description: 'Agent runtime for execution' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Profile ID for agent configuration' },
+  { name: 'type', type: 'enum', required: false, description: 'scheduled (default) or heartbeat' },
+  { name: 'recurs', type: 'boolean', required: false, description: 'Whether to repeat (default: true)' },
+  { name: 'maxFirings', type: 'number', required: false, description: 'Stop after N firings' },
+  { name: 'expiresInHours', type: 'number', required: false, description: 'Auto-expire after N hours' },
+  { name: 'documentIds', type: 'string[]', required: false, description: 'Document UUIDs to attach as inputs' },
+]} />
+
+<SchemaTable title="Heartbeat-specific Fields" fields={[
+  { name: 'heartbeatChecklist', type: 'ChecklistItem[]', required: true, description: 'Array of { id, instruction, priority } items (required for heartbeat type)' },
+  { name: 'activeHoursStart', type: 'number (0–23)', required: false, description: 'Start of active hours window' },
+  { name: 'activeHoursEnd', type: 'number (0–23)', required: false, description: 'End of active hours window' },
+  { name: 'activeTimezone', type: 'string', required: false, description: 'IANA timezone for active hours (default: UTC)' },
+  { name: 'heartbeatBudgetPerDay', type: 'number', required: false, description: 'Daily budget limit for heartbeat actions' },
+]} />
+
+**Response** `201 Created` — The created schedule object
+
+**Errors:** `400` — Validation failure, invalid interval, or runtime/profile incompatibility
+
+Create a standard recurring schedule that fires every weekday morning:
+
+<CodeExample ts={`// Create a schedule with natural language interval
+const schedule: Schedule = await fetch('/api/schedules', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Daily standup summary',
+    prompt: 'Review all open tasks, summarize blockers, and draft a standup message',
+    interval: 'every weekday at 9am',
+    projectId: 'proj-8f3a-4b2c',
+    assignedAgent: 'claude-code',
+    agentProfile: 'project-manager',
+  }),
+}).then(r => r.json());
+
+console.log(schedule.cronExpression); // "0 9 * * 1-5"
+console.log(schedule.nextFireAt);     // "2026-04-04T09:00:00.000Z"`} python={`import requests
+
+# Create a schedule with natural language interval
+response = requests.post(
+    "http://localhost:3000/api/schedules",
+    json={
+        "name": "Daily standup summary",
+        "prompt": "Review all open tasks, summarize blockers, and draft a standup message",
+        "interval": "every weekday at 9am",
+        "projectId": "proj-8f3a-4b2c",
+        "assignedAgent": "claude-code",
+        "agentProfile": "project-manager",
+    },
+)
+schedule: dict = response.json()
+
+print(schedule["cronExpression"])  # "0 9 * * 1-5"
+print(schedule["nextFireAt"])      # "2026-04-04T09:00:00.000Z"`} />
+
+Create a heartbeat monitor with active hours and a daily budget — the agent evaluates a checklist and only acts when conditions warrant:
+
+<CodeExample ts={`const heartbeat: Schedule = await fetch('/api/schedules', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Production health check',
+    type: 'heartbeat',
+    interval: '30m',
+    assignedAgent: 'claude-code',
+    agentProfile: 'devops-engineer',
+    heartbeatChecklist: [
+      { id: 'uptime', instruction: 'Check that all API endpoints return 200', priority: 1 },
+      { id: 'errors', instruction: 'Check error rate is below 1%', priority: 1 },
+      { id: 'latency', instruction: 'Check P95 latency is under 500ms', priority: 2 },
+    ],
+    activeHoursStart: 8,
+    activeHoursEnd: 22,
+    activeTimezone: 'America/New_York',
+    heartbeatBudgetPerDay: 5.00,
+  }),
+}).then(r => r.json());`} python={`import requests
+
+heartbeat: dict = requests.post(
+    "http://localhost:3000/api/schedules",
+    json={
+        "name": "Production health check",
+        "type": "heartbeat",
+        "interval": "30m",
+        "assignedAgent": "claude-code",
+        "agentProfile": "devops-engineer",
+        "heartbeatChecklist": [
+            {"id": "uptime", "instruction": "Check that all API endpoints return 200", "priority": 1},
+            {"id": "errors", "instruction": "Check error rate is below 1%", "priority": 1},
+            {"id": "latency", "instruction": "Check P95 latency is under 500ms", "priority": 2},
+        ],
+        "activeHoursStart": 8,
+        "activeHoursEnd": 22,
+        "activeTimezone": "America/New_York",
+        "heartbeatBudgetPerDay": 5.00,
+    },
+).json()`} />
+
+</EndpointCard>
+
+### Get Schedule
+
+<EndpointCard method="GET" path="/api/schedules/{id}" description="Retrieve a single schedule with its parsed heartbeat checklist and firing history (child tasks).">
+
+**Response** `200` — Extended schedule object
+
+<SchemaTable title="Additional Fields" fields={[
+  { name: 'heartbeatChecklist', type: 'ChecklistItem[]', required: false, description: 'Parsed checklist array (null for scheduled type)' },
+  { name: 'firingHistory', type: 'Task[]', required: true, description: 'Child tasks created by this schedule, newest first' },
+]} />
+
+**Errors:** `404` — Schedule not found
+
+Fetch a schedule with its firing history to see every task it has spawned:
+
+<CodeExample ts={`// Get schedule detail with full firing history
+const schedule: ScheduleDetail = await fetch('/api/schedules/sched-e7b2-1f4a')
+  .then(r => r.json());
+
+console.log(\`\${schedule.name} — \${schedule.firingCount} firings\`);
+
+// Show recent firing results
+schedule.firingHistory.slice(0, 5).forEach(task => {
+  console.log(\`  [\${task.status}] \${task.title} — \${new Date(task.createdAt).toLocaleDateString()}\`);
+});`} python={`import requests
+
+# Get schedule detail with full firing history
+response = requests.get("http://localhost:3000/api/schedules/sched-e7b2-1f4a")
+schedule: dict = response.json()
+
+print(f"{schedule['name']} — {schedule['firingCount']} firings")
+
+# Show recent firing results
+for task in schedule["firingHistory"][:5]:
+    print(f"  [{task['status']}] {task['title']} — {task['createdAt']}")`} />
+
+Example response:
+
+```json
+{
+  "id": "sched-e7b2-1f4a",
+  "name": "Daily standup summary",
+  "cronExpression": "0 9 * * 1-5",
+  "type": "scheduled",
+  "status": "active",
+  "firingCount": 14,
+  "nextFireAt": "2026-04-04T09:00:00.000Z",
+  "heartbeatChecklist": null,
+  "firingHistory": [
+    {
+      "id": "task-c2a8-5e1d",
+      "title": "Daily standup summary (run #14)",
+      "status": "completed",
+      "createdAt": "2026-04-03T09:00:00.000Z"
+    },
+    {
+      "id": "task-a1b7-3f9c",
+      "title": "Daily standup summary (run #13)",
+      "status": "completed",
+      "createdAt": "2026-04-02T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Update Schedule
+
+<EndpointCard method="PATCH" path="/api/schedules/{id}" description="Update schedule fields. Status changes follow strict transitions: only active can be paused, only paused can be resumed. Changing the interval recomputes the next fire time.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'status', type: 'enum', required: false, description: 'Set to paused or active' },
+  { name: 'name', type: 'string', required: false, description: 'Updated name' },
+  { name: 'prompt', type: 'string', required: false, description: 'Updated prompt' },
+  { name: 'interval', type: 'string', required: false, description: 'New interval (recomputes next fire time)' },
+  { name: 'assignedAgent', type: 'string', required: false, description: 'New agent runtime' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'New profile ID' },
+  { name: 'heartbeatChecklist', type: 'ChecklistItem[]', required: false, description: 'Updated checklist (heartbeat type)' },
+  { name: 'activeHoursStart', type: 'number | null', required: false, description: 'Updated active hours start' },
+  { name: 'activeHoursEnd', type: 'number | null', required: false, description: 'Updated active hours end' },
+  { name: 'activeTimezone', type: 'string', required: false, description: 'Updated timezone' },
+  { name: 'heartbeatBudgetPerDay', type: 'number | null', required: false, description: 'Updated daily budget' },
+]} />
+
+**Errors:**
+- `400` — Invalid interval, empty name/prompt, or runtime/profile incompatibility
+- `404` — Schedule not found
+- `409` — Invalid status transition (e.g. pausing an already paused schedule)
+
+Pause a schedule to temporarily stop it from firing, then resume later:
+
+<CodeExample ts={`// Pause a schedule — nextFireAt becomes null
+await fetch('/api/schedules/sched-e7b2-1f4a', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ status: 'paused' }),
+});
+
+// Later, resume it — nextFireAt is recomputed
+await fetch('/api/schedules/sched-e7b2-1f4a', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ status: 'active' }),
+});`} python={`import requests
+
+# Pause a schedule — nextFireAt becomes null
+requests.patch(
+    "http://localhost:3000/api/schedules/sched-e7b2-1f4a",
+    json={"status": "paused"},
+)
+
+# Later, resume it — nextFireAt is recomputed
+requests.patch(
+    "http://localhost:3000/api/schedules/sched-e7b2-1f4a",
+    json={"status": "active"},
+)`} />
+
+</EndpointCard>
+
+### Delete Schedule
+
+<EndpointCard method="DELETE" path="/api/schedules/{id}" description="Permanently remove a schedule. Existing child tasks are not affected.">
+
+**Response** `200` — `{ "deleted": true }`
+
+**Errors:** `404` — Schedule not found
+
+<CodeExample ts={`// Delete a schedule — child tasks remain intact
+await fetch('/api/schedules/sched-e7b2-1f4a', { method: 'DELETE' });`} python={`import requests
+
+# Delete a schedule — child tasks remain intact
+requests.delete("http://localhost:3000/api/schedules/sched-e7b2-1f4a")`} />
+
+</EndpointCard>
+
+### Parse Interval
+
+<EndpointCard method="POST" path="/api/schedules/parse" description="Preview how an interval expression will be parsed. Returns the resolved cron expression, human-readable description, next 3 fire times, and confidence score. Useful for validating expressions before creating a schedule.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'expression', type: 'string', required: true, description: 'Interval to parse: natural language, shorthand, or cron' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'cronExpression', type: 'string', required: true, description: 'Resolved cron expression' },
+  { name: 'description', type: 'string', required: true, description: 'Human-readable description' },
+  { name: 'nextFireTimes', type: 'string[]', required: true, description: 'Next 3 fire times as ISO 8601' },
+  { name: 'confidence', type: 'number', required: true, description: 'Parse confidence (0.0–1.0)' },
+]} />
+
+**Errors:** `400` — Expression missing or unparseable
+
+Test how different interval formats resolve — useful for building a schedule creation form with live preview:
+
+<CodeExample ts={`// Preview different interval formats before creating a schedule
+const formats: string[] = ['every weekday at 9am', '30m', '0 */4 * * *'];
+
+for (const expression of formats) {
+  const result: ParseResult = await fetch('/api/schedules/parse', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expression }),
+  }).then(r => r.json());
+
+  console.log(\`"\${expression}" → \${result.cronExpression}\`);
+  console.log(\`  \${result.description} (confidence: \${result.confidence})\`);
+  console.log(\`  Next: \${result.nextFireTimes[0]}\`);
+}`} python={`import requests
+
+# Preview different interval formats before creating a schedule
+formats: list[str] = ["every weekday at 9am", "30m", "0 */4 * * *"]
+
+for expression in formats:
+    response = requests.post(
+        "http://localhost:3000/api/schedules/parse",
+        json={"expression": expression},
+    )
+    result: dict = response.json()
+
+    print(f'"{expression}" → {result["cronExpression"]}')
+    print(f'  {result["description"]} (confidence: {result["confidence"]})')
+    print(f'  Next: {result["nextFireTimes"][0]}')`} />
+
+Example response:
+
+```json
+{
+  "cronExpression": "0 9 * * 1-5",
+  "description": "At 09:00 AM, Monday through Friday",
+  "nextFireTimes": [
+    "2026-04-04T09:00:00.000Z",
+    "2026-04-07T09:00:00.000Z",
+    "2026-04-08T09:00:00.000Z"
+  ],
+  "confidence": 0.95
+}
+```
+
+</EndpointCard>
+
+### Get Heartbeat History
+
+<EndpointCard method="GET" path="/api/schedules/{id}/heartbeat-history" description="Retrieve recent heartbeat evaluation history including both action and suppressed entries. Only available for heartbeat-type schedules. Returns up to 50 most recent entries.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'history', type: 'HistoryEntry[]', required: true, description: 'Array of heartbeat log entries' },
+  { name: 'stats', type: 'object', required: true, description: 'Aggregate statistics for the heartbeat schedule' },
+]} />
+
+<SchemaTable title="History Entry" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Log entry ID' },
+  { name: 'taskId', type: 'string', required: true, description: 'Associated task ID' },
+  { name: 'event', type: 'enum', required: true, description: 'heartbeat_action or heartbeat_suppressed' },
+  { name: 'payload', type: 'object', required: false, description: 'Event-specific payload data' },
+  { name: 'timestamp', type: 'ISO 8601', required: true, description: 'When the event occurred' },
+]} />
+
+<SchemaTable title="Stats Object" fields={[
+  { name: 'suppressionCount', type: 'number', required: true, description: 'Total suppressions (no action taken)' },
+  { name: 'lastActionAt', type: 'ISO 8601', required: false, description: 'When the last action was taken' },
+  { name: 'firingCount', type: 'number', required: true, description: 'Total heartbeat evaluations' },
+  { name: 'heartbeatSpentToday', type: 'number', required: true, description: 'Budget spent today' },
+  { name: 'heartbeatBudgetPerDay', type: 'number', required: false, description: 'Configured daily budget' },
+]} />
+
+**Errors:**
+- `400` — Not a heartbeat schedule
+- `404` — Schedule not found
+
+Check heartbeat history to see how often the monitor takes action vs suppresses — useful for tuning checklist sensitivity:
+
+<CodeExample ts={`// Review heartbeat history to tune monitoring sensitivity
+const { history, stats }: HeartbeatHistory = await fetch('/api/schedules/sched-hb-3c9d/heartbeat-history')
+  .then(r => r.json());
+
+// Calculate suppression ratio
+const ratio: number = stats.suppressionCount / stats.firingCount;
+console.log(\`Action rate: \${((1 - ratio) * 100).toFixed(0)}%\`);
+console.log(\`Budget: $\${stats.heartbeatSpentToday.toFixed(2)} / $\${stats.heartbeatBudgetPerDay?.toFixed(2) ?? 'unlimited'}\`);
+
+// Show recent entries
+history.slice(0, 5).forEach(entry => {
+  const icon = entry.event === 'heartbeat_action' ? 'ACT' : 'SKIP';
+  console.log(\`  [\${icon}] \${new Date(entry.timestamp).toLocaleTimeString()}\`);
+});`} python={`import requests
+
+# Review heartbeat history to tune monitoring sensitivity
+response = requests.get("http://localhost:3000/api/schedules/sched-hb-3c9d/heartbeat-history")
+data: dict = response.json()
+history: list[dict] = data["history"]
+stats: dict = data["stats"]
+
+# Calculate suppression ratio
+ratio: float = stats["suppressionCount"] / stats["firingCount"]
+action_rate = int((1 - ratio) * 100)
+print(f"Action rate: {action_rate}%")
+budget = stats.get("heartbeatBudgetPerDay")
+spent = stats["heartbeatSpentToday"]
+budget_str = str(round(budget, 2)) if budget else "unlimited"
+print(f"Budget: {spent} / {budget_str}")
+
+# Show recent entries
+for entry in history[:5]:
+    icon = "ACT" if entry["event"] == "heartbeat_action" else "SKIP"
+    print(f"  [{icon}] {entry['timestamp']}")`} />
+
+Example response:
+
+```json
+{
+  "history": [
+    {
+      "id": "log-7a2b-4e1c",
+      "taskId": "task-f8d3-9b7e",
+      "event": "heartbeat_action",
+      "payload": { "triggeredChecks": ["errors", "latency"] },
+      "timestamp": "2026-04-03T14:30:00.000Z"
+    },
+    {
+      "id": "log-5c1d-8f3a",
+      "taskId": "task-a2e7-6c4b",
+      "event": "heartbeat_suppressed",
+      "payload": { "reason": "All checks passed" },
+      "timestamp": "2026-04-03T14:00:00.000Z"
+    }
+  ],
+  "stats": {
+    "suppressionCount": 42,
+    "lastActionAt": "2026-04-03T14:30:00.000Z",
+    "firingCount": 48,
+    "heartbeatSpentToday": 1.85,
+    "heartbeatBudgetPerDay": 5.00
+  }
+}
+```
+
+</EndpointCard>
+
+## Status Transitions
+
+Schedules follow a strict lifecycle. Invalid transitions return `409`.
+
+| From | Allowed Targets |
+|------|----------------|
+| **active** | paused |
+| **paused** | active |
+| **exhausted** | *(terminal — no transitions)* |
+
+Schedules move to **exhausted** automatically when `firingCount` reaches `maxFirings` or when `expiresAt` is passed.
+
+## Interval Formats
+
+The `interval` field accepts three formats, tried in order:
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| **Natural language** | `every weekday at 9am` | Parsed via NLP with confidence score |
+| **Shorthand** | `5m`, `2h`, `1d` | Minutes, hours, or days |
+| **Cron expression** | `0 9 * * 1-5` | Standard 5-field cron syntax |
+
+Use the `/api/schedules/parse` endpoint to preview how any expression will be interpreted before creating a schedule.
+
+## Error Format
+
+All errors follow a consistent JSON format:
+
+```json
+{
+  "error": "Descriptive error message"
+}
+```

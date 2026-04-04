@@ -1,0 +1,47 @@
+---
+interface Field {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
+  default?: string;
+}
+
+interface Props {
+  fields: Field[];
+  title?: string;
+}
+
+const { fields, title } = Astro.props;
+---
+{title && <h4 class="font-mono text-xs uppercase tracking-widest text-text-muted mb-3 mt-4">{title}</h4>}
+<div class="overflow-x-auto mb-4">
+  <table class="api-schema-table w-full text-sm border-collapse">
+    <thead>
+      <tr>
+        <th class="text-left font-mono text-xs uppercase tracking-widest text-text-muted pb-2 pr-4 border-b border-border">Field</th>
+        <th class="text-left font-mono text-xs uppercase tracking-widest text-text-muted pb-2 pr-4 border-b border-border">Type</th>
+        <th class="text-left font-mono text-xs uppercase tracking-widest text-text-muted pb-2 pr-4 border-b border-border">Req</th>
+        <th class="text-left font-mono text-xs uppercase tracking-widest text-text-muted pb-2 border-b border-border">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {fields.map(({ name, type, required, description: desc, default: defaultVal }) => (
+        <tr class="border-b border-surface-overlay">
+          <td class="py-2.5 pr-4 font-mono text-xs text-text font-medium whitespace-nowrap">{name}</td>
+          <td class="py-2.5 pr-4 font-mono text-xs text-primary whitespace-nowrap">{type}</td>
+          <td class="py-2.5 pr-4 text-center">
+            {required
+              ? <span class="text-[oklch(0.65_0.2_25)] font-bold text-xs" title="Required">*</span>
+              : <span class="text-text-dim text-xs">—</span>
+            }
+          </td>
+          <td class="py-2.5 text-text-muted text-xs leading-relaxed">
+            {desc}
+            {defaultVal && <span class="ml-1 text-text-dim">(default: <code class="text-[0.7rem] bg-surface-raised px-1 py-0.5 rounded">{defaultVal}</code>)</span>}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,317 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Permissions API"
+description: "Manage tool permission patterns and curated presets that control which operations agents can perform without human approval."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Permissions API
+
+Permissions define which tool operations agents can execute autonomously. Patterns use glob-style matching against tool names. Presets bundle commonly needed patterns into one-click configurations.
+
+## Quick Start
+
+List current permissions, add a new pattern, and enable a preset — a typical setup flow:
+
+<CodeExample ts={`// 1. List currently allowed permission patterns
+const res1: Response = await fetch('/api/permissions');
+const { permissions }: { permissions: string[] } = await res1.json();
+console.log(\`\${permissions.length} patterns allowed\`);
+permissions.forEach((p: string) => console.log(\`  \${p}\`));
+
+// 2. Add a new permission pattern for git commands
+await fetch('/api/permissions', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ pattern: 'Bash(git *)' }),
+});
+
+// 3. Browse available presets and enable one
+const res2: Response = await fetch('/api/permissions/presets');
+const { presets }: { presets: Array<{ id: string; name: string; patterns: string[] }> } = await res2.json();
+const devTools = presets.find((p) => p.id === 'developer-tools')!;
+console.log(\`\${devTools.name}: \${devTools.patterns.length} patterns\`);
+
+await fetch('/api/permissions/presets', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ presetId: 'developer-tools' }),
+});
+
+// 4. Verify — the preset's patterns are now in the allow list
+const res3: Response = await fetch('/api/permissions');
+const updated: { permissions: string[] } = await res3.json();
+console.log(\`Now \${updated.permissions.length} patterns allowed\`);`} python={`import requests
+
+# 1. List currently allowed permission patterns
+res1: requests.Response = requests.get("http://localhost:3000/api/permissions")
+data: dict = res1.json()
+print(f"{len(data['permissions'])} patterns allowed")
+for p in data["permissions"]:
+    print(f"  {p}")
+
+# 2. Add a new permission pattern for git commands
+requests.post(
+    "http://localhost:3000/api/permissions",
+    json={"pattern": "Bash(git *)"},
+)
+
+# 3. Browse available presets and enable one
+res2: requests.Response = requests.get("http://localhost:3000/api/permissions/presets")
+presets: list[dict] = res2.json()["presets"]
+dev_tools: dict = next(p for p in presets if p["id"] == "developer-tools")
+print(f"{dev_tools['name']}: {len(dev_tools['patterns'])} patterns")
+
+requests.post(
+    "http://localhost:3000/api/permissions/presets",
+    json={"presetId": "developer-tools"},
+)
+
+# 4. Verify — the preset's patterns are now in the allow list
+res3: requests.Response = requests.get("http://localhost:3000/api/permissions")
+updated: dict = res3.json()
+print(f"Now {len(updated['permissions'])} patterns allowed")`} />
+
+## Base URL
+
+```
+/api/permissions
+```
+
+## Endpoints
+
+### List Allowed Permissions
+
+<EndpointCard method="GET" path="/api/permissions" description="Retrieve all currently allowed permission patterns.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'permissions', type: 'string[]', required: true, description: 'Array of glob patterns for allowed tool operations' },
+]} />
+
+Fetch the current allow list to audit what agents can do without asking:
+
+<CodeExample ts={`// Audit the current permission allow list
+const res: Response = await fetch('http://localhost:3000/api/permissions');
+const { permissions }: { permissions: string[] } = await res.json();
+
+console.log(\`\${permissions.length} permission patterns:\`);
+permissions.forEach((p: string) => console.log(\`  \${p}\`));`} python={`import requests
+
+# Audit the current permission allow list
+res: requests.Response = requests.get("http://localhost:3000/api/permissions")
+data: dict = res.json()
+
+print(f"{len(data['permissions'])} permission patterns:")
+for p in data["permissions"]:
+    print(f"  {p}")`} />
+
+Example response:
+
+```json
+{
+  "permissions": [
+    "Read(*)",
+    "Bash(git *)",
+    "Bash(npm test)",
+    "Write(src/**)"
+  ]
+}
+```
+
+</EndpointCard>
+
+### Add Permission Pattern
+
+<EndpointCard method="POST" path="/api/permissions" description="Add a new tool permission pattern to the allow list.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'pattern', type: 'string', required: true, description: 'Glob pattern to allow (e.g., "Bash(*)", "Read(*)")' },
+]} />
+
+**Response** `200` — `{ "success": true }`
+
+Add a permission so agents can run git commands without needing approval each time:
+
+<CodeExample ts={`// Allow agents to run git commands autonomously
+await fetch('http://localhost:3000/api/permissions', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ pattern: 'Bash(git *)' }),
+});`} python={`import requests
+
+# Allow agents to run git commands autonomously
+requests.post(
+    "http://localhost:3000/api/permissions",
+    json={"pattern": "Bash(git *)"},
+)`} />
+
+**Errors:** `400` — Pattern is required
+
+</EndpointCard>
+
+### Remove Permission Pattern
+
+<EndpointCard method="DELETE" path="/api/permissions" description="Remove a tool permission pattern from the allow list.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'pattern', type: 'string', required: true, description: 'Exact pattern to remove' },
+]} />
+
+**Response** `200` — `{ "success": true }`
+
+Revoke a permission when you want agents to ask for approval again:
+
+<CodeExample ts={`// Revoke git permission — agents will need approval again
+await fetch('http://localhost:3000/api/permissions', {
+  method: 'DELETE',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ pattern: 'Bash(git *)' }),
+});`} python={`import requests
+
+# Revoke git permission — agents will need approval again
+requests.delete(
+    "http://localhost:3000/api/permissions",
+    json={"pattern": "Bash(git *)"},
+)`} />
+
+**Errors:** `400` — Pattern is required
+
+</EndpointCard>
+
+---
+
+## Permission Presets
+
+### List Presets
+
+<EndpointCard method="GET" path="/api/permissions/presets" description="List all available permission presets with their current active status.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'presets', type: 'object[]', required: true, description: 'Array of preset objects' },
+  { name: 'presets[].id', type: 'string', required: true, description: 'Preset identifier' },
+  { name: 'presets[].name', type: 'string', required: true, description: 'Human-readable preset name' },
+  { name: 'presets[].description', type: 'string', required: true, description: 'What this preset enables' },
+  { name: 'presets[].patterns', type: 'string[]', required: true, description: 'Permission patterns included in this preset' },
+  { name: 'presets[].active', type: 'boolean', required: true, description: 'Whether this preset is currently enabled' },
+]} />
+
+Browse presets to see what bundles are available and which are already active:
+
+<CodeExample ts={`// List presets and show which are active
+const res: Response = await fetch('http://localhost:3000/api/permissions/presets');
+const { presets }: { presets: Array<{ name: string; description: string; patterns: string[]; active: boolean }> } = await res.json();
+
+presets.forEach((p) => {
+  const status: string = p.active ? 'ACTIVE' : 'inactive';
+  console.log(\`[\${status}] \${p.name} — \${p.description}\`);
+  p.patterns.forEach((pat: string) => console.log(\`    \${pat}\`));
+});`} python={`import requests
+
+# List presets and show which are active
+res: requests.Response = requests.get("http://localhost:3000/api/permissions/presets")
+data: dict = res.json()
+
+for p in data["presets"]:
+    status: str = "ACTIVE" if p["active"] else "inactive"
+    print(f"[{status}] {p['name']} — {p['description']}")
+    for pat in p["patterns"]:
+        print(f"    {pat}")`} />
+
+Example response:
+
+```json
+{
+  "presets": [
+    {
+      "id": "developer-tools",
+      "name": "Developer Tools",
+      "description": "Read files, run git commands, execute tests",
+      "patterns": ["Read(*)", "Bash(git *)", "Bash(npm test)", "Bash(npm run *)"],
+      "active": true
+    },
+    {
+      "id": "file-writer",
+      "name": "File Writer",
+      "description": "Write and edit files in the project directory",
+      "patterns": ["Write(src/**)", "Write(docs/**)"],
+      "active": false
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Enable Preset
+
+<EndpointCard method="POST" path="/api/permissions/presets" description="Activate a preset, adding all its permission patterns to the allow list.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'presetId', type: 'string', required: true, description: 'Preset identifier to enable' },
+]} />
+
+**Response** `200` — `{ "success": true }`
+
+Enable a preset to grant a bundle of permissions at once:
+
+<CodeExample ts={`// Enable the developer-tools preset
+await fetch('http://localhost:3000/api/permissions/presets', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ presetId: 'developer-tools' }),
+});`} python={`import requests
+
+# Enable the developer-tools preset
+requests.post(
+    "http://localhost:3000/api/permissions/presets",
+    json={"presetId": "developer-tools"},
+)`} />
+
+**Errors:** `400` — presetId required, `404` — Unknown preset
+
+</EndpointCard>
+
+### Disable Preset
+
+<EndpointCard method="DELETE" path="/api/permissions/presets" description="Deactivate a preset, removing its unique permission patterns from the allow list.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'presetId', type: 'string', required: true, description: 'Preset identifier to disable' },
+]} />
+
+**Response** `200` — `{ "success": true }`
+
+Disable a preset to revoke its patterns — only removes patterns unique to the preset:
+
+<CodeExample ts={`// Disable the developer-tools preset
+await fetch('http://localhost:3000/api/permissions/presets', {
+  method: 'DELETE',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ presetId: 'developer-tools' }),
+});`} python={`import requests
+
+# Disable the developer-tools preset
+requests.delete(
+    "http://localhost:3000/api/permissions/presets",
+    json={"presetId": "developer-tools"},
+)`} />
+
+**Errors:** `400` — presetId required, `404` — Unknown preset
+
+</EndpointCard>
+
+## Pattern Syntax
+
+Permission patterns use glob-style matching against tool invocation strings:
+
+| Pattern | Matches |
+|---------|---------|
+| `Bash(*)` | Any Bash command |
+| `Bash(git *)` | Git commands only |
+| `Read(*)` | Any file read |
+| `Write(*)` | Any file write |
+| `mcp__*` | Any MCP tool invocation |

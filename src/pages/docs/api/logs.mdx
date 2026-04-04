@@ -1,0 +1,211 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Logs API"
+description: "Stream real-time agent execution logs via Server-Sent Events with optional filtering by task and event type."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Logs API
+
+The Logs API provides a real-time Server-Sent Events stream of agent execution logs. Logs are polled from the database every 500ms and delivered incrementally, with 15-second keepalive heartbeats to maintain the connection. Use this endpoint to build live dashboards, monitor running tasks, or pipe agent output into external observability tools.
+
+## Quick Start
+
+Connect to the log stream, filter by event type, and handle reconnection gracefully:
+
+<CodeExample ts={`// 1. Connect to the SSE log stream for a specific task
+const taskId: string = 'task-9d4e-a1b2';
+const source: EventSource = new EventSource(\`/api/logs/stream?taskId=\${taskId}\`);
+
+// 2. Filter and handle logs by event type
+interface LogEntry {
+  id: string;
+  taskId: string;
+  agentType: string;
+  event: string;
+  payload: string;
+  timestamp: string;
+}
+
+source.onmessage = (event: MessageEvent) => {
+  const log: LogEntry = JSON.parse(event.data);
+
+  // Route logs based on event type
+  switch (log.event) {
+    case 'tool_use':
+      console.log(\`[TOOL] \${log.payload}\`);
+      break;
+    case 'assistant_message':
+      console.log(\`[AGENT] \${log.payload}\`);
+      break;
+    case 'error':
+      console.error(\`[ERROR] \${log.payload}\`);
+      break;
+    default:
+      console.log(\`[\${log.event}] \${log.payload}\`);
+  }
+};
+
+// 3. Handle reconnection on connection loss
+source.onerror = () => {
+  console.warn('SSE connection lost — browser will auto-reconnect');
+  // EventSource auto-reconnects by default.
+  // To stop retrying, call source.close() here.
+};
+
+// 4. Clean up when done (e.g. when navigating away)
+function stopStreaming(): void {
+  source.close();
+  console.log('Log stream closed');
+}`} python={`import requests
+import json
+
+# 1. Connect to the SSE log stream for a specific task
+task_id = "task-9d4e-a1b2"
+response = requests.get(
+    "http://localhost:3000/api/logs/stream",
+    params={"taskId": task_id},
+    stream=True,
+)
+
+# 2. Filter and handle logs by event type
+for line in response.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        log: dict = json.loads(line[6:])
+
+        # Route logs based on event type
+        event = log["event"]
+        payload = log["payload"]
+        if event == "tool_use":
+            print(f"[TOOL] {payload}")
+        elif event == "assistant_message":
+            print(f"[AGENT] {payload}")
+        elif event == "error":
+            print(f"[ERROR] {payload}")
+        else:
+            print(f"[{event}] {payload}")`} />
+
+## Base URL
+
+```
+/api/logs/stream
+```
+
+## Endpoints
+
+### Stream Logs
+
+<EndpointCard method="SSE" path="/api/logs/stream" description="Open a persistent SSE connection that streams agent log entries in real time. Supports optional filtering by task ID and event type. Polls every 500ms with 15-second keepalive heartbeats.">
+
+<ParamTable params={[
+  { name: 'taskId', type: 'string', required: false, description: 'Filter logs to a specific task UUID' },
+  { name: 'eventType', type: 'string', required: false, description: 'Filter logs by event type (e.g. tool_use, assistant_message, error)' },
+]} />
+
+**Response** — `text/event-stream` with JSON log objects
+
+<SchemaTable title="Log Object" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Log entry identifier' },
+  { name: 'taskId', type: 'string (UUID)', required: false, description: 'Associated task ID' },
+  { name: 'agentType', type: 'string', required: true, description: 'Agent runtime that produced the log' },
+  { name: 'event', type: 'string', required: true, description: 'Event type (e.g. tool_use, assistant_message, error)' },
+  { name: 'payload', type: 'string (JSON)', required: false, description: 'Event-specific data as serialized JSON' },
+  { name: 'timestamp', type: 'ISO 8601', required: true, description: 'When the log entry was recorded' },
+]} />
+
+Each SSE message is a `data:` frame containing a single JSON log object. On database errors, an error event is emitted and the stream backs off for 2 seconds before retrying.
+
+Stream all logs for a running task — each SSE message contains a single JSON log object:
+
+<CodeExample ts={`// Stream logs for a specific task
+interface LogEntry {
+  id: string;
+  agentType: string;
+  event: string;
+  payload: string;
+  timestamp: string;
+}
+
+const source: EventSource = new EventSource('/api/logs/stream?taskId=task-9d4e-a1b2');
+
+source.onmessage = (event: MessageEvent) => {
+  const log: LogEntry = JSON.parse(event.data);
+  const time: string = new Date(log.timestamp).toLocaleTimeString();
+  console.log(\`[\${time}] [\${log.agentType}] \${log.event}: \${log.payload}\`);
+};
+
+source.onerror = () => {
+  console.warn('SSE connection lost — browser will auto-reconnect');
+};`} python={`import requests
+import json
+
+# Stream logs for a specific task
+response = requests.get(
+    "http://localhost:3000/api/logs/stream",
+    params={"taskId": "task-9d4e-a1b2"},
+    stream=True,
+)
+
+for line in response.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        log: dict = json.loads(line[6:])
+        print(f"[{log['agentType']}] {log['event']}: {log['payload']}")`} />
+
+Filter by event type to only receive tool usage events — useful for tracking file operations:
+
+<CodeExample ts={`// Only stream tool_use events for a task
+const source: EventSource = new EventSource(
+  '/api/logs/stream?taskId=task-9d4e-a1b2&eventType=tool_use'
+);
+
+source.onmessage = (event: MessageEvent) => {
+  const log: { payload: string } = JSON.parse(event.data);
+  console.log(\`Tool: \${log.payload}\`);
+};`} python={`import requests
+import json
+
+# Only stream tool_use events for a task
+response = requests.get(
+    "http://localhost:3000/api/logs/stream",
+    params={"taskId": "task-9d4e-a1b2", "eventType": "tool_use"},
+    stream=True,
+)
+
+for line in response.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        log: dict = json.loads(line[6:])
+        print(f"Tool: {log['payload']}")`} />
+
+Example stream events:
+
+```
+data: {"id":"log-a1b2c3d4","taskId":"task-9d4e-a1b2","agentType":"claude-code","event":"tool_use","payload":"{\"tool\":\"Read\",\"file\":\"src/data/revenue.csv\"}","timestamp":"2026-04-03T10:31:16.000Z"}
+
+data: {"id":"log-e5f6a7b8","taskId":"task-9d4e-a1b2","agentType":"claude-code","event":"assistant_message","payload":"{\"message\":\"Analyzing quarterly revenue trends...\"}","timestamp":"2026-04-03T10:31:18.000Z"}
+
+data: {"id":"log-c9d0e1f2","taskId":"task-9d4e-a1b2","agentType":"claude-code","event":"tool_use","payload":"{\"tool\":\"Write\",\"file\":\"/reports/q4-analysis.md\"}","timestamp":"2026-04-03T10:31:22.000Z"}
+```
+
+</EndpointCard>
+
+## Connection Behavior
+
+| Behavior | Detail |
+|----------|--------|
+| **Poll interval** | 500ms between database queries |
+| **Keepalive** | `: keepalive` comment every 15 seconds |
+| **Batch size** | Up to 50 log entries per poll cycle |
+| **Error recovery** | 2-second backoff on database errors, then resume |
+| **Client disconnect** | Detected via `AbortSignal`; stream and intervals are cleaned up |
+
+## Response Headers
+
+```
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```

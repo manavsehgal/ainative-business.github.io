@@ -1,0 +1,737 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Workflows API"
+description: "Orchestrate multi-step execution with six patterns — sequence, parallel, loop, swarm, planner-executor, and checkpoint."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Workflows API
+
+Workflows orchestrate multi-step agent execution across six patterns. Each workflow contains a definition with steps, optional loop or swarm configuration, and persisted execution state. Workflows manage their own task lifecycle — creating, executing, and monitoring step tasks automatically.
+
+## Quick Start
+
+Create a workflow with sequential steps, execute it, poll for status, and check the results:
+
+<CodeExample ts={`// 1. Create a sequence workflow with three steps
+interface Workflow {
+  id: string;
+  name: string;
+  status: string;
+  runNumber: number;
+}
+
+const wfRes: Response = await fetch("http://localhost:3000/api/workflows", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "Content Pipeline",
+    projectId: "proj-8f3a-4b2c",
+    definition: {
+      pattern: "sequence",
+      steps: [
+        {
+          id: "research",
+          name: "Research",
+          prompt: "Research competitor pricing pages and summarize patterns",
+          assignedAgent: "claude-code",
+          agentProfile: "researcher",
+        },
+        {
+          id: "draft",
+          name: "Draft",
+          prompt: "Write a pricing page draft based on the research findings",
+          dependsOn: ["research"],
+        },
+        {
+          id: "review",
+          name: "Review",
+          prompt: "Review the draft for clarity, accuracy, and tone",
+          requiresApproval: true,
+          dependsOn: ["draft"],
+        },
+      ],
+    },
+  }),
+});
+const workflow: Workflow = await wfRes.json();
+// → { id: "wf-4a7c-e2d1", status: "draft", runNumber: 0, ... }
+
+// 2. Execute the workflow — returns 202 immediately
+await fetch(\`http://localhost:3000/api/workflows/\${workflow.id}/execute\`, { method: "POST" });
+
+// 3. Poll for status until all steps are done
+interface StepState { stepId: string; status: string }
+interface WorkflowStatus { status: string; steps: StepState[] }
+
+const poll = async (): Promise<string> => {
+  const statusRes: Response = await fetch(\`http://localhost:3000/api/workflows/\${workflow.id}/status\`);
+  const status: WorkflowStatus = await statusRes.json();
+
+  console.log(\`Workflow: \${status.status}\`);
+  for (const step of status.steps) {
+    console.log(\`  \${step.stepId}: \${step.status}\`);
+  }
+  return status.status;
+};
+
+// 4. Check output documents produced by the workflow
+const docsRes: Response = await fetch(\`http://localhost:3000/api/workflows/\${workflow.id}/documents\`);
+const docs: { documentId: string }[] = await docsRes.json();
+
+console.log(\`\${docs.length} documents produced\`);`} python={`import requests
+
+# 1. Create a sequence workflow with three steps
+wf_res = requests.post("http://localhost:3000/api/workflows", json={
+    "name": "Content Pipeline",
+    "projectId": "proj-8f3a-4b2c",
+    "definition": {
+        "pattern": "sequence",
+        "steps": [
+            {
+                "id": "research",
+                "name": "Research",
+                "prompt": "Research competitor pricing pages and summarize patterns",
+                "assignedAgent": "claude-code",
+                "agentProfile": "researcher",
+            },
+            {
+                "id": "draft",
+                "name": "Draft",
+                "prompt": "Write a pricing page draft based on the research findings",
+                "dependsOn": ["research"],
+            },
+            {
+                "id": "review",
+                "name": "Review",
+                "prompt": "Review the draft for clarity, accuracy, and tone",
+                "requiresApproval": True,
+                "dependsOn": ["draft"],
+            },
+        ],
+    },
+})
+workflow: dict = wf_res.json()
+# → { "id": "wf-4a7c-e2d1", "status": "draft", "runNumber": 0, ... }
+
+# 2. Execute the workflow — returns 202 immediately
+requests.post(f"http://localhost:3000/api/workflows/{workflow['id']}/execute")
+
+# 3. Poll for status until all steps are done
+status_res = requests.get(f"http://localhost:3000/api/workflows/{workflow['id']}/status")
+status: dict = status_res.json()
+
+print(f"Workflow: {status['status']}")
+for step in status["steps"]:
+    print(f"  {step['stepId']}: {step['status']}")
+
+# 4. Check output documents produced by the workflow
+docs_res = requests.get(f"http://localhost:3000/api/workflows/{workflow['id']}/documents")
+docs: list[dict] = docs_res.json()
+
+print(f"{len(docs)} documents produced")`} />
+
+## Base URL
+
+```
+/api/workflows
+```
+
+## Patterns
+
+| Pattern | Description |
+|---------|-------------|
+| **sequence** | Steps execute in order, each waits for the previous to complete |
+| **parallel** | Steps execute concurrently with dependency tracking |
+| **loop** | Single step repeats for configurable iterations with time/signal budget |
+| **planner-executor** | Planning phase followed by execution phase |
+| **checkpoint** | Steps with approval gates between execution stages |
+| **swarm** | Concurrent worker agents with configurable concurrency limit |
+
+## Endpoints
+
+### List Workflows
+
+<EndpointCard method="GET" path="/api/workflows" description="Retrieve all workflows with task count and output document count aggregation, ordered newest first.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Workflow identifier' },
+  { name: 'name', type: 'string', required: true, description: 'Workflow name' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Associated project' },
+  { name: 'definition', type: 'string (JSON)', required: true, description: 'Serialized WorkflowDefinition' },
+  { name: 'status', type: 'enum', required: true, description: 'draft, active, paused, completed, or failed' },
+  { name: 'runNumber', type: 'number', required: true, description: 'Execution iteration counter' },
+  { name: 'taskCount', type: 'number', required: true, description: 'Total step tasks created' },
+  { name: 'outputDocCount', type: 'number', required: true, description: 'Output documents produced' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification' },
+]} />
+
+Fetch all workflows to build a pipeline overview — includes task and document counts:
+
+<CodeExample ts={`// List all workflows with aggregated counts
+const response: Response = await fetch("http://localhost:3000/api/workflows");
+const workflows: Workflow[] = await response.json();
+
+workflows.forEach((wf) => {
+  const def: { pattern: string } = JSON.parse(wf.definition);
+  console.log(\`\${wf.name} [\${wf.status}] — \${def.pattern}, \${wf.taskCount} tasks, \${wf.outputDocCount} docs\`);
+});`} python={`import requests
+import json
+
+# List all workflows with aggregated counts
+response = requests.get("http://localhost:3000/api/workflows")
+workflows: list[dict] = response.json()
+
+for wf in workflows:
+    defn = json.loads(wf["definition"])
+    print(f"{wf['name']} [{wf['status']}] — {defn['pattern']}, {wf['taskCount']} tasks, {wf['outputDocCount']} docs")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "wf-4a7c-e2d1",
+    "name": "Content Pipeline",
+    "projectId": "proj-8f3a-4b2c",
+    "status": "completed",
+    "runNumber": 2,
+    "taskCount": 3,
+    "outputDocCount": 1,
+    "createdAt": "2026-04-01T08:00:00.000Z",
+    "updatedAt": "2026-04-01T09:15:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Workflow
+
+<EndpointCard method="POST" path="/api/workflows" description="Create a new workflow in draft state. The definition must include a valid pattern and at least one step.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Workflow name (non-empty)' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Project to associate with' },
+  { name: 'definition', type: 'WorkflowDefinition', required: true, description: 'Pattern, steps, and optional config' },
+]} />
+
+<SchemaTable title="WorkflowDefinition" fields={[
+  { name: 'pattern', type: 'enum', required: true, description: 'sequence, parallel, loop, planner-executor, checkpoint, or swarm' },
+  { name: 'steps', type: 'WorkflowStep[]', required: true, description: 'At least one step' },
+  { name: 'loopConfig', type: 'LoopConfig', required: false, description: 'Required for loop pattern' },
+  { name: 'swarmConfig', type: 'SwarmConfig', required: false, description: 'Optional concurrency settings for swarm' },
+  { name: 'sourceTaskId', type: 'string', required: false, description: 'Task that originated this workflow' },
+]} />
+
+<SchemaTable title="WorkflowStep" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Step identifier (unique within workflow)' },
+  { name: 'name', type: 'string', required: true, description: 'Step display name' },
+  { name: 'prompt', type: 'string', required: true, description: 'Agent prompt for this step' },
+  { name: 'requiresApproval', type: 'boolean', required: false, description: 'Pause for human approval before executing' },
+  { name: 'dependsOn', type: 'string[]', required: false, description: 'Step IDs that must complete first' },
+  { name: 'assignedAgent', type: 'string', required: false, description: 'Override agent runtime for this step' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Override profile for this step' },
+  { name: 'documentIds', type: 'string[]', required: false, description: 'Documents available to this step' },
+]} />
+
+<SchemaTable title="LoopConfig" fields={[
+  { name: 'maxIterations', type: 'number', required: true, description: 'Maximum loop iterations' },
+  { name: 'timeBudgetMs', type: 'number', required: false, description: 'Total time budget in milliseconds' },
+  { name: 'assignedAgent', type: 'string', required: false, description: 'Agent runtime for loop iterations' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Profile for loop iterations' },
+  { name: 'completionSignals', type: 'string[]', required: false, description: 'Agent output signals that end the loop early' },
+]} />
+
+**Response** `201 Created` — Workflow with `status: "draft"`, `runNumber: 0`
+
+**Errors:** `400` — Invalid name, definition, or assignment validation failure
+
+Create a parallel workflow where independent steps run concurrently, with a final step that depends on both:
+
+<CodeExample ts={`// Create a parallel workflow — pricing and features run concurrently,
+// synthesis waits for both to finish
+const response: Response = await fetch("http://localhost:3000/api/workflows", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "Competitive Analysis",
+    projectId: "proj-8f3a-4b2c",
+    definition: {
+      pattern: "parallel",
+      steps: [
+        { id: "pricing", name: "Pricing Research", prompt: "Analyze competitor pricing models" },
+        { id: "features", name: "Feature Comparison", prompt: "Compare feature sets across top 5 competitors" },
+        { id: "synthesis", name: "Synthesis", prompt: "Combine pricing and feature analysis into a final report", dependsOn: ["pricing", "features"] },
+      ],
+    },
+  }),
+});
+const workflow: Workflow = await response.json();
+
+console.log(workflow.id);     // "wf-4a7c-e2d1"
+console.log(workflow.status); // "draft"`} python={`import requests
+
+# Create a parallel workflow — pricing and features run concurrently,
+# synthesis waits for both to finish
+response = requests.post("http://localhost:3000/api/workflows", json={
+    "name": "Competitive Analysis",
+    "projectId": "proj-8f3a-4b2c",
+    "definition": {
+        "pattern": "parallel",
+        "steps": [
+            {"id": "pricing", "name": "Pricing Research", "prompt": "Analyze competitor pricing models"},
+            {"id": "features", "name": "Feature Comparison", "prompt": "Compare feature sets across top 5 competitors"},
+            {"id": "synthesis", "name": "Synthesis", "prompt": "Combine pricing and feature analysis into a final report", "dependsOn": ["pricing", "features"]},
+        ],
+    },
+})
+workflow: dict = response.json()
+
+print(workflow["id"])     # "wf-4a7c-e2d1"
+print(workflow["status"]) # "draft"`} />
+
+Example response:
+
+```json
+{
+  "id": "wf-4a7c-e2d1",
+  "name": "Competitive Analysis",
+  "projectId": "proj-8f3a-4b2c",
+  "status": "draft",
+  "runNumber": 0,
+  "taskCount": 0,
+  "outputDocCount": 0,
+  "createdAt": "2026-04-03T10:00:00.000Z",
+  "updatedAt": "2026-04-03T10:00:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Update Workflow
+
+<EndpointCard method="PATCH" path="/api/workflows/{id}" description="Edit a draft workflow's name or definition, or pause an active workflow. Active/paused workflows cannot be edited — only paused.">
+
+**Mode A — Edit (draft, completed, or failed workflows only):**
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: false, description: 'Updated name' },
+  { name: 'definition', type: 'WorkflowDefinition', required: false, description: 'Updated definition' },
+]} />
+
+**Mode B — Pause (active workflows only):**
+
+```json
+{ "status": "paused" }
+```
+
+Editing a completed or failed workflow resets it to draft and clears execution state.
+
+**Errors:** `404` — Not found, `409` — Cannot edit active/paused workflow, invalid status transition
+
+Update the name and add a step to a draft workflow:
+
+<CodeExample ts={`// Rename a draft workflow before execution
+await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1", {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Competitive Analysis v2" }),
+});`} python={`import requests
+
+# Rename a draft workflow before execution
+requests.patch("http://localhost:3000/api/workflows/wf-4a7c-e2d1", json={
+    "name": "Competitive Analysis v2",
+})`} />
+
+</EndpointCard>
+
+### Delete Workflow
+
+<EndpointCard method="DELETE" path="/api/workflows/{id}" description="Delete a workflow and all related resources. Active workflows cannot be deleted — pause first.">
+
+**Response** `200` — `{ "deleted": true }`
+
+Cascade deletes: usage ledger, agent logs, notifications, documents, learned context, tasks, then workflow.
+
+**Errors:** `404` — Not found, `409` — Cannot delete active workflow
+
+<CodeExample ts={`// Delete a workflow — must not be in active state
+const res: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1", { method: "DELETE" });
+
+if (res.status === 409) {
+  console.log("Pause the workflow first before deleting");
+}`} python={`import requests
+
+# Delete a workflow — must not be in active state
+res = requests.delete("http://localhost:3000/api/workflows/wf-4a7c-e2d1")
+
+if res.status_code == 409:
+    print("Pause the workflow first before deleting")`} />
+
+</EndpointCard>
+
+### Execute Workflow
+
+<EndpointCard method="POST" path="/api/workflows/{id}/execute" description="Start workflow execution. Returns 202 immediately while the workflow engine runs steps asynchronously. Increments runNumber on each execution.">
+
+**Response** `202 Accepted` — `{ "status": "started", "workflowId": "..." }`
+
+For completed or failed workflows, re-execution resets the internal state and starts fresh.
+
+**Errors:** `404` — Not found, `409` — Already running
+
+Execute a workflow and track its progress — the engine creates tasks for each step automatically:
+
+<CodeExample ts={`// Start the workflow — returns immediately while steps run in background
+const res: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/execute", {
+  method: "POST",
+});
+
+if (res.status === 202) {
+  const { workflowId }: { workflowId: string } = await res.json();
+  console.log("Workflow started — poll /status to track progress");
+} else if (res.status === 409) {
+  console.log("Workflow is already running");
+}`} python={`import requests
+
+# Start the workflow — returns immediately while steps run in background
+res = requests.post("http://localhost:3000/api/workflows/wf-4a7c-e2d1/execute")
+
+if res.status_code == 202:
+    data: dict = res.json()
+    print("Workflow started — poll /status to track progress")
+elif res.status_code == 409:
+    print("Workflow is already running")`} />
+
+Example response:
+
+```json
+{
+  "status": "started",
+  "workflowId": "wf-4a7c-e2d1"
+}
+```
+
+</EndpointCard>
+
+### Get Workflow Status
+
+<EndpointCard method="GET" path="/api/workflows/{id}/status" description="Get detailed execution status including per-step states, loop progress, documents, and run history.">
+
+The response shape depends on the workflow pattern:
+
+**Non-loop patterns** return `steps[]` with per-step state:
+
+<SchemaTable title="Step State Fields" fields={[
+  { name: 'stepId', type: 'string', required: true, description: 'Step identifier' },
+  { name: 'status', type: 'enum', required: true, description: 'pending, running, completed, failed, waiting_approval, or waiting_dependencies' },
+  { name: 'taskId', type: 'string', required: false, description: 'Associated task ID (once created)' },
+  { name: 'result', type: 'string', required: false, description: 'Step execution result' },
+  { name: 'error', type: 'string', required: false, description: 'Error message if failed' },
+  { name: 'startedAt', type: 'ISO 8601', required: false, description: 'Step start time' },
+  { name: 'completedAt', type: 'ISO 8601', required: false, description: 'Step completion time' },
+]} />
+
+**Loop patterns** return `loopState` with iteration history:
+
+<SchemaTable title="Loop State Fields" fields={[
+  { name: 'currentIteration', type: 'number', required: true, description: 'Current iteration index' },
+  { name: 'iterations', type: 'array', required: true, description: 'Per-iteration status, result, timing' },
+  { name: 'status', type: 'enum', required: true, description: 'running, completed, paused, or failed' },
+  { name: 'stopReason', type: 'enum', required: false, description: 'max_iterations, time_budget, agent_signaled, human_cancel, human_pause, or error' },
+  { name: 'totalDurationMs', type: 'number', required: false, description: 'Total execution time' },
+]} />
+
+Both shapes include `stepDocuments` (per-task output files), `parentDocuments` (workflow-level inputs), and `runHistory` (per-run aggregation).
+
+**Errors:** `404` — Not found
+
+Poll workflow status to build a real-time progress tracker:
+
+<CodeExample ts={`// Poll workflow status to display step-by-step progress
+const response: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/status");
+const status: WorkflowStatus = await response.json();
+
+console.log(\`Workflow: \${status.status}, Run #\${status.runNumber}\`);
+
+// Display per-step progress
+for (const step of status.steps) {
+  const duration: string = step.completedAt && step.startedAt
+    ? ((new Date(step.completedAt).getTime() - new Date(step.startedAt).getTime()) / 1000).toFixed(1) + "s"
+    : "—";
+  console.log(\`  \${step.stepId}: \${step.status} (\${duration})\`);
+}`} python={`import requests
+from datetime import datetime
+
+# Poll workflow status to display step-by-step progress
+response = requests.get("http://localhost:3000/api/workflows/wf-4a7c-e2d1/status")
+status: dict = response.json()
+
+print(f"Workflow: {status['status']}, Run #{status['runNumber']}")
+
+# Display per-step progress
+for step in status["steps"]:
+    if step.get("completedAt") and step.get("startedAt"):
+        started = datetime.fromisoformat(step["startedAt"])
+        completed = datetime.fromisoformat(step["completedAt"])
+        duration = f"{(completed - started).total_seconds():.1f}s"
+    else:
+        duration = "—"
+    print(f"  {step['stepId']}: {step['status']} ({duration})")`} />
+
+Example response for a running sequence workflow:
+
+```json
+{
+  "status": "active",
+  "runNumber": 1,
+  "steps": [
+    {
+      "stepId": "research",
+      "status": "completed",
+      "taskId": "task-b3e1-7f2a",
+      "result": "Found 5 competitor pricing pages with common patterns...",
+      "startedAt": "2026-04-03T10:01:00.000Z",
+      "completedAt": "2026-04-03T10:03:22.000Z"
+    },
+    {
+      "stepId": "draft",
+      "status": "running",
+      "taskId": "task-d9c4-1a8e",
+      "startedAt": "2026-04-03T10:03:23.000Z"
+    },
+    {
+      "stepId": "review",
+      "status": "waiting_dependencies"
+    }
+  ],
+  "stepDocuments": {},
+  "parentDocuments": [],
+  "runHistory": []
+}
+```
+
+</EndpointCard>
+
+### List Workflow Documents
+
+<EndpointCard method="GET" path="/api/workflows/{id}/documents" description="List all document bindings for a workflow, including step-scoped and workflow-level documents.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'bindingId', type: 'string (UUID)', required: true, description: 'Binding record ID' },
+  { name: 'documentId', type: 'string (UUID)', required: true, description: 'Document ID' },
+  { name: 'stepId', type: 'string', required: false, description: 'Step scope (null = all steps)' },
+  { name: 'document', type: 'object', required: false, description: 'Document metadata (name, MIME type, size, direction, status)' },
+]} />
+
+List all documents attached to a workflow, including step-scoped and workflow-wide bindings:
+
+<CodeExample ts={`// List workflow documents to see inputs and outputs
+const response: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/documents");
+const docs: { bindingId: string; documentId: string; stepId?: string }[] = await response.json();
+
+// Separate workflow-wide vs step-scoped documents
+const globalDocs = docs.filter((d) => !d.stepId);
+const scoped = docs.filter((d) => d.stepId);
+console.log(\`\${globalDocs.length} global, \${scoped.length} step-scoped documents\`);`} python={`import requests
+
+# List workflow documents to see inputs and outputs
+response = requests.get("http://localhost:3000/api/workflows/wf-4a7c-e2d1/documents")
+docs: list[dict] = response.json()
+
+# Separate workflow-wide vs step-scoped documents
+global_docs = [d for d in docs if not d.get("stepId")]
+scoped = [d for d in docs if d.get("stepId")]
+print(f"{len(global_docs)} global, {len(scoped)} step-scoped documents")`} />
+
+</EndpointCard>
+
+### Attach Documents
+
+<EndpointCard method="POST" path="/api/workflows/{id}/documents" description="Attach documents to a workflow. Optionally scope to a specific step. Duplicate bindings are silently ignored.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'documentIds', type: 'string[]', required: true, description: 'Document UUIDs to attach (non-empty)' },
+  { name: 'stepId', type: 'string', required: false, description: 'Scope to a specific step (null = all steps)' },
+]} />
+
+**Response** `201 Created` — `{ "attached": 2, "workflowId": "...", "stepId": null }`
+
+**Errors:** `400` — Empty array, `404` — Workflow or documents not found
+
+Attach reference documents to a specific step — only that step's agent will see these files:
+
+<CodeExample ts={`// Attach documents scoped to the research step only
+const response: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/documents", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    documentIds: ["doc-competitor-data-q4", "doc-pricing-spreadsheet"],
+    stepId: "research",
+  }),
+});
+const { attached }: { attached: number } = await response.json();
+
+console.log(\`Attached \${attached} documents to research step\`);`} python={`import requests
+
+# Attach documents scoped to the research step only
+response = requests.post("http://localhost:3000/api/workflows/wf-4a7c-e2d1/documents", json={
+    "documentIds": ["doc-competitor-data-q4", "doc-pricing-spreadsheet"],
+    "stepId": "research",
+})
+data: dict = response.json()
+
+print(f"Attached {data['attached']} documents to research step")`} />
+
+</EndpointCard>
+
+### Remove Documents
+
+<EndpointCard method="DELETE" path="/api/workflows/{id}/documents" description="Remove document bindings. Pass specific IDs to remove selectively, or omit to remove all bindings.">
+
+<SchemaTable title="Request Body (optional)" fields={[
+  { name: 'documentIds', type: 'string[]', required: false, description: 'Specific documents to unbind' },
+  { name: 'stepId', type: 'string', required: false, description: 'Filter removal by step' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+<CodeExample ts={`// Remove a specific document binding
+await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/documents", {
+  method: "DELETE",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ documentIds: ["doc-competitor-data-q4"] }),
+});`} python={`import requests
+
+# Remove a specific document binding
+requests.delete("http://localhost:3000/api/workflows/wf-4a7c-e2d1/documents", json={
+    "documentIds": ["doc-competitor-data-q4"],
+})`} />
+
+</EndpointCard>
+
+### Retry Step
+
+<EndpointCard method="POST" path="/api/workflows/{id}/steps/{stepId}/retry" description="Retry a failed workflow step. Returns 202 while the retry runs asynchronously.">
+
+**Response** `202 Accepted` — `{ "status": "retry_started", "workflowId": "...", "stepId": "..." }`
+
+Retry a failed step without re-running the entire workflow:
+
+<CodeExample ts={`// Retry a failed step — the workflow engine picks up from here
+const res: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/steps/research/retry", {
+  method: "POST",
+});
+
+if (res.status === 202) {
+  console.log("Retry started — downstream steps will re-execute when this completes");
+}`} python={`import requests
+
+# Retry a failed step — the workflow engine picks up from here
+res = requests.post("http://localhost:3000/api/workflows/wf-4a7c-e2d1/steps/research/retry")
+
+if res.status_code == 202:
+    print("Retry started — downstream steps will re-execute when this completes")`} />
+
+</EndpointCard>
+
+### Create from AI Assist
+
+<EndpointCard method="POST" path="/api/workflows/from-assist" description="Create a workflow with pre-built step tasks in a single atomic operation. Optionally execute immediately.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Workflow name' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Project association' },
+  { name: 'definition', type: 'WorkflowDefinition', required: true, description: 'Pattern and steps' },
+  { name: 'priority', type: 'number', required: false, description: 'Default priority for step tasks', default: '2' },
+  { name: 'assignedAgent', type: 'string', required: false, description: 'Default agent for steps' },
+  { name: 'executeImmediately', type: 'boolean', required: false, description: 'Start execution after creation' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'workflow', type: 'object', required: true, description: 'Created workflow' },
+  { name: 'taskIds', type: 'string[]', required: true, description: 'IDs of created step tasks' },
+  { name: 'status', type: 'enum', required: true, description: 'created or started' },
+]} />
+
+**Errors:** `400` — Validation failure
+
+Create a workflow and start it immediately in one call — useful for AI-assisted task decomposition:
+
+<CodeExample ts={`// Create and execute in one call — no need for a separate execute request
+const response: Response = await fetch("http://localhost:3000/api/workflows/from-assist", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "Quick Analysis",
+    definition: {
+      pattern: "sequence",
+      steps: [
+        { id: "analyze", name: "Analyze", prompt: "Analyze the Q4 revenue dataset and produce a summary" },
+      ],
+    },
+    executeImmediately: true,
+  }),
+});
+const { workflow, taskIds, status }: { workflow: Workflow; taskIds: string[]; status: string } = await response.json();
+
+console.log(\`Workflow \${workflow.id}: \${status}\`); // "started"
+console.log(\`Task IDs: \${taskIds.join(", ")}\`);`} python={`import requests
+
+# Create and execute in one call — no need for a separate execute request
+response = requests.post("http://localhost:3000/api/workflows/from-assist", json={
+    "name": "Quick Analysis",
+    "definition": {
+        "pattern": "sequence",
+        "steps": [
+            {"id": "analyze", "name": "Analyze", "prompt": "Analyze the Q4 revenue dataset and produce a summary"},
+        ],
+    },
+    "executeImmediately": True,
+})
+data: dict = response.json()
+
+print(f"Workflow {data['workflow']['id']}: {data['status']}")  # "started"
+print(f"Task IDs: {', '.join(data['taskIds'])}")`} />
+
+Example response:
+
+```json
+{
+  "workflow": {
+    "id": "wf-7b2e-c4a9",
+    "name": "Quick Analysis",
+    "status": "active",
+    "runNumber": 1
+  },
+  "taskIds": ["task-e5f1-8d3c"],
+  "status": "started"
+}
+```
+
+</EndpointCard>
+
+## Workflow Statuses
+
+| Status | Description |
+|--------|-------------|
+| **draft** | Created but not yet executed |
+| **active** | Currently executing steps |
+| **paused** | Execution suspended (can resume via execute) |
+| **completed** | All steps finished successfully |
+| **failed** | One or more steps failed |
+
+## Execution State
+
+Workflow execution state is persisted inside the `definition` field:
+
+- **`_state`** — Used by sequence, parallel, planner-executor, checkpoint, and swarm patterns. Tracks `currentStepIndex`, per-step states, and overall workflow status.
+- **`_loopState`** — Used by loop pattern. Tracks iteration count, per-iteration results, stop reason, and timing.
+
+Both are automatically cleared when a completed or failed workflow is re-executed or edited back to draft.

@@ -1,0 +1,430 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Memory API"
+description: "Store, retrieve, update, and archive agent memories with confidence scoring, category classification, and decay lifecycle."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Memory API
+
+Agent memory stores facts, preferences, patterns, and outcomes learned during task execution. Each memory is scoped to a profile and carries a confidence score that decays over time. The Memory API supports CRUD operations with category and status filtering, confidence adjustment, and soft-delete archival.
+
+## Quick Start
+
+Store a memory, retrieve memories by category, boost confidence on a useful one, and archive a stale one — the full memory lifecycle:
+
+<CodeExample ts={`// 1. Store a fact learned during task execution
+const res1 = await fetch('/api/memory', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    profileId: 'data-analyst',
+    category: 'fact',
+    content: 'Project uses PostgreSQL 16 with TimescaleDB extension for time-series data',
+    tags: ['database', 'postgresql', 'timescaledb'],
+    confidence: 0.9,
+  }),
+});
+const { id: memId }: { id: string } = await res1.json();
+// → { id: "mem-7c3a-2e1f" }
+
+// 2. Store a preference
+await fetch('/api/memory', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    profileId: 'data-analyst',
+    category: 'preference',
+    content: 'User prefers seaborn over matplotlib for visualizations',
+    tags: ['visualization', 'python'],
+    confidence: 0.85,
+  }),
+});
+
+// 3. Retrieve all active facts for a profile
+const factsRes = await fetch('/api/memory?profileId=data-analyst&category=fact&status=active');
+const facts: Array<{ confidence: number; content: string }> = await factsRes.json();
+
+console.log(\`\${facts.length} active facts:\`);
+facts.forEach((m) => {
+  const conf: string = (m.confidence / 1000 * 100).toFixed(0);
+  console.log(\`  [\${conf}%] \${m.content}\`);
+});
+
+// 4. Boost confidence on a memory that proved useful
+await fetch('/api/memory', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ id: memId, confidence: 950 }),
+});
+
+// 5. Archive a stale memory (soft delete — can be restored later)
+await fetch('/api/memory', {
+  method: 'DELETE',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ id: 'mem-old-stale-one' }),
+});`} python={`import requests
+
+# 1. Store a fact learned during task execution
+response = requests.post(
+    "http://localhost:3000/api/memory",
+    json={
+        "profileId": "data-analyst",
+        "category": "fact",
+        "content": "Project uses PostgreSQL 16 with TimescaleDB extension for time-series data",
+        "tags": ["database", "postgresql", "timescaledb"],
+        "confidence": 0.9,
+    },
+)
+mem_id = response.json()["id"]
+# → "mem-7c3a-2e1f"
+
+# 2. Store a preference
+requests.post(
+    "http://localhost:3000/api/memory",
+    json={
+        "profileId": "data-analyst",
+        "category": "preference",
+        "content": "User prefers seaborn over matplotlib for visualizations",
+        "tags": ["visualization", "python"],
+        "confidence": 0.85,
+    },
+)
+
+# 3. Retrieve all active facts for a profile
+facts_response = requests.get(
+    "http://localhost:3000/api/memory",
+    params={"profileId": "data-analyst", "category": "fact", "status": "active"},
+)
+facts = facts_response.json()
+
+print(f"{len(facts)} active facts:")
+for m in facts:
+    conf = int(m["confidence"] / 1000 * 100)
+    print(f"  [{conf}%] {m['content']}")
+
+# 4. Boost confidence on a memory that proved useful
+requests.patch(
+    "http://localhost:3000/api/memory",
+    json={"id": mem_id, "confidence": 950},
+)
+
+# 5. Archive a stale memory (soft delete — can be restored later)
+requests.delete(
+    "http://localhost:3000/api/memory",
+    json={"id": "mem-old-stale-one"},
+)`} />
+
+## Base URL
+
+```
+/api/memory
+```
+
+## Endpoints
+
+### List Memories
+
+<EndpointCard method="GET" path="/api/memory" description="Retrieve memories for a profile with optional filtering by category and status. Results are ordered by confidence (highest first).">
+
+<ParamTable params={[
+  { name: 'profileId', type: 'string', required: true, description: 'Profile UUID — required for all queries' },
+  { name: 'category', type: 'enum', required: false, description: 'Filter by category: fact, preference, pattern, or outcome' },
+  { name: 'status', type: 'enum', required: false, description: 'Filter by status: active, decayed, archived, or rejected' },
+]} />
+
+**Response** `200` — Array of memory objects ordered by confidence descending
+
+<SchemaTable title="Memory Object" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Memory identifier' },
+  { name: 'profileId', type: 'string', required: true, description: 'Associated profile ID' },
+  { name: 'category', type: 'enum', required: true, description: 'fact, preference, pattern, or outcome' },
+  { name: 'content', type: 'string', required: true, description: 'Memory content text' },
+  { name: 'confidence', type: 'number (0–1000)', required: true, description: 'Confidence score — higher means more reliable' },
+  { name: 'tags', type: 'string (JSON)', required: false, description: 'JSON-encoded array of tags' },
+  { name: 'accessCount', type: 'number', required: true, description: 'Number of times this memory has been accessed' },
+  { name: 'decayRate', type: 'number', required: true, description: 'Confidence decay rate per cycle' },
+  { name: 'status', type: 'enum', required: true, description: 'active, decayed, archived, or rejected' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification timestamp' },
+]} />
+
+**Errors:** `400` — Missing profileId
+
+Retrieve all active memories for a profile — the agent uses these as context during task execution:
+
+<CodeExample ts={`// Fetch active facts for a profile, sorted by confidence
+const response: Response = await fetch(
+  '/api/memory?profileId=data-analyst&category=fact&status=active'
+);
+const memories: Array<{ confidence: number; content: string; accessCount: number }> =
+  await response.json();
+
+// Display with human-readable confidence percentages
+memories.forEach((m) => {
+  const conf: string = (m.confidence / 10).toFixed(0);
+  const accessed: string = m.accessCount === 1 ? '1 access' : \`\${m.accessCount} accesses\`;
+  console.log(\`[\${conf}%] \${m.content} (\${accessed})\`);
+});`} python={`import requests
+
+# Fetch active facts for a profile, sorted by confidence
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/memory",
+    params={"profileId": "data-analyst", "category": "fact", "status": "active"},
+)
+memories: list[dict] = response.json()
+
+# Display with human-readable confidence percentages
+for m in memories:
+    conf: str = f"{m['confidence'] / 10:.0f}"
+    accessed: str = "1 access" if m["accessCount"] == 1 else f"{m['accessCount']} accesses"
+    print(f"[{conf}%] {m['content']} ({accessed})")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "mem-7c3a-2e1f",
+    "profileId": "data-analyst",
+    "category": "fact",
+    "content": "Project uses PostgreSQL 16 with TimescaleDB extension for time-series data",
+    "confidence": 900,
+    "tags": "[\"database\",\"postgresql\",\"timescaledb\"]",
+    "accessCount": 7,
+    "decayRate": 10,
+    "status": "active",
+    "createdAt": "2026-03-20T14:00:00.000Z",
+    "updatedAt": "2026-04-03T09:30:00.000Z"
+  },
+  {
+    "id": "mem-4b8d-9f2c",
+    "profileId": "data-analyst",
+    "category": "fact",
+    "content": "API rate limit is 100 requests per minute per client IP",
+    "confidence": 700,
+    "tags": "[\"api\",\"rate-limit\"]",
+    "accessCount": 3,
+    "decayRate": 10,
+    "status": "active",
+    "createdAt": "2026-03-25T10:15:00.000Z",
+    "updatedAt": "2026-04-01T08:00:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Memory
+
+<EndpointCard method="POST" path="/api/memory" description="Create a memory manually (operator injection). The confidence value is provided as a 0–1 float and stored internally as 0–1000 integer. Default confidence is 0.7 (700).">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'profileId', type: 'string', required: true, description: 'Profile to associate the memory with' },
+  { name: 'category', type: 'enum', required: true, description: 'fact, preference, pattern, or outcome' },
+  { name: 'content', type: 'string', required: true, description: 'Memory content text' },
+  { name: 'tags', type: 'string[]', required: false, description: 'Categorization tags (stored as JSON)' },
+  { name: 'confidence', type: 'number (0–1)', required: false, description: 'Initial confidence score', default: '0.7' },
+]} />
+
+**Response** `201 Created` — `{ "id": "uuid" }`
+
+**Errors:** `400` — Missing required fields or invalid category
+
+Store different types of memories — facts for objective information, preferences for user choices, patterns for recurring behaviors, and outcomes for task results:
+
+<CodeExample ts={`// Store a preference memory with high confidence
+const response: Response = await fetch('/api/memory', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    profileId: 'data-analyst',
+    category: 'preference',
+    content: 'User prefers seaborn over matplotlib for visualizations',
+    tags: ['visualization', 'python'],
+    confidence: 0.85,  // Stored as 850 internally
+  }),
+});
+const { id }: { id: string } = await response.json();
+
+console.log(\`Created memory: \${id}\`); // "mem-7c3a-2e1f"
+
+// Store a pattern observed across multiple task runs
+await fetch('/api/memory', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    profileId: 'devops-engineer',
+    category: 'pattern',
+    content: 'CI failures spike on Monday mornings due to dependency cache expiration over weekends',
+    tags: ['ci', 'caching', 'reliability'],
+    confidence: 0.75,
+  }),
+});`} python={`import requests
+
+# Store a preference memory with high confidence
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/memory",
+    json={
+        "profileId": "data-analyst",
+        "category": "preference",
+        "content": "User prefers seaborn over matplotlib for visualizations",
+        "tags": ["visualization", "python"],
+        "confidence": 0.85,  # Stored as 850 internally
+    },
+)
+data: dict = response.json()
+print(f"Created memory: {data['id']}")  # "mem-7c3a-2e1f"
+
+# Store a pattern observed across multiple task runs
+requests.post(
+    "http://localhost:3000/api/memory",
+    json={
+        "profileId": "devops-engineer",
+        "category": "pattern",
+        "content": "CI failures spike on Monday mornings due to dependency cache expiration over weekends",
+        "tags": ["ci", "caching", "reliability"],
+        "confidence": 0.75,
+    },
+)`} />
+
+Example response:
+
+```json
+{
+  "id": "mem-7c3a-2e1f"
+}
+```
+
+</EndpointCard>
+
+### Update Memory
+
+<EndpointCard method="PATCH" path="/api/memory" description="Update a memory's confidence score or status. Confidence is provided as a 0–1000 integer at this level. Status transitions are validated.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Memory identifier' },
+  { name: 'confidence', type: 'number (0–1000)', required: false, description: 'Updated confidence score' },
+  { name: 'status', type: 'enum', required: false, description: 'New status: active, decayed, archived, or rejected' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Missing id or invalid status
+
+Boost confidence on a memory that proved accurate, or reject one that turned out to be wrong:
+
+<CodeExample ts={`// Boost confidence on a memory that was useful during execution
+await fetch('/api/memory', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    id: 'mem-7c3a-2e1f',
+    confidence: 950,  // Boost from 850 to 950
+  }),
+});
+
+// Mark a memory as incorrect — it will be excluded from agent context
+await fetch('/api/memory', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    id: 'mem-4b8d-9f2c',
+    status: 'rejected',
+  }),
+});`} python={`import requests
+
+# Boost confidence on a memory that was useful during execution
+requests.patch(
+    "http://localhost:3000/api/memory",
+    json={
+        "id": "mem-7c3a-2e1f",
+        "confidence": 950,  # Boost from 850 to 950
+    },
+)
+
+# Mark a memory as incorrect — it will be excluded from agent context
+requests.patch(
+    "http://localhost:3000/api/memory",
+    json={
+        "id": "mem-4b8d-9f2c",
+        "status": "rejected",
+    },
+)`} />
+
+</EndpointCard>
+
+### Archive Memory
+
+<EndpointCard method="DELETE" path="/api/memory" description="Soft-delete a memory by setting its status to archived. No hard deletes are performed — memories can be restored by updating status back to active.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Memory identifier to archive' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Missing id or archive failure
+
+Archive a memory you no longer need — it's a soft delete, so you can restore it later by updating status back to active:
+
+<CodeExample ts={`// Soft-delete a memory — can be restored later
+await fetch('/api/memory', {
+  method: 'DELETE',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ id: 'mem-4b8d-9f2c' }),
+});
+
+// Restore it later by updating status back to active
+await fetch('/api/memory', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ id: 'mem-4b8d-9f2c', status: 'active' }),
+});`} python={`import requests
+
+# Soft-delete a memory — can be restored later
+requests.delete(
+    "http://localhost:3000/api/memory",
+    json={"id": "mem-4b8d-9f2c"},
+)
+
+# Restore it later by updating status back to active
+requests.patch(
+    "http://localhost:3000/api/memory",
+    json={"id": "mem-4b8d-9f2c", "status": "active"},
+)`} />
+
+</EndpointCard>
+
+## Memory Categories
+
+| Category | Description | Examples |
+|----------|-------------|---------|
+| **fact** | Objective information learned from execution | "Project uses PostgreSQL 16", "API rate limit is 100 req/min" |
+| **preference** | User or operational preferences | "Prefer TypeScript over JavaScript", "Use dark theme in reports" |
+| **pattern** | Recurring behaviors or execution patterns | "CI failures usually happen on Monday mornings", "Auth errors spike after deploys" |
+| **outcome** | Results and learnings from completed tasks | "Refactoring reduced build time by 40%", "Migration completed without data loss" |
+
+## Memory Lifecycle
+
+Memories follow a confidence-based lifecycle:
+
+| Status | Description |
+|--------|-------------|
+| **active** | Memory is current and used in agent context |
+| **decayed** | Confidence dropped below threshold — still available but deprioritized |
+| **archived** | Soft-deleted by user or system — excluded from agent context |
+| **rejected** | Explicitly marked as incorrect — excluded from agent context |
+
+## Constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| DEFAULT_CONFIDENCE | 700 (0.7) | Default confidence for new memories |
+| DEFAULT_DECAY_RATE | 10 | Confidence decay per cycle |
+| MIN_CONFIDENCE | 0 | Minimum confidence value |
+| MAX_CONFIDENCE | 1000 | Maximum confidence value |

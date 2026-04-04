@@ -1,0 +1,1212 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Tables API"
+description: "Create, query, and manage structured data tables with columns, rows, filtering, sorting, import/export, triggers, charts, templates, and version history."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Tables API
+
+Tables provide structured data storage for agents and users. Each table has typed columns, queryable rows with filtering and sorting, import/export support, automation triggers, chart visualizations, and full change history with rollback.
+
+## Quick Start
+
+Create a table, add columns, insert rows, and query with filters — a typical integration flow:
+
+<CodeExample ts={`// 1. Create a table with initial columns
+const table: { id: string; name: string } = await fetch('/api/tables', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Customer Feedback',
+    projectId: 'proj-8f3a-4b2c',
+    columns: [
+      { name: 'customer', displayName: 'Customer', dataType: 'text', position: 0 },
+      { name: 'rating', displayName: 'Rating', dataType: 'number', position: 1 },
+      { name: 'feedback', displayName: 'Feedback', dataType: 'text', position: 2 },
+    ],
+  }),
+}).then((r) => r.json());
+// → { id: "tbl-6c1d-9e7f", name: "Customer Feedback", ... }
+
+// 2. Add a status column after creation
+await fetch(\`/api/tables/\${table.id}/columns\`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'status',
+    displayName: 'Status',
+    dataType: 'select',
+    config: { options: ['open', 'in_progress', 'closed'] },
+  }),
+});
+
+// 3. Insert rows in batch (up to 1000 per request)
+await fetch(\`/api/tables/\${table.id}/rows\`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    rows: [
+      { data: { customer: 'Acme Corp', rating: 5, feedback: 'Excellent', status: 'closed' } },
+      { data: { customer: 'Globex Inc', rating: 3, feedback: 'Average', status: 'open' } },
+      { data: { customer: 'Initech', rating: 4, feedback: 'Good support', status: 'closed' } },
+    ],
+  }),
+});
+
+// 4. Query with filters — find high-rated feedback
+const filters: string = JSON.stringify([{ column: 'rating', operator: 'gte', value: 4 }]);
+const rows: Array<{ data: Record<string, unknown> }> = await fetch(
+  \`/api/tables/\${table.id}/rows?filters=\${encodeURIComponent(filters)}\`
+).then((r) => r.json());
+console.log(\`\${rows.length} rows with rating >= 4\`);`} python={`import requests
+import json
+from urllib.parse import quote
+
+# 1. Create a table with initial columns
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables",
+    json={
+        "name": "Customer Feedback",
+        "projectId": "proj-8f3a-4b2c",
+        "columns": [
+            {"name": "customer", "displayName": "Customer", "dataType": "text", "position": 0},
+            {"name": "rating", "displayName": "Rating", "dataType": "number", "position": 1},
+            {"name": "feedback", "displayName": "Feedback", "dataType": "text", "position": 2},
+        ],
+    },
+)
+table: dict = response.json()
+# -> { "id": "tbl-6c1d-9e7f", "name": "Customer Feedback", ... }
+
+# 2. Add a status column after creation
+requests.post(
+    f"http://localhost:3000/api/tables/{table['id']}/columns",
+    json={
+        "name": "status",
+        "displayName": "Status",
+        "dataType": "select",
+        "config": {"options": ["open", "in_progress", "closed"]},
+    },
+)
+
+# 3. Insert rows in batch (up to 1000 per request)
+requests.post(
+    f"http://localhost:3000/api/tables/{table['id']}/rows",
+    json={
+        "rows": [
+            {"data": {"customer": "Acme Corp", "rating": 5, "feedback": "Excellent", "status": "closed"}},
+            {"data": {"customer": "Globex Inc", "rating": 3, "feedback": "Average", "status": "open"}},
+            {"data": {"customer": "Initech", "rating": 4, "feedback": "Good support", "status": "closed"}},
+        ],
+    },
+)
+
+# 4. Query with filters — find high-rated feedback
+filters: str = quote(json.dumps([{"column": "rating", "operator": "gte", "value": 4}]))
+rows: list[dict] = requests.get(
+    f"http://localhost:3000/api/tables/{table['id']}/rows?filters={filters}"
+).json()
+print(f"{len(rows)} rows with rating >= 4")`} />
+
+## Base URL
+
+```
+/api/tables
+```
+
+## Endpoints
+
+### List Tables
+
+<EndpointCard method="GET" path="/api/tables" description="Retrieve all tables with optional filtering by project, source, or search term.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'projectId', type: 'string', description: 'Filter by project ID' },
+  { name: 'source', type: 'enum', description: 'manual, imported, agent, or template' },
+  { name: 'search', type: 'string', description: 'Search by table name' },
+]} />
+
+List all tables for a project — useful for building a data browser or selecting a table to query:
+
+<CodeExample ts={`// List all tables in a project
+const response: Response = await fetch('/api/tables?projectId=proj-8f3a-4b2c');
+const tables: Array<{ id: string; name: string; source: string }> = await response.json();
+
+tables.forEach((t) => console.log(\`\${t.name} (\${t.source}) — \${t.id}\`));`} python={`import requests
+
+# List all tables in a project
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables",
+    params={"projectId": "proj-8f3a-4b2c"},
+)
+tables: list[dict] = response.json()
+
+for t in tables:
+    print(f"{t['name']} ({t['source']}) — {t['id']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "tbl-6c1d-9e7f",
+    "name": "Customer Feedback",
+    "description": null,
+    "projectId": "proj-8f3a-4b2c",
+    "source": "manual",
+    "rowCount": 42,
+    "createdAt": "2026-04-03T10:00:00.000Z",
+    "updatedAt": "2026-04-03T11:30:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Table
+
+<EndpointCard method="POST" path="/api/tables" description="Create a new table with optional column definitions. If a templateId is provided, the table is cloned from that template instead.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Table name (1-256 characters)' },
+  { name: 'description', type: 'string', required: false, description: 'Table description (max 1024 characters)' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Link to a project' },
+  { name: 'columns', type: 'ColumnDef[]', required: false, description: 'Initial column definitions (see Column Schema below)' },
+  { name: 'source', type: 'enum', required: false, description: 'manual, imported, agent, or template' },
+  { name: 'templateId', type: 'string (UUID)', required: false, description: 'Clone from an existing template' },
+]} />
+
+**Response** `201 Created` — New table object
+
+**Errors:** `400` — Zod validation failure
+
+Create a table with typed columns — columns define the schema that rows must follow:
+
+<CodeExample ts={`// Create a table with typed columns
+const response: Response = await fetch('/api/tables', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Customer Feedback',
+    projectId: 'proj-8f3a-4b2c',
+    columns: [
+      { name: 'customer', displayName: 'Customer', dataType: 'text', position: 0 },
+      { name: 'rating', displayName: 'Rating', dataType: 'number', position: 1 },
+      { name: 'feedback', displayName: 'Feedback', dataType: 'text', position: 2 },
+    ],
+  }),
+});
+const table: { id: string } = await response.json();
+
+console.log(table.id); // "tbl-6c1d-9e7f"`} python={`import requests
+
+# Create a table with typed columns
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables",
+    json={
+        "name": "Customer Feedback",
+        "projectId": "proj-8f3a-4b2c",
+        "columns": [
+            {"name": "customer", "displayName": "Customer", "dataType": "text", "position": 0},
+            {"name": "rating", "displayName": "Rating", "dataType": "number", "position": 1},
+            {"name": "feedback", "displayName": "Feedback", "dataType": "text", "position": 2},
+        ],
+    },
+)
+table: dict = response.json()
+
+print(table["id"])  # "tbl-6c1d-9e7f"`} />
+
+Example response:
+
+```json
+{
+  "id": "tbl-6c1d-9e7f",
+  "name": "Customer Feedback",
+  "projectId": "proj-8f3a-4b2c",
+  "source": "manual",
+  "columns": [
+    { "id": "col-a1b2", "name": "customer", "displayName": "Customer", "dataType": "text", "position": 0 },
+    { "id": "col-c3d4", "name": "rating", "displayName": "Rating", "dataType": "number", "position": 1 },
+    { "id": "col-e5f6", "name": "feedback", "displayName": "Feedback", "dataType": "text", "position": 2 }
+  ],
+  "createdAt": "2026-04-03T10:00:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Clone from Template
+
+<EndpointCard method="POST" path="/api/tables" description="Create a table by cloning a template. Provide templateId in the request body to use this path.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'templateId', type: 'string (UUID)', required: true, description: 'Template to clone' },
+  { name: 'name', type: 'string', required: true, description: 'Name for the new table (1-256 characters)' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Link to a project' },
+  { name: 'includeSampleData', type: 'boolean', required: false, description: 'Include sample rows from the template' },
+]} />
+
+Clone a template to get a pre-configured table with columns and optional sample data:
+
+<CodeExample ts={`// Clone a template with sample data included
+const response: Response = await fetch('/api/tables', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    templateId: 'tpl-4a2b-8c9d',
+    name: 'Q3 Budget Tracker',
+    projectId: 'proj-8f3a-4b2c',
+    includeSampleData: true,
+  }),
+});
+const table: { id: string; name: string } = await response.json();`} python={`import requests
+
+# Clone a template with sample data included
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables",
+    json={
+        "templateId": "tpl-4a2b-8c9d",
+        "name": "Q3 Budget Tracker",
+        "projectId": "proj-8f3a-4b2c",
+        "includeSampleData": True,
+    },
+)
+table: dict = response.json()`} />
+
+</EndpointCard>
+
+### Get Table
+
+<EndpointCard method="GET" path="/api/tables/{id}" description="Retrieve a single table by ID including its column definitions.">
+
+**Response** `200` — Table object with `columns` array
+
+<CodeExample ts={`// Fetch table metadata and column definitions
+const table: { name: string; columns: Array<{ displayName: string; dataType: string }> } =
+  await fetch('/api/tables/tbl-6c1d-9e7f').then((r) => r.json());
+
+console.log(\`\${table.name} — \${table.columns.length} columns\`);
+table.columns.forEach((c) => console.log(\`  \${c.displayName} (\${c.dataType})\`));`} python={`import requests
+
+# Fetch table metadata and column definitions
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f"
+)
+table: dict = response.json()
+
+print(f"{table['name']} — {len(table['columns'])} columns")
+for c in table["columns"]:
+    print(f"  {c['displayName']} ({c['dataType']})")`} />
+
+**Errors:** `404` — `{ "error": "Table not found" }`
+
+</EndpointCard>
+
+### Update Table
+
+<EndpointCard method="PATCH" path="/api/tables/{id}" description="Update table name, description, or project association.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'name', type: 'string', required: false, description: 'Updated name (1-256 chars)' },
+  { name: 'description', type: 'string', required: false, description: 'Updated description (max 1024 chars)' },
+  { name: 'projectId', type: 'string (UUID) | null', required: false, description: 'Reassign or unlink project' },
+]} />
+
+**Response** `200` — Updated table object
+
+**Errors:** `400` — Validation failure, `404` — Not found
+
+<CodeExample ts={`// Update table name
+await fetch('/api/tables/tbl-6c1d-9e7f', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Customer Feedback v2' }),
+});`} python={`import requests
+
+# Update table name
+requests.patch(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f",
+    json={"name": "Customer Feedback v2"},
+)`} />
+
+</EndpointCard>
+
+### Delete Table
+
+<EndpointCard method="DELETE" path="/api/tables/{id}" description="Permanently delete a table and all its rows, columns, triggers, charts, and history.">
+
+**Response** `204 No Content`
+
+**Errors:** `404` — Not found
+
+<CodeExample ts={`// Delete a table and all associated data
+await fetch('/api/tables/tbl-6c1d-9e7f', { method: 'DELETE' });`} python={`import requests
+
+# Delete a table and all associated data
+requests.delete("http://localhost:3000/api/tables/tbl-6c1d-9e7f")`} />
+
+</EndpointCard>
+
+---
+
+## Rows
+
+### List Rows
+
+<EndpointCard method="GET" path="/api/tables/{id}/rows" description="Query rows with filtering, sorting, and pagination. Filters and sorts are passed as JSON-encoded query parameters.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'limit', type: 'number', description: 'Max rows to return (1-1000)' },
+  { name: 'offset', type: 'number', description: 'Number of rows to skip' },
+  { name: 'filters', type: 'JSON string', description: 'Array of FilterSpec objects (see Filtering below)' },
+  { name: 'sorts', type: 'JSON string', description: 'Array of SortSpec objects (see Sorting below)' },
+]} />
+
+Query rows with filters and pagination — useful for building data views or feeding data to agents:
+
+<CodeExample ts={`// Query with filters and sorting
+const filters: string = JSON.stringify([
+  { column: 'rating', operator: 'gte', value: 4 },
+  { column: 'status', operator: 'eq', value: 'open' },
+]);
+const sorts: string = JSON.stringify([
+  { column: 'rating', direction: 'desc' },
+]);
+
+const rows: Array<{ data: { customer: string; rating: number; feedback: string } }> = await fetch(
+  \`/api/tables/tbl-6c1d-9e7f/rows?limit=50&filters=\${encodeURIComponent(filters)}&sorts=\${encodeURIComponent(sorts)}\`
+).then((r) => r.json());
+
+rows.forEach((row) => {
+  console.log(\`\${row.data.customer}: \${row.data.rating}/5 — \${row.data.feedback}\`);
+});`} python={`import json
+import requests
+from urllib.parse import urlencode
+
+# Query with filters and sorting
+filters: str = json.dumps([
+    {"column": "rating", "operator": "gte", "value": 4},
+    {"column": "status", "operator": "eq", "value": "open"},
+])
+sorts: str = json.dumps([
+    {"column": "rating", "direction": "desc"},
+])
+
+params: dict = {"limit": 50, "filters": filters, "sorts": sorts}
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/rows",
+    params=params,
+)
+rows: list[dict] = response.json()
+
+for row in rows:
+    d = row["data"]
+    print(f"{d['customer']}: {d['rating']}/5 — {d['feedback']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "row-a1b2-c3d4",
+    "tableId": "tbl-6c1d-9e7f",
+    "data": {
+      "customer": "Acme Corp",
+      "rating": 5,
+      "feedback": "Excellent support and fast resolution",
+      "status": "open"
+    },
+    "createdBy": "claude-code",
+    "createdAt": "2026-04-03T10:30:00.000Z",
+    "updatedAt": "2026-04-03T10:30:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Add Rows
+
+<EndpointCard method="POST" path="/api/tables/{id}/rows" description="Insert one or more rows into a table. Accepts a batch of up to 1000 rows per request.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'rows', type: 'Array', required: true, description: 'Array of row objects (1-1000 items)' },
+  { name: 'rows[].data', type: 'Record<string, unknown>', required: true, description: 'Column name to value mapping' },
+  { name: 'rows[].createdBy', type: 'string', required: false, description: 'Creator identifier (e.g. agent name)' },
+]} />
+
+**Response** `201 Created` — Array of created rows
+
+Insert a batch of rows — agents often use this to populate tables with structured results:
+
+<CodeExample ts={`// Batch insert rows (up to 1000 per request)
+const result: Array<{ id: string }> = await fetch('/api/tables/tbl-6c1d-9e7f/rows', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    rows: [
+      { data: { customer: 'Acme Corp', rating: 5, feedback: 'Excellent' }, createdBy: 'claude-code' },
+      { data: { customer: 'Globex Inc', rating: 3, feedback: 'Average' }, createdBy: 'claude-code' },
+    ],
+  }),
+}).then((r) => r.json());
+
+console.log(\`Inserted \${result.length} rows\`);`} python={`import requests
+
+# Batch insert rows (up to 1000 per request)
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/rows",
+    json={
+        "rows": [
+            {"data": {"customer": "Acme Corp", "rating": 5, "feedback": "Excellent"}, "createdBy": "claude-code"},
+            {"data": {"customer": "Globex Inc", "rating": 3, "feedback": "Average"}, "createdBy": "claude-code"},
+        ],
+    },
+)
+result: list[dict] = response.json()
+
+print(f"Inserted {len(result)} rows")`} />
+
+**Errors:** `400` — Validation failure, `404` — Table not found
+
+</EndpointCard>
+
+### Update Row
+
+<EndpointCard method="PATCH" path="/api/tables/{id}/rows/{rowId}" description="Update the data for a single row. The entire data object is replaced.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'data', type: 'Record<string, unknown>', required: true, description: 'Updated column name to value mapping' },
+]} />
+
+**Response** `200` — Updated row
+
+Replace a row's data — note that the entire data object is replaced, not merged:
+
+<CodeExample ts={`// Update a row — full data replacement
+await fetch('/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    data: { customer: 'Acme Corp', rating: 4, feedback: 'Good, improved response time', status: 'closed' },
+  }),
+});`} python={`import requests
+
+# Update a row — full data replacement
+requests.patch(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4",
+    json={
+        "data": {"customer": "Acme Corp", "rating": 4, "feedback": "Good, improved response time", "status": "closed"},
+    },
+)`} />
+
+**Errors:** `400` — Validation failure, `404` — Row not found
+
+</EndpointCard>
+
+### Delete Row
+
+<EndpointCard method="DELETE" path="/api/tables/{id}/rows/{rowId}" description="Permanently delete a single row.">
+
+**Response** `204 No Content`
+
+<CodeExample ts={`// Delete a single row
+await fetch('/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4', { method: 'DELETE' });`} python={`import requests
+
+# Delete a single row
+requests.delete("http://localhost:3000/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4")`} />
+
+</EndpointCard>
+
+---
+
+## Columns
+
+### Add Column
+
+<EndpointCard method="POST" path="/api/tables/{id}/columns" description="Add a new column to an existing table.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Column key (1-64 chars, unique per table)' },
+  { name: 'displayName', type: 'string', required: true, description: 'Display label (1-128 chars)' },
+  { name: 'dataType', type: 'enum', required: true, description: 'text, number, boolean, date, select, url, email, computed, or relation' },
+  { name: 'required', type: 'boolean', required: false, description: 'Whether the column is required' },
+  { name: 'defaultValue', type: 'string | null', required: false, description: 'Default value for new rows' },
+  { name: 'config', type: 'ColumnConfig', required: false, description: 'Type-specific config (see Column Config below)' },
+]} />
+
+**Response** `201 Created` — New column object
+
+Add a select column with predefined options — great for status tracking:
+
+<CodeExample ts={`// Add a select column with options
+const column: { id: string; name: string } = await fetch('/api/tables/tbl-6c1d-9e7f/columns', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'status',
+    displayName: 'Status',
+    dataType: 'select',
+    config: { options: ['open', 'in_progress', 'closed'] },
+  }),
+}).then((r) => r.json());`} python={`import requests
+
+# Add a select column with options
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/columns",
+    json={
+        "name": "status",
+        "displayName": "Status",
+        "dataType": "select",
+        "config": {"options": ["open", "in_progress", "closed"]},
+    },
+)
+column: dict = response.json()`} />
+
+Example response:
+
+```json
+{
+  "id": "col-g7h8",
+  "tableId": "tbl-6c1d-9e7f",
+  "name": "status",
+  "displayName": "Status",
+  "dataType": "select",
+  "position": 3,
+  "config": { "options": ["open", "in_progress", "closed"] },
+  "createdAt": "2026-04-03T10:05:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Reorder Columns
+
+<EndpointCard method="PATCH" path="/api/tables/{id}/columns" description="Reorder all columns by providing column IDs in the desired order.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'columnIds', type: 'string[]', required: true, description: 'Column IDs in the desired display order' },
+]} />
+
+**Response** `200` — Reordered columns array
+
+<CodeExample ts={`// Move status column to the front
+await fetch('/api/tables/tbl-6c1d-9e7f/columns', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    columnIds: ['col-g7h8', 'col-a1b2', 'col-c3d4', 'col-e5f6'],
+  }),
+});`} python={`import requests
+
+# Move status column to the front
+requests.patch(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/columns",
+    json={
+        "columnIds": ["col-g7h8", "col-a1b2", "col-c3d4", "col-e5f6"],
+    },
+)`} />
+
+</EndpointCard>
+
+---
+
+## Import & Export
+
+### Import Data
+
+<EndpointCard method="POST" path="/api/tables/{id}/import" description="Import structured data from a document into the table. Supports a preview mode to inspect inferred columns and sample rows before committing. Column types are auto-inferred from the first 100 rows.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'documentId', type: 'string (UUID)', required: true, description: 'Source document to import from' },
+  { name: 'preview', type: 'boolean', required: false, description: 'Set true to preview without importing' },
+  { name: 'columnMapping', type: 'Array', required: false, description: 'Override inferred column names, types, or skip columns' },
+  { name: 'columnMapping[].name', type: 'string', required: true, description: 'Column key' },
+  { name: 'columnMapping[].displayName', type: 'string', required: true, description: 'Display label' },
+  { name: 'columnMapping[].dataType', type: 'string', required: true, description: 'Column data type' },
+  { name: 'columnMapping[].skip', type: 'boolean', required: false, description: 'Set true to skip this column' },
+]} />
+
+<SchemaTable title="Preview Response" fields={[
+  { name: 'headers', type: 'string[]', required: true, description: 'Detected column headers' },
+  { name: 'sampleRows', type: 'Array', required: true, description: 'First 10 rows of data' },
+  { name: 'totalRows', type: 'number', required: true, description: 'Total row count in source' },
+  { name: 'inferredColumns', type: 'ColumnDef[]', required: true, description: 'Auto-inferred column definitions' },
+]} />
+
+<SchemaTable title="Import Response" fields={[
+  { name: 'importId', type: 'string', required: true, description: 'Audit record ID' },
+  { name: 'rowsImported', type: 'number', required: true, description: 'Successfully imported rows' },
+  { name: 'rowsSkipped', type: 'number', required: true, description: 'Skipped rows (validation errors)' },
+  { name: 'errors', type: 'Array', required: true, description: 'First 20 error details' },
+  { name: 'columns', type: 'ColumnDef[]', required: true, description: 'Final column definitions used' },
+]} />
+
+Preview an import before committing — inspect inferred column types and sample data, then execute:
+
+<CodeExample ts={`// Preview first, then import
+const preview: { totalRows: number; headers: string[] } = await fetch(
+  '/api/tables/tbl-6c1d-9e7f/import',
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ documentId: 'doc-7b2e-3f9a', preview: true }),
+  }
+).then((r) => r.json());
+
+console.log(\`\${preview.totalRows} rows, \${preview.headers.length} columns detected\`);
+
+// Execute the import
+const result: { rowsImported: number; rowsSkipped: number } = await fetch(
+  '/api/tables/tbl-6c1d-9e7f/import',
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ documentId: 'doc-7b2e-3f9a' }),
+  }
+).then((r) => r.json());
+
+console.log(\`Imported \${result.rowsImported}, skipped \${result.rowsSkipped}\`);`} python={`import requests
+
+# Preview first, then import
+preview_response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/import",
+    json={"documentId": "doc-7b2e-3f9a", "preview": True},
+)
+preview: dict = preview_response.json()
+
+print(f"{preview['totalRows']} rows, {len(preview['headers'])} columns detected")
+
+# Execute the import
+import_response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/import",
+    json={"documentId": "doc-7b2e-3f9a"},
+)
+result: dict = import_response.json()
+
+print(f"Imported {result['rowsImported']}, skipped {result['rowsSkipped']}")`} />
+
+Example preview response:
+
+```json
+{
+  "headers": ["customer", "rating", "feedback"],
+  "sampleRows": [
+    { "customer": "Acme Corp", "rating": "5", "feedback": "Excellent" }
+  ],
+  "totalRows": 150,
+  "inferredColumns": [
+    { "name": "customer", "displayName": "customer", "dataType": "text" },
+    { "name": "rating", "displayName": "rating", "dataType": "number" },
+    { "name": "feedback", "displayName": "feedback", "dataType": "text" }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Export Table
+
+<EndpointCard method="GET" path="/api/tables/{id}/export" description="Download the entire table as CSV, JSON, or XLSX. Returns up to 10,000 rows.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'format', type: 'enum', description: 'csv (default), json, or xlsx' },
+]} />
+
+**Response** `200` — File download with appropriate Content-Type and Content-Disposition headers
+
+Export a table for external use — CSV for spreadsheets, JSON for programmatic access, XLSX for stakeholders:
+
+<CodeExample ts={`// Download as CSV and trigger browser save
+const res: Response = await fetch('/api/tables/tbl-6c1d-9e7f/export?format=csv');
+const blob: Blob = await res.blob();
+const url: string = URL.createObjectURL(blob);
+
+const link: HTMLAnchorElement = document.createElement('a');
+link.href = url;
+link.download = 'customer-feedback.csv';
+link.click();`} python={`import requests
+
+# Export as CSV (default)
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/export",
+    params={"format": "csv"},
+)
+with open("customer-feedback.csv", "wb") as f:
+    f.write(response.content)
+
+# Export as JSON
+json_response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/export",
+    params={"format": "json"},
+)
+data: list[dict] = json_response.json()`} />
+
+</EndpointCard>
+
+---
+
+## Triggers
+
+### List Triggers
+
+<EndpointCard method="GET" path="/api/tables/{id}/triggers" description="List all automation triggers configured for a table.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Trigger identifier' },
+  { name: 'tableId', type: 'string (UUID)', required: true, description: 'Parent table ID' },
+  { name: 'name', type: 'string', required: true, description: 'Trigger name' },
+  { name: 'triggerEvent', type: 'enum', required: true, description: 'row_added, row_updated, or row_deleted' },
+  { name: 'condition', type: 'JSON | null', required: false, description: 'Optional condition expression' },
+  { name: 'actionType', type: 'enum', required: true, description: 'run_workflow or create_task' },
+  { name: 'actionConfig', type: 'JSON', required: true, description: 'Action-specific configuration' },
+  { name: 'status', type: 'enum', required: true, description: 'active or paused' },
+  { name: 'fireCount', type: 'number', required: true, description: 'Times this trigger has fired' },
+]} />
+
+List triggers to see what automations are active on a table:
+
+<CodeExample ts={`// Check which triggers are active
+const triggers: Array<{ name: string; status: string; triggerEvent: string; actionType: string; fireCount: number }> =
+  await fetch('/api/tables/tbl-6c1d-9e7f/triggers').then((r) => r.json());
+
+triggers.forEach((t) => {
+  console.log(\`\${t.name} [\${t.status}] — \${t.triggerEvent} → \${t.actionType} (fired \${t.fireCount}x)\`);
+});`} python={`import requests
+
+# Check which triggers are active
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/triggers"
+)
+triggers: list[dict] = response.json()
+
+for t in triggers:
+    print(f"{t['name']} [{t['status']}] — {t['triggerEvent']} → {t['actionType']} (fired {t['fireCount']}x)")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "trg-5e4d-3c2b",
+    "tableId": "tbl-6c1d-9e7f",
+    "name": "Auto-triage feedback",
+    "triggerEvent": "row_added",
+    "condition": null,
+    "actionType": "run_workflow",
+    "actionConfig": { "workflowId": "wf-2a3b-4c5d" },
+    "status": "active",
+    "fireCount": 28
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Trigger
+
+<EndpointCard method="POST" path="/api/tables/{id}/triggers" description="Create a new automation trigger that fires when rows are added, updated, or deleted.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Trigger name' },
+  { name: 'triggerEvent', type: 'enum', required: true, description: 'row_added, row_updated, or row_deleted' },
+  { name: 'condition', type: 'object', required: false, description: 'Condition that must be met for the trigger to fire' },
+  { name: 'actionType', type: 'enum', required: true, description: 'run_workflow or create_task' },
+  { name: 'actionConfig', type: 'object', required: true, description: 'Action configuration (e.g. workflowId, task template)' },
+]} />
+
+**Response** `201 Created` — New trigger object
+
+Create a trigger that automatically runs a workflow when new feedback is added:
+
+<CodeExample ts={`// Auto-run a triage workflow when new rows are added
+const trigger: { id: string; name: string } = await fetch('/api/tables/tbl-6c1d-9e7f/triggers', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Auto-triage feedback',
+    triggerEvent: 'row_added',
+    actionType: 'run_workflow',
+    actionConfig: { workflowId: 'wf-2a3b-4c5d' },
+  }),
+}).then((r) => r.json());`} python={`import requests
+
+# Auto-run a triage workflow when new rows are added
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/triggers",
+    json={
+        "name": "Auto-triage feedback",
+        "triggerEvent": "row_added",
+        "actionType": "run_workflow",
+        "actionConfig": {"workflowId": "wf-2a3b-4c5d"},
+    },
+)
+trigger: dict = response.json()`} />
+
+</EndpointCard>
+
+### Update Trigger
+
+<EndpointCard method="PATCH" path="/api/tables/{id}/triggers/{triggerId}" description="Update a trigger's name, event, condition, action, or status.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'name', type: 'string', required: false, description: 'Updated name' },
+  { name: 'triggerEvent', type: 'enum', required: false, description: 'row_added, row_updated, or row_deleted' },
+  { name: 'status', type: 'enum', required: false, description: 'active or paused' },
+  { name: 'condition', type: 'object | null', required: false, description: 'Updated condition (null to remove)' },
+  { name: 'actionType', type: 'enum', required: false, description: 'run_workflow or create_task' },
+  { name: 'actionConfig', type: 'object', required: false, description: 'Updated action configuration' },
+]} />
+
+**Response** `200` — Updated trigger object
+
+**Errors:** `404` — Trigger not found
+
+Pause a trigger temporarily during maintenance:
+
+<CodeExample ts={`// Pause a trigger during maintenance
+await fetch('/api/tables/tbl-6c1d-9e7f/triggers/trg-5e4d-3c2b', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ status: 'paused' }),
+});`} python={`import requests
+
+# Pause a trigger during maintenance
+requests.patch(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/triggers/trg-5e4d-3c2b",
+    json={"status": "paused"},
+)`} />
+
+</EndpointCard>
+
+### Delete Trigger
+
+<EndpointCard method="DELETE" path="/api/tables/{id}/triggers/{triggerId}" description="Permanently delete a trigger.">
+
+**Response** `204 No Content`
+
+**Errors:** `404` — Trigger not found
+
+<CodeExample ts={`// Delete a trigger
+await fetch('/api/tables/tbl-6c1d-9e7f/triggers/trg-5e4d-3c2b', { method: 'DELETE' });`} python={`import requests
+
+# Delete a trigger
+requests.delete("http://localhost:3000/api/tables/tbl-6c1d-9e7f/triggers/trg-5e4d-3c2b")`} />
+
+</EndpointCard>
+
+---
+
+## Charts
+
+### List Charts
+
+<EndpointCard method="GET" path="/api/tables/{id}/charts" description="List all chart visualizations saved for a table.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Chart view ID' },
+  { name: 'name', type: 'string', required: true, description: 'Chart title' },
+  { name: 'config', type: 'object', required: true, description: 'Chart configuration (type, xColumn, yColumn, aggregation)' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+]} />
+
+<CodeExample ts={`// List all charts for a table
+const charts: Array<{ name: string; config: { type: string } }> =
+  await fetch('/api/tables/tbl-6c1d-9e7f/charts').then((r) => r.json());
+charts.forEach((c) => console.log(\`\${c.name} (\${c.config.type})\`));`} python={`import requests
+
+# List all charts for a table
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/charts"
+)
+charts: list[dict] = response.json()
+for c in charts:
+    print(f"{c['name']} ({c['config']['type']})")`} />
+
+</EndpointCard>
+
+### Create Chart
+
+<EndpointCard method="POST" path="/api/tables/{id}/charts" description="Save a new chart visualization for a table.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'type', type: 'string', required: true, description: 'Chart type (e.g. bar, line, pie, scatter)' },
+  { name: 'title', type: 'string', required: true, description: 'Chart display title' },
+  { name: 'xColumn', type: 'string', required: true, description: 'Column name for X axis' },
+  { name: 'yColumn', type: 'string', required: false, description: 'Column name for Y axis' },
+  { name: 'aggregation', type: 'string', required: false, description: 'Aggregation function (e.g. sum, count, avg)' },
+]} />
+
+**Response** `201 Created` — `{ "id": "...", "name": "..." }`
+
+Create a bar chart showing the distribution of customer ratings:
+
+<CodeExample ts={`// Create a ratings distribution chart
+const chart: { id: string; name: string } = await fetch('/api/tables/tbl-6c1d-9e7f/charts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    type: 'bar',
+    title: 'Ratings Distribution',
+    xColumn: 'rating',
+    aggregation: 'count',
+  }),
+}).then((r) => r.json());`} python={`import requests
+
+# Create a ratings distribution chart
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/charts",
+    json={
+        "type": "bar",
+        "title": "Ratings Distribution",
+        "xColumn": "rating",
+        "aggregation": "count",
+    },
+)
+chart: dict = response.json()`} />
+
+</EndpointCard>
+
+### Update Chart
+
+<EndpointCard method="PATCH" path="/api/tables/{id}/charts/{chartId}" description="Update a chart's title, type, axes, or aggregation. Config fields are merged with the existing configuration.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'title', type: 'string', required: false, description: 'Updated chart title' },
+  { name: 'type', type: 'string', required: false, description: 'Updated chart type' },
+  { name: 'xColumn', type: 'string', required: false, description: 'Updated X axis column' },
+  { name: 'yColumn', type: 'string', required: false, description: 'Updated Y axis column' },
+  { name: 'aggregation', type: 'string', required: false, description: 'Updated aggregation function' },
+]} />
+
+**Response** `200` — Updated chart object with parsed config
+
+**Errors:** `404` — Chart not found
+
+<CodeExample ts={`// Switch to pie chart
+await fetch('/api/tables/tbl-6c1d-9e7f/charts/chart-a1b2-c3d4', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ type: 'pie', title: 'Ratings Breakdown' }),
+});`} python={`import requests
+
+# Switch to pie chart
+requests.patch(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/charts/chart-a1b2-c3d4",
+    json={"type": "pie", "title": "Ratings Breakdown"},
+)`} />
+
+</EndpointCard>
+
+### Delete Chart
+
+<EndpointCard method="DELETE" path="/api/tables/{id}/charts/{chartId}" description="Permanently delete a chart visualization.">
+
+**Response** `204 No Content`
+
+**Errors:** `404` — Chart not found
+
+<CodeExample ts={`// Delete a chart
+await fetch('/api/tables/tbl-6c1d-9e7f/charts/chart-a1b2-c3d4', { method: 'DELETE' });`} python={`import requests
+
+# Delete a chart
+requests.delete("http://localhost:3000/api/tables/tbl-6c1d-9e7f/charts/chart-a1b2-c3d4")`} />
+
+</EndpointCard>
+
+---
+
+## History
+
+### Table History
+
+<EndpointCard method="GET" path="/api/tables/{id}/history" description="Retrieve the change history for a table (row additions, updates, deletions).">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'limit', type: 'number', description: 'Max entries to return (default 100, max 500)' },
+]} />
+
+<CodeExample ts={`// Fetch recent change history
+const history: Array<{ action: string; rowId: string; createdAt: string }> =
+  await fetch('/api/tables/tbl-6c1d-9e7f/history?limit=50').then((r) => r.json());
+
+history.forEach((entry) => {
+  console.log(\`[\${entry.action}] row \${entry.rowId} at \${entry.createdAt}\`);
+});`} python={`import requests
+
+# Fetch recent change history
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/history",
+    params={"limit": 50},
+)
+history: list[dict] = response.json()
+
+for entry in history:
+    print(f"[{entry['action']}] row {entry['rowId']} at {entry['createdAt']}")`} />
+
+</EndpointCard>
+
+### Row History
+
+<EndpointCard method="GET" path="/api/tables/{id}/rows/{rowId}/history" description="Retrieve the change history for a specific row, showing each version of its data.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'limit', type: 'number', description: 'Max entries to return (default 50, max 200)' },
+]} />
+
+<CodeExample ts={`// View how a row changed over time
+const history: Array<{ version: number; data: { rating: number }; createdAt: string }> =
+  await fetch('/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4/history').then((r) => r.json());
+
+history.forEach((entry) => {
+  console.log(\`v\${entry.version}: rating=\${entry.data.rating} at \${entry.createdAt}\`);
+});`} python={`import requests
+
+# View how a row changed over time
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4/history"
+)
+history: list[dict] = response.json()
+
+for entry in history:
+    print(f"v{entry['version']}: rating={entry['data']['rating']} at {entry['createdAt']}")`} />
+
+</EndpointCard>
+
+### Rollback Row
+
+<EndpointCard method="POST" path="/api/tables/{id}/rows/{rowId}/history" description="Rollback a row to a previous version by providing a history entry ID.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'historyEntryId', type: 'string (UUID)', required: true, description: 'History entry to rollback to' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+Rollback a row to a previous version — useful for undoing accidental edits:
+
+<CodeExample ts={`// Rollback a row to a previous version
+await fetch('/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4/history', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ historyEntryId: 'hist-9f8e-7d6c' }),
+});`} python={`import requests
+
+# Rollback a row to a previous version
+requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/rows/row-a1b2-c3d4/history",
+    json={"historyEntryId": "hist-9f8e-7d6c"},
+)`} />
+
+**Errors:** `400` — Missing historyEntryId, `404` — History entry not found
+
+</EndpointCard>
+
+---
+
+## Templates
+
+### List Templates
+
+<EndpointCard method="GET" path="/api/tables/templates" description="List available table templates, optionally filtered by category or scope.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'category', type: 'enum', description: 'business, personal, pm, finance, or content' },
+  { name: 'scope', type: 'enum', description: 'system or user' },
+]} />
+
+<CodeExample ts={`// List project management templates
+const { templates }: { templates: Array<{ name: string; scope: string; description: string }> } =
+  await fetch('/api/tables/templates?category=pm').then((r) => r.json());
+
+templates.forEach((t) => console.log(\`\${t.name} [\${t.scope}] — \${t.description}\`));`} python={`import requests
+
+# List project management templates
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/tables/templates",
+    params={"category": "pm"},
+)
+data: dict = response.json()
+
+for t in data["templates"]:
+    print(f"{t['name']} [{t['scope']}] — {t['description']}")`} />
+
+</EndpointCard>
+
+### Save as Template
+
+<EndpointCard method="POST" path="/api/tables/templates" description="Save an existing table as a reusable user-scoped template. Optionally includes the first 5 rows as sample data.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'tableId', type: 'string (UUID)', required: true, description: 'Source table to save as template' },
+  { name: 'name', type: 'string', required: true, description: 'Template name' },
+  { name: 'description', type: 'string', required: false, description: 'Template description (defaults to table description)' },
+  { name: 'category', type: 'enum', required: false, description: 'business, personal, pm, finance, or content' },
+  { name: 'includeSampleData', type: 'boolean', required: false, description: 'Include first 5 rows as sample data' },
+]} />
+
+**Response** `201 Created` — `{ "id": "...", "name": "..." }`
+
+Save a well-designed table as a reusable template for your team:
+
+<CodeExample ts={`// Save a table as a reusable template
+const template: { id: string } = await fetch('/api/tables/templates', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    tableId: 'tbl-6c1d-9e7f',
+    name: 'Sprint Planning Board',
+    category: 'pm',
+    includeSampleData: true,
+  }),
+}).then((r) => r.json());
+
+console.log(\`Template saved: \${template.id}\`);`} python={`import requests
+
+# Save a table as a reusable template
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/tables/templates",
+    json={
+        "tableId": "tbl-6c1d-9e7f",
+        "name": "Sprint Planning Board",
+        "category": "pm",
+        "includeSampleData": True,
+    },
+)
+template: dict = response.json()
+
+print(f"Template saved: {template['id']}")`} />
+
+</EndpointCard>
+
+## Column Config Reference
+
+| Config Field | Applies To | Description |
+|-------------|-----------|-------------|
+| **options** | select | Array of allowed option strings |
+| **formula** | computed | Formula expression string |
+| **formulaType** | computed | arithmetic, text_concat, date_diff, conditional, or aggregate |
+| **resultType** | computed | Expected result data type |
+| **dependencies** | computed | Column names the formula depends on |
+| **targetTableId** | relation | ID of the related table |
+| **displayColumn** | relation | Column name to display from the related table |
+
+## Filter Operators
+
+| Operator | Description |
+|----------|-------------|
+| **eq** | Equal to |
+| **neq** | Not equal to |
+| **gt** / **gte** | Greater than / greater than or equal |
+| **lt** / **lte** | Less than / less than or equal |
+| **contains** | String contains |
+| **starts_with** | String starts with |
+| **in** | Value is in array |
+| **is_empty** | Value is null or empty |
+| **is_not_empty** | Value is not null or empty |

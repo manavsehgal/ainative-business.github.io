@@ -1,0 +1,436 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Channels API"
+description: "Configure outbound and bidirectional messaging channels for Slack, Telegram, and webhooks with connection testing and inbound message handling."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Channels API
+
+Channels connect Stagent to external messaging platforms. Each channel configuration stores credentials and connection details for a Slack workspace, Telegram bot, or generic webhook. Inbound endpoints receive messages from these platforms and route them through the gateway for agent processing.
+
+## Quick Start
+
+Configure a Slack channel, test the connection, and send a message — a typical integration flow:
+
+<CodeExample ts={`// 1. Create a Slack channel configuration
+const createRes: Response = await fetch('/api/channels', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Engineering Alerts',
+    channelType: 'slack',
+    config: {
+      webhookUrl: 'https://hooks.slack.com/services/T0001/B0001/xxxx',
+    },
+  }),
+});
+const channel: { id: string; channelType: string; testStatus: string } = await createRes.json();
+// -> { id: "ch-3a4b-5c6d", channelType: "slack", testStatus: "untested", ... }
+
+// 2. Test the connection — sends a test message through the adapter
+const testRes: Response = await fetch(\`/api/channels/\${channel.id}/test\`, {
+  method: 'POST',
+});
+const test: { testStatus: string } = await testRes.json();
+console.log(\`Test: \${test.testStatus}\`); // "ok" or "failed"
+
+// 3. Enable bidirectional messaging (receive Slack events too)
+await fetch(\`/api/channels/\${channel.id}\`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ direction: 'bidirectional' }),
+});
+
+// 4. List all configured channels
+const listRes: Response = await fetch('/api/channels');
+const channels: Array<{ name: string; channelType: string; status: string; testStatus: string }> = await listRes.json();
+channels.forEach((ch) => {
+  console.log(\`\${ch.name} (\${ch.channelType}) — \${ch.status} [\${ch.testStatus}]\`);
+});`} python={`import requests
+
+# 1. Create a Slack channel configuration
+create_res = requests.post(
+    "http://localhost:3000/api/channels",
+    json={
+        "name": "Engineering Alerts",
+        "channelType": "slack",
+        "config": {
+            "webhookUrl": "https://hooks.slack.com/services/T0001/B0001/xxxx",
+        },
+    },
+)
+channel: dict = create_res.json()
+# -> { "id": "ch-3a4b-5c6d", "channelType": "slack", "testStatus": "untested", ... }
+
+# 2. Test the connection — sends a test message through the adapter
+test_res = requests.post(f"http://localhost:3000/api/channels/{channel['id']}/test")
+test: dict = test_res.json()
+print(f"Test: {test['testStatus']}")  # "ok" or "failed"
+
+# 3. Enable bidirectional messaging (receive Slack events too)
+requests.patch(
+    f"http://localhost:3000/api/channels/{channel['id']}",
+    json={"direction": "bidirectional"},
+)
+
+# 4. List all configured channels
+list_res = requests.get("http://localhost:3000/api/channels")
+channels: list[dict] = list_res.json()
+for ch in channels:
+    print(f"{ch['name']} ({ch['channelType']}) — {ch['status']} [{ch['testStatus']}]")`} />
+
+## Base URL
+
+```
+/api/channels
+```
+
+## Endpoints
+
+### List Channels
+
+<EndpointCard method="GET" path="/api/channels" description="Retrieve all channel configurations, newest first. Sensitive fields are masked in the response.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Channel configuration identifier' },
+  { name: 'channelType', type: 'enum', required: true, description: 'slack, telegram, or webhook' },
+  { name: 'name', type: 'string', required: true, description: 'Channel display name' },
+  { name: 'config', type: 'object', required: true, description: 'Channel-specific config (tokens masked)' },
+  { name: 'status', type: 'enum', required: true, description: 'active or disabled' },
+  { name: 'direction', type: 'enum', required: true, description: 'outbound or bidirectional' },
+  { name: 'testStatus', type: 'enum', required: true, description: 'untested, ok, or failed' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification' },
+]} />
+
+List all channels to see their status and test results — tokens are masked in the response:
+
+<CodeExample ts={`// List all channels and check their health
+const res: Response = await fetch('http://localhost:3000/api/channels');
+const channels: Array<{ name: string; channelType: string; status: string; direction: string; testStatus: string }> = await res.json();
+
+channels.forEach((ch) => {
+  console.log(\`\${ch.name} (\${ch.channelType})\`);
+  console.log(\`  Status: \${ch.status}, Direction: \${ch.direction}\`);
+  console.log(\`  Test: \${ch.testStatus}\`);
+});`} python={`import requests
+
+# List all channels and check their health
+res: requests.Response = requests.get("http://localhost:3000/api/channels")
+channels: list[dict] = res.json()
+
+for ch in channels:
+    print(f"{ch['name']} ({ch['channelType']})")
+    print(f"  Status: {ch['status']}, Direction: {ch['direction']}")
+    print(f"  Test: {ch['testStatus']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "ch-3a4b-5c6d",
+    "channelType": "slack",
+    "name": "Engineering Alerts",
+    "config": { "webhookUrl": "https://hooks.slack.com/services/T.../B.../****" },
+    "status": "active",
+    "direction": "outbound",
+    "testStatus": "ok",
+    "createdAt": "2026-04-03T09:00:00.000Z",
+    "updatedAt": "2026-04-03T09:05:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Channel
+
+<EndpointCard method="POST" path="/api/channels" description="Create a new channel configuration. Required config fields depend on the channel type.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Channel display name' },
+  { name: 'channelType', type: 'enum', required: true, description: 'slack, telegram, or webhook' },
+  { name: 'config', type: 'object', required: true, description: 'Channel-specific configuration' },
+]} />
+
+**Slack config requires:** `webhookUrl`
+**Telegram config requires:** `botToken`, `chatId`
+**Webhook config requires:** `url`
+
+**Response** `201 Created` — Channel object (tokens masked)
+
+Create a Slack channel for sending task completion alerts to your team:
+
+<CodeExample ts={`// Configure a Slack channel
+const res: Response = await fetch('http://localhost:3000/api/channels', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Engineering Alerts',
+    channelType: 'slack',
+    config: { webhookUrl: 'https://hooks.slack.com/services/T0001/B0001/xxxx' },
+  }),
+});
+const channel: { id: string; testStatus: string } = await res.json();
+
+console.log(\`Channel created: \${channel.id} [\${channel.testStatus}]\`);`} python={`import requests
+
+# Configure a Slack channel
+res: requests.Response = requests.post(
+    "http://localhost:3000/api/channels",
+    json={
+        "name": "Engineering Alerts",
+        "channelType": "slack",
+        "config": {"webhookUrl": "https://hooks.slack.com/services/T0001/B0001/xxxx"},
+    },
+)
+channel: dict = res.json()
+
+print(f"Channel created: {channel['id']} [{channel['testStatus']}]")`} />
+
+Create a Telegram channel for mobile notifications:
+
+<CodeExample ts={`// Configure a Telegram bot channel
+const res: Response = await fetch('http://localhost:3000/api/channels', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Mobile Alerts',
+    channelType: 'telegram',
+    config: { botToken: '7123456789:AAF...', chatId: '-1001234567890' },
+  }),
+});
+const channel: { id: string; testStatus: string } = await res.json();`} python={`import requests
+
+# Configure a Telegram bot channel
+res: requests.Response = requests.post(
+    "http://localhost:3000/api/channels",
+    json={
+        "name": "Mobile Alerts",
+        "channelType": "telegram",
+        "config": {"botToken": "7123456789:AAF...", "chatId": "-1001234567890"},
+    },
+)
+channel: dict = res.json()`} />
+
+**Errors:** `400` — Missing required fields
+
+</EndpointCard>
+
+### Get Channel
+
+<EndpointCard method="GET" path="/api/channels/{id}" description="Retrieve a single channel configuration by ID.">
+
+**Response** `200` — Channel object (tokens masked)
+
+<CodeExample ts={`// Retrieve a single channel by ID
+const res: Response = await fetch('http://localhost:3000/api/channels/ch-3a4b-5c6d');
+const channel: { name: string; status: string; testStatus: string } = await res.json();
+console.log(\`\${channel.name}: \${channel.status} (\${channel.testStatus})\`);`} python={`import requests
+
+# Retrieve a single channel by ID
+res: requests.Response = requests.get("http://localhost:3000/api/channels/ch-3a4b-5c6d")
+channel: dict = res.json()
+print(f"{channel['name']}: {channel['status']} ({channel['testStatus']})")`} />
+
+**Errors:** `404` — Channel not found
+
+</EndpointCard>
+
+### Update Channel
+
+<EndpointCard method="PATCH" path="/api/channels/{id}" description="Update channel fields. Changing config resets testStatus to untested.">
+
+<SchemaTable title="Request Body (all optional)" fields={[
+  { name: 'name', type: 'string', required: false, description: 'Updated display name' },
+  { name: 'config', type: 'object', required: false, description: 'Updated channel config (resets test status)' },
+  { name: 'status', type: 'enum', required: false, description: 'active or disabled' },
+  { name: 'direction', type: 'enum', required: false, description: 'outbound or bidirectional' },
+]} />
+
+**Response** `200` — Updated channel object
+
+Disable a channel temporarily or switch it to bidirectional mode:
+
+<CodeExample ts={`// Enable bidirectional messaging
+await fetch('http://localhost:3000/api/channels/ch-3a4b-5c6d', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ direction: 'bidirectional' }),
+});`} python={`import requests
+
+# Enable bidirectional messaging
+requests.patch(
+    "http://localhost:3000/api/channels/ch-3a4b-5c6d",
+    json={"direction": "bidirectional"},
+)`} />
+
+**Errors:** `400` — Invalid field values, `404` — Not found
+
+</EndpointCard>
+
+### Delete Channel
+
+<EndpointCard method="DELETE" path="/api/channels/{id}" description="Permanently delete a channel configuration.">
+
+**Response** `200` — `{ "deleted": true }`
+
+<CodeExample ts={`// Permanently delete a channel configuration
+await fetch('http://localhost:3000/api/channels/ch-3a4b-5c6d', { method: 'DELETE' });`} python={`import requests
+
+# Permanently delete a channel configuration
+requests.delete("http://localhost:3000/api/channels/ch-3a4b-5c6d")`} />
+
+**Errors:** `404` — Channel not found
+
+</EndpointCard>
+
+### Test Channel Connection
+
+<EndpointCard method="POST" path="/api/channels/{id}/test" description="Test connectivity to a channel by sending a test message through its adapter. Updates the channel's testStatus field.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'testStatus', type: 'enum', required: true, description: 'ok or failed' },
+  { name: 'error', type: 'string', required: false, description: 'Error message if test failed' },
+]} />
+
+Send a test message to verify the channel is configured correctly — always test after creating or updating config:
+
+<CodeExample ts={`// Test connectivity — sends a test message through the adapter
+const res: Response = await fetch('http://localhost:3000/api/channels/ch-3a4b-5c6d/test', {
+  method: 'POST',
+});
+const { testStatus, error }: { testStatus: string; error?: string } = await res.json();
+
+if (testStatus === 'ok') {
+  console.log('Channel is working — test message sent');
+} else {
+  console.error(\`Test failed: \${error}\`);
+}`} python={`import requests
+
+# Test connectivity — sends a test message through the adapter
+res: requests.Response = requests.post("http://localhost:3000/api/channels/ch-3a4b-5c6d/test")
+data: dict = res.json()
+
+if data["testStatus"] == "ok":
+    print("Channel is working — test message sent")
+else:
+    print(f"Test failed: {data.get('error')}")`} />
+
+Example response (success):
+
+```json
+{
+  "testStatus": "ok"
+}
+```
+
+Example response (failure):
+
+```json
+{
+  "testStatus": "failed",
+  "error": "Webhook returned 403 — check the webhook URL is still valid"
+}
+```
+
+**Errors:** `404` — Channel not found, `500` — Adapter error
+
+</EndpointCard>
+
+---
+
+## Inbound Webhooks
+
+### Slack Inbound
+
+<EndpointCard method="POST" path="/api/channels/inbound/slack?configId={id}" description="Receives Slack Events API callbacks. Handles url_verification challenges and event_callback messages. Verifies request signatures using the channel's signingSecret. Responds within 3 seconds per Slack requirements.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'configId', type: 'string', required: true, description: 'Channel config ID to route the message to' },
+]} />
+
+**Response** `200` — `{ "ok": true }` (or challenge response)
+
+**Errors:** `400` — Missing configId or invalid JSON, `401` — Missing signingSecret, `403` — Invalid signature, `404` — Channel not found
+
+</EndpointCard>
+
+### Telegram Inbound
+
+<EndpointCard method="POST" path="/api/channels/inbound/telegram?configId={id}&secret={token}" description="Receives Telegram Bot API webhook updates. Verifies the shared secret token. Bot messages are silently skipped to prevent loops.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'configId', type: 'string', required: true, description: 'Channel config ID to route the message to' },
+  { name: 'secret', type: 'string', required: true, description: 'Shared webhook secret for verification' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Missing configId, `401` — Missing webhookSecret in config, `403` — Invalid secret, `404` — Channel not found
+
+</EndpointCard>
+
+### Telegram Poll (Internal)
+
+<EndpointCard method="POST" path="/api/channels/inbound/telegram/poll?configId={id}" description="Poll Telegram getUpdates API for local development when webhooks can't reach localhost. Internal-only — requires x-stagent-internal: poll header.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'configId', type: 'string', required: true, description: 'Channel config ID to poll for' },
+]} />
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'offset', type: 'number', required: false, description: 'Telegram update offset for pagination' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'processed', type: 'number', required: true, description: 'Number of messages processed' },
+  { name: 'total', type: 'number', required: true, description: 'Total updates received from Telegram' },
+  { name: 'nextOffset', type: 'number', required: true, description: 'Offset for the next poll request' },
+]} />
+
+Poll for Telegram messages during local development when webhooks cannot reach localhost:
+
+<CodeExample ts={`// Poll Telegram for local development
+const res: Response = await fetch('http://localhost:3000/api/channels/inbound/telegram/poll?configId=ch-3a4b-5c6d', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-stagent-internal': 'poll',
+  },
+  body: JSON.stringify({ offset: 0 }),
+});
+const poll: { processed: number; total: number; nextOffset: number } = await res.json();
+
+console.log(\`Processed \${poll.processed} of \${poll.total} updates\`);
+console.log(\`Next offset: \${poll.nextOffset}\`);`} python={`import requests
+
+# Poll Telegram for local development
+res: requests.Response = requests.post(
+    "http://localhost:3000/api/channels/inbound/telegram/poll",
+    params={"configId": "ch-3a4b-5c6d"},
+    headers={"x-stagent-internal": "poll"},
+    json={"offset": 0},
+)
+poll: dict = res.json()
+
+print(f"Processed {poll['processed']} of {poll['total']} updates")
+print(f"Next offset: {poll['nextOffset']}")`} />
+
+**Errors:** `401` — Missing internal header, `403` — Channel not active, `502` — Telegram API error
+
+</EndpointCard>
+
+## Channel Types
+
+| Type | Required Config | Direction |
+|------|----------------|-----------|
+| **slack** | `webhookUrl`, `signingSecret` (for inbound) | Outbound or bidirectional |
+| **telegram** | `botToken`, `chatId`, `webhookSecret` (for inbound) | Outbound or bidirectional |
+| **webhook** | `url` | Outbound only |

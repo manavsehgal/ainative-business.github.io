@@ -1,0 +1,14 @@
+---
+interface Props {
+  code: number;
+}
+
+const { code } = Astro.props;
+
+const variant =
+  code < 300 ? 'api-status-2xx' :
+  code < 400 ? 'api-status-3xx' :
+  code < 500 ? 'api-status-4xx' :
+               'api-status-5xx';
+---
+<code class:list={["api-status-badge", variant]}>{code}</code>

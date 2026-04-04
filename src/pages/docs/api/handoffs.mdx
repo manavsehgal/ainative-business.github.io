@@ -1,0 +1,266 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Handoffs API"
+description: "List and create agent-to-agent handoff messages for inter-agent collaboration, task delegation, and approval workflows."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Handoffs API
+
+Handoffs enable structured agent-to-agent communication. One agent profile can send a message to another, optionally referencing a source task and requesting approval before the recipient acts. Handoffs power delegation chains, collaborative workflows, and human-in-the-loop review gates.
+
+## Quick Start
+
+Create a handoff from one agent to another, list pending handoffs, and resolve one:
+
+<CodeExample ts={`// 1. Create a handoff — analyst delegates review to a reviewer agent
+interface Handoff {
+  id: string;
+  status: string;
+  toProfileId: string;
+  requiresApproval: boolean;
+}
+
+const handoff: Handoff = await fetch('/api/handoffs', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    fromProfileId: 'analyst-agent',
+    toProfileId: 'reviewer-agent',
+    sourceTaskId: 'task-9d4e-a1b2',
+    subject: 'Q4 revenue analysis ready for review',
+    body: 'Analysis is complete with 3 charts and an executive summary. Please verify the methodology and sign off.',
+    priority: 1,
+    requiresApproval: true,
+  }),
+}).then((r: Response) => r.json());
+// -> { id: "hoff-c7a1...", status: "pending", requiresApproval: true, ... }
+
+// 2. List all pending handoffs for the reviewer
+const pending: Handoff[] = await fetch('/api/handoffs?status=pending&profileId=reviewer-agent')
+  .then((r: Response) => r.json());
+console.log(\`\${pending.length} handoffs awaiting review\`);
+
+// 3. Resolve the handoff (recipient marks it as completed)
+//    Note: status updates happen through the handoff bus internally.
+//    The reviewer agent processes the handoff and its status transitions
+//    from pending -> accepted -> in_progress -> completed automatically.
+console.log(\`Handoff \${handoff.id} is being processed by \${handoff.toProfileId}\`);`} python={`import requests
+
+# 1. Create a handoff — analyst delegates review to a reviewer agent
+handoff: dict = requests.post(
+    "http://localhost:3000/api/handoffs",
+    json={
+        "fromProfileId": "analyst-agent",
+        "toProfileId": "reviewer-agent",
+        "sourceTaskId": "task-9d4e-a1b2",
+        "subject": "Q4 revenue analysis ready for review",
+        "body": "Analysis is complete with 3 charts and an executive summary. Please verify the methodology and sign off.",
+        "priority": 1,
+        "requiresApproval": True,
+    },
+).json()
+# -> { "id": "hoff-c7a1...", "status": "pending", "requiresApproval": true, ... }
+
+# 2. List all pending handoffs for the reviewer
+pending: list[dict] = requests.get(
+    "http://localhost:3000/api/handoffs",
+    params={"status": "pending", "profileId": "reviewer-agent"},
+).json()
+print(f"{len(pending)} handoffs awaiting review")
+
+# 3. Resolve the handoff (recipient marks it as completed)
+#    Note: status updates happen through the handoff bus internally.
+#    The reviewer agent processes the handoff and its status transitions
+#    from pending -> accepted -> in_progress -> completed automatically.
+print(f"Handoff {handoff['id']} is being processed by {handoff['toProfileId']}")`} />
+
+## Base URL
+
+```
+/api/handoffs
+```
+
+## Endpoints
+
+### List Handoffs
+
+<EndpointCard method="GET" path="/api/handoffs" description="Retrieve handoff messages with optional filtering by status and recipient profile. Results are ordered newest first, limited to 100 entries.">
+
+<ParamTable params={[
+  { name: 'status', type: 'enum', required: false, description: 'Filter by message status: pending, accepted, in_progress, completed, rejected, expired' },
+  { name: 'profileId', type: 'string', required: false, description: 'Filter by recipient profile UUID' },
+]} />
+
+**Response** `200` — Array of handoff message objects
+
+<SchemaTable title="Handoff Message Object" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Message identifier' },
+  { name: 'fromProfileId', type: 'string', required: true, description: 'Sender agent profile ID' },
+  { name: 'toProfileId', type: 'string', required: true, description: 'Recipient agent profile ID' },
+  { name: 'taskId', type: 'string (UUID)', required: false, description: 'Source task that triggered the handoff' },
+  { name: 'targetTaskId', type: 'string (UUID)', required: false, description: 'Task created or assigned by the handoff' },
+  { name: 'subject', type: 'string', required: true, description: 'Message subject line' },
+  { name: 'body', type: 'string', required: true, description: 'Message body text' },
+  { name: 'attachments', type: 'string (JSON)', required: false, description: 'Serialized JSON attachments' },
+  { name: 'priority', type: 'number (0–3)', required: true, description: 'Priority level (default 2)' },
+  { name: 'status', type: 'enum', required: true, description: 'Lifecycle state: pending, accepted, in_progress, completed, rejected, expired' },
+  { name: 'requiresApproval', type: 'boolean', required: true, description: 'Whether the handoff needs approval before execution' },
+  { name: 'approvedBy', type: 'string', required: false, description: 'Profile ID that approved the handoff' },
+  { name: 'parentMessageId', type: 'string (UUID)', required: false, description: 'Parent message for threaded handoff chains' },
+  { name: 'chainDepth', type: 'number', required: true, description: 'Depth in the handoff chain (0 = root)' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'respondedAt', type: 'ISO 8601', required: false, description: 'When the recipient responded' },
+  { name: 'expiresAt', type: 'ISO 8601', required: false, description: 'Expiration timestamp' },
+]} />
+
+Fetch all pending handoffs for a specific recipient — useful for building an inbox or approval queue:
+
+<CodeExample ts={`// Fetch pending handoffs for the reviewer agent
+interface Handoff {
+  id: string;
+  priority: number;
+  subject: string;
+  fromProfileId: string;
+}
+
+const handoffs: Handoff[] = await fetch('/api/handoffs?status=pending&profileId=reviewer-agent')
+  .then((r: Response) => r.json());
+
+console.log(\`\${handoffs.length} pending handoffs\`);
+handoffs.forEach((h: Handoff) => {
+  console.log(\`  [\${h.priority}] \${h.subject} (from: \${h.fromProfileId})\`);
+});`} python={`import requests
+
+# Fetch pending handoffs for the reviewer agent
+response = requests.get(
+    "http://localhost:3000/api/handoffs",
+    params={"status": "pending", "profileId": "reviewer-agent"},
+)
+handoffs: list[dict] = response.json()
+
+print(f"{len(handoffs)} pending handoffs")
+for h in handoffs:
+    print(f"  [{h['priority']}] {h['subject']} (from: {h['fromProfileId']})")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "hoff-c7a1-b3d4",
+    "fromProfileId": "analyst-agent",
+    "toProfileId": "reviewer-agent",
+    "taskId": "task-9d4e-a1b2",
+    "subject": "Q4 revenue analysis ready for review",
+    "body": "Analysis is complete with 3 charts and an executive summary. Please verify the methodology and sign off.",
+    "priority": 1,
+    "status": "pending",
+    "requiresApproval": true,
+    "chainDepth": 0,
+    "createdAt": "2026-04-03T10:45:00.000Z",
+    "expiresAt": "2026-04-04T10:45:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Handoff
+
+<EndpointCard method="POST" path="/api/handoffs" description="Send a handoff message from one agent profile to another. The message is dispatched through the handoff bus and persisted to the database.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'fromProfileId', type: 'string', required: true, description: 'Sender agent profile ID' },
+  { name: 'toProfileId', type: 'string', required: true, description: 'Recipient agent profile ID' },
+  { name: 'sourceTaskId', type: 'string', required: false, description: 'Source task UUID that triggered this handoff' },
+  { name: 'subject', type: 'string', required: true, description: 'Message subject line' },
+  { name: 'body', type: 'string', required: true, description: 'Message body text' },
+  { name: 'priority', type: 'number', required: false, description: 'Priority level 0–3 (default 2)' },
+  { name: 'requiresApproval', type: 'boolean', required: false, description: 'Require approval before recipient acts (default false)' },
+  { name: 'parentMessageId', type: 'string', required: false, description: 'Parent message ID for threaded chains' },
+]} />
+
+**Response** `201 Created` — The created handoff message object
+
+**Errors:** `400` — Missing required fields or handoff bus error
+
+Send a handoff requesting approval — the recipient must accept before acting on it:
+
+<CodeExample ts={`// Create a handoff with approval required
+interface HandoffResponse {
+  id: string;
+  status: string;
+}
+
+const handoff: HandoffResponse = await fetch('/api/handoffs', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    fromProfileId: 'analyst-agent',
+    toProfileId: 'reviewer-agent',
+    sourceTaskId: 'task-9d4e-a1b2',
+    subject: 'Analysis complete — ready for review',
+    body: 'Q4 revenue analysis is done. 3 charts generated, executive summary attached. Please review methodology before sign-off.',
+    priority: 1,
+    requiresApproval: true,
+  }),
+}).then((r: Response) => r.json());
+
+console.log(handoff.id);     // "hoff-c7a1-..."
+console.log(handoff.status); // "pending"`} python={`import requests
+
+# Create a handoff with approval required
+response = requests.post(
+    "http://localhost:3000/api/handoffs",
+    json={
+        "fromProfileId": "analyst-agent",
+        "toProfileId": "reviewer-agent",
+        "sourceTaskId": "task-9d4e-a1b2",
+        "subject": "Analysis complete — ready for review",
+        "body": "Q4 revenue analysis is done. 3 charts generated, executive summary attached. Please review methodology before sign-off.",
+        "priority": 1,
+        "requiresApproval": True,
+    },
+)
+handoff: dict = response.json()
+
+print(handoff["id"])      # "hoff-c7a1-..."
+print(handoff["status"])  # "pending"`} />
+
+Example response:
+
+```json
+{
+  "id": "hoff-c7a1-b3d4",
+  "fromProfileId": "analyst-agent",
+  "toProfileId": "reviewer-agent",
+  "taskId": "task-9d4e-a1b2",
+  "subject": "Analysis complete — ready for review",
+  "body": "Q4 revenue analysis is done. 3 charts generated, executive summary attached. Please review methodology before sign-off.",
+  "priority": 1,
+  "status": "pending",
+  "requiresApproval": true,
+  "chainDepth": 0,
+  "createdAt": "2026-04-03T10:45:00.000Z"
+}
+```
+
+**Errors:** `400` — Missing required fields or handoff bus error
+
+</EndpointCard>
+
+## Status Lifecycle
+
+| Status | Description |
+|--------|-------------|
+| **pending** | Message sent, awaiting recipient action |
+| **accepted** | Recipient acknowledged the handoff |
+| **in_progress** | Recipient is actively working on the handoff |
+| **completed** | Handoff fulfilled successfully |
+| **rejected** | Recipient declined the handoff |
+| **expired** | Handoff timed out before a response |

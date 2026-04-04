@@ -8,6 +8,14 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://stagent.io',
   trailingSlash: 'always',
+  markdown: {
+    shikiConfig: {
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
+    },
+  },
   integrations: [mdx(), sitemap({
     filter: (page) =>
       !page.includes('/confirmed') && !page.includes('/og'),

@@ -1,0 +1,117 @@
+---
+import ApiDocsLayout from '../../../layouts/ApiDocsLayout.astro';
+
+const domains = [
+  {
+    group: 'Core',
+    items: [
+      { href: '/docs/api/tasks/', title: 'Tasks', endpoints: 13, description: 'Create, execute, cancel, and monitor task lifecycle with fire-and-forget execution and SSE log streaming.' },
+      { href: '/docs/api/projects/', title: 'Projects', endpoints: 7, description: 'Manage project workspaces with working directories, document bindings, and cascading resource cleanup.' },
+      { href: '/docs/api/workflows/', title: 'Workflows', endpoints: 11, description: 'Orchestrate multi-step execution patterns — sequence, parallel, loop, swarm, planner-executor, and checkpoint.' },
+      { href: '/docs/api/blueprints/', title: 'Blueprints', endpoints: 5, description: 'Store and instantiate reusable workflow templates with import and lineage tracking.' },
+      { href: '/docs/api/schedules/', title: 'Schedules', endpoints: 5, description: 'Clock-driven cron and heartbeat schedules with natural language parsing and delivery channels.' },
+    ],
+  },
+  {
+    group: 'Intelligence',
+    items: [
+      { href: '/docs/api/chat/', title: 'Chat', endpoints: 9, description: 'Multi-provider conversations with SSE streaming, tool permissions, model selection, and entity search.' },
+      { href: '/docs/api/profiles/', title: 'Profiles', endpoints: 10, description: 'Agent profiles with multi-runtime support, testing, learned context, and AI-assisted creation.' },
+      { href: '/docs/api/runtimes/', title: 'Runtimes', endpoints: 2, description: 'Query available agent runtimes and their capabilities across five providers.' },
+      { href: '/docs/api/memory/', title: 'Memory', endpoints: 2, description: 'Episodic agent memory with decay scoring and confidence tracking.' },
+    ],
+  },
+  {
+    group: 'Content',
+    items: [
+      { href: '/docs/api/documents/', title: 'Documents', endpoints: 7, description: 'Upload, preprocess, version, and download files with automatic text extraction.' },
+      { href: '/docs/api/tables/', title: 'Tables', endpoints: 26, description: 'Structured data grids with columns, rows, charts, triggers, import/export, and templates.' },
+      { href: '/docs/api/uploads/', title: 'Uploads', endpoints: 4, description: 'File upload management with storage cleanup and metadata retrieval.' },
+      { href: '/docs/api/views/', title: 'Views', endpoints: 4, description: 'Saved view configurations with filters, sorting, and column visibility.' },
+    ],
+  },
+  {
+    group: 'Platform',
+    items: [
+      { href: '/docs/api/settings/', title: 'Settings', endpoints: 14, description: 'Provider configuration, runtime routing, budgets, permissions, browser tools, and pricing.' },
+      { href: '/docs/api/permissions/', title: 'Permissions', endpoints: 5, description: 'Permission patterns and presets for tool access control and agent governance.' },
+      { href: '/docs/api/notifications/', title: 'Notifications', endpoints: 6, description: 'Approval requests, alerts, and SSE streaming for pending permission decisions.' },
+      { href: '/docs/api/channels/', title: 'Channels', endpoints: 6, description: 'Multi-channel delivery via Slack, Telegram, and webhooks with bidirectional messaging.' },
+      { href: '/docs/api/environment/', title: 'Environment', endpoints: 8, description: 'Scan, audit, and manage CLI environments with health scoring and artifact discovery.' },
+      { href: '/docs/api/snapshots/', title: 'Snapshots', endpoints: 4, description: 'Database backup and restore with point-in-time snapshot management.' },
+      { href: '/docs/api/workspace/', title: 'Workspace', endpoints: 3, description: 'Discover, import, and analyze project workspace context for agent onboarding.' },
+    ],
+  },
+  {
+    group: 'Operations',
+    items: [
+      { href: '/docs/api/logs/', title: 'Logs', endpoints: 1, description: 'Real-time agent log streaming via Server-Sent Events with keepalive and backoff.' },
+      { href: '/docs/api/handoffs/', title: 'Handoffs', endpoints: 2, description: 'Agent handoff records for transferring execution context between runtimes.' },
+      { href: '/docs/api/data/', title: 'Data', endpoints: 2, description: 'Database maintenance — clear all data or seed with sample records.' },
+      { href: '/docs/api/context/', title: 'Context', endpoints: 1, description: 'Batch approve or reject learned context proposals from agent interactions.' },
+    ],
+  },
+];
+
+const totalEndpoints = domains.reduce((sum, g) => sum + g.items.reduce((s, i) => s + i.endpoints, 0), 0);
+const totalDomains = domains.reduce((sum, g) => sum + g.items.length, 0);
+---
+<ApiDocsLayout title="API Reference" description="Complete REST API reference for Stagent — 120+ endpoints across 26 domains for building integrations and automations.">
+  <h1>API Reference</h1>
+  <p>
+    Stagent exposes a local REST API with <strong>{totalEndpoints} endpoints</strong> across <strong>{totalDomains} domains</strong>.
+    All endpoints accept and return JSON. Authentication is handled by provider API keys configured in Settings.
+  </p>
+
+  <div class="not-prose mt-4 mb-8 p-4 rounded-lg border border-border bg-surface-raised/50">
+    <h4 class="font-mono text-xs uppercase tracking-widest text-text-muted mb-2">Base URL</h4>
+    <code class="font-mono text-sm text-primary">http://localhost:3000</code>
+    <p class="text-xs text-text-dim mt-2 mb-0">Stagent runs locally. All API calls are made to your local instance.</p>
+  </div>
+
+  <div class="not-prose mb-6 flex flex-wrap gap-4 text-xs font-mono">
+    <span class="flex items-center gap-1.5">
+      <span class="api-method-badge api-method-get">GET</span> Read
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="api-method-badge api-method-post">POST</span> Create / Execute
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="api-method-badge api-method-patch">PATCH</span> Update
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="api-method-badge api-method-delete">DELETE</span> Remove
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="api-method-badge api-method-sse">SSE</span> Stream
+    </span>
+  </div>
+
+  {domains.map(({ group, items }) => (
+    <section class="mb-10">
+      <h2 class="text-lg font-semibold text-text mb-4 border-b border-border pb-2">{group}</h2>
+      <div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {items.map(({ href, title, endpoints, description }) => (
+          <a href={href} class="api-domain-card block no-underline">
+            <div class="flex items-baseline justify-between mb-1.5">
+              <h3>{title}</h3>
+              <span class="api-domain-count">{endpoints} endpoints</span>
+            </div>
+            <p>{description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  ))}
+
+  <div class="not-prose mt-12 p-5 rounded-lg border border-border bg-surface-raised/30">
+    <h3 class="text-sm font-semibold text-text mb-2">Common Patterns</h3>
+    <ul class="text-sm text-text-muted space-y-1.5 list-none pl-0">
+      <li><strong>Validation</strong> — Request bodies validated with Zod. Errors return <code class="text-xs bg-surface-raised px-1 py-0.5 rounded">400</code> with <code class="text-xs bg-surface-raised px-1 py-0.5 rounded">error.flatten()</code> format.</li>
+      <li><strong>IDs</strong> — All resources use UUID v4 identifiers, auto-generated on creation.</li>
+      <li><strong>Fire-and-forget</strong> — Execution endpoints return <code class="text-xs bg-surface-raised px-1 py-0.5 rounded">202 Accepted</code> while work runs asynchronously.</li>
+      <li><strong>SSE</strong> — Streaming endpoints use <code class="text-xs bg-surface-raised px-1 py-0.5 rounded">text/event-stream</code> with keepalive heartbeats.</li>
+      <li><strong>Timestamps</strong> — All dates are ISO 8601 strings in responses.</li>
+    </ul>
+  </div>
+</ApiDocsLayout>

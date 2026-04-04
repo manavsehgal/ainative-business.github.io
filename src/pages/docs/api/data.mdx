@@ -1,0 +1,190 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Data API"
+description: "Seed sample data and clear all records for development and testing environments."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Data API
+
+The Data API provides development-only endpoints for seeding sample data and clearing all records. Both endpoints are disabled in production — they return `404` when `NODE_ENV=production`. Use these to quickly bootstrap a local instance or reset state between test runs.
+
+## Quick Start
+
+Seed sample data, verify it was created, and clear it when done:
+
+<CodeExample ts={`// 1. Seed the database with sample projects, tasks, workflows, and profiles
+const seed: { success: boolean; seeded: Record<string, number> } =
+  await fetch('/api/data/seed', { method: 'POST' }).then((r: Response) => r.json());
+console.log('Seeded entities:', seed.seeded);
+// -> { projects: 3, tasks: 12, workflows: 4, profiles: 6, schedules: 2, ... }
+
+// 2. Verify the seed worked — fetch tasks to confirm data exists
+const tasks: unknown[] = await fetch('/api/tasks').then((r: Response) => r.json());
+console.log(\`\${tasks.length} tasks now in database\`);
+
+// 3. Run your tests or explore the UI...
+
+// 4. Clean up — clear all data when done
+const clear: { success: boolean; deleted: Record<string, number> } =
+  await fetch('/api/data/clear', { method: 'POST' }).then((r: Response) => r.json());
+console.log('Cleared entities:', clear.deleted);
+// -> { tasks: 12, projects: 3, workflows: 4, profiles: 6, ... }`} python={`import requests
+
+# 1. Seed the database with sample projects, tasks, workflows, and profiles
+seed: dict = requests.post("http://localhost:3000/api/data/seed").json()
+print("Seeded entities:", seed["seeded"])
+# -> { "projects": 3, "tasks": 12, "workflows": 4, "profiles": 6, "schedules": 2, ... }
+
+# 2. Verify the seed worked — fetch tasks to confirm data exists
+tasks: list = requests.get("http://localhost:3000/api/tasks").json()
+print(f"{len(tasks)} tasks now in database")
+
+# 3. Run your tests or explore the UI...
+
+# 4. Clean up — clear all data when done
+clear: dict = requests.post("http://localhost:3000/api/data/clear").json()
+print("Cleared entities:", clear["deleted"])
+# -> { "tasks": 12, "projects": 3, "workflows": 4, "profiles": 6, ... }`} />
+
+## Base URL
+
+```
+/api/data
+```
+
+## Endpoints
+
+### Seed Sample Data
+
+<EndpointCard method="POST" path="/api/data/seed" description="Populate the database with sample projects, tasks, workflows, profiles, and related entities. Clears existing data before seeding. Development only.">
+
+**Request** — No body required
+
+**Response** `200` — Seed summary
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'success', type: 'boolean', required: true, description: 'Whether the operation succeeded' },
+  { name: 'seeded', type: 'object', required: true, description: 'Counts of seeded entities by table (e.g. projects, tasks, workflows)' },
+]} />
+
+**Errors:**
+- `404` — Endpoint disabled in production
+- `500` — Seed operation failed
+
+Seed the database to bootstrap a local development instance with realistic sample data:
+
+<CodeExample ts={`// Seed sample data — clears existing records first, then populates all tables
+const { success, seeded }: { success: boolean; seeded: Record<string, number> } =
+  await fetch('/api/data/seed', { method: 'POST' }).then((r: Response) => r.json());
+
+if (success) {
+  // Log counts for each seeded entity type
+  Object.entries(seeded).forEach(([table, count]) => {
+    console.log(\`  \${table}: \${count} records\`);
+  });
+}`} python={`import requests
+
+# Seed sample data — clears existing records first, then populates all tables
+response = requests.post("http://localhost:3000/api/data/seed")
+data: dict = response.json()
+
+if data["success"]:
+    # Log counts for each seeded entity type
+    for table, count in data["seeded"].items():
+        print(f"  {table}: {count} records")`} />
+
+Example response:
+
+```json
+{
+  "success": true,
+  "seeded": {
+    "projects": 3,
+    "tasks": 12,
+    "workflows": 4,
+    "profiles": 6,
+    "schedules": 2,
+    "documents": 8,
+    "handoffs": 3,
+    "learned_context": 5
+  }
+}
+```
+
+</EndpointCard>
+
+### Clear All Data
+
+<EndpointCard method="POST" path="/api/data/clear" description="Delete all records from the database in foreign-key-safe order. Development only.">
+
+**Request** — No body required
+
+**Response** `200` — Deletion summary
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'success', type: 'boolean', required: true, description: 'Whether the operation succeeded' },
+  { name: 'deleted', type: 'object', required: true, description: 'Counts of deleted rows by table' },
+]} />
+
+**Errors:**
+- `404` — Endpoint disabled in production
+- `500` — Clear operation failed
+
+Clear all records after a test run — tables are truncated in foreign-key-safe order:
+
+<CodeExample ts={`// Clear all data — useful between test runs or to reset local state
+const { success, deleted }: { success: boolean; deleted: Record<string, number> } =
+  await fetch('/api/data/clear', { method: 'POST' }).then((r: Response) => r.json());
+
+if (success) {
+  const total: number = Object.values(deleted).reduce((sum, n) => sum + n, 0);
+  console.log(\`Cleared \${total} records across \${Object.keys(deleted).length} tables\`);
+}`} python={`import requests
+
+# Clear all data — useful between test runs or to reset local state
+response = requests.post("http://localhost:3000/api/data/clear")
+data: dict = response.json()
+
+if data["success"]:
+    total: int = sum(data["deleted"].values())
+    print(f"Cleared {total} records across {len(data['deleted'])} tables")`} />
+
+Example response:
+
+```json
+{
+  "success": true,
+  "deleted": {
+    "cost_ledger": 24,
+    "logs": 156,
+    "handoffs": 3,
+    "learned_context": 5,
+    "tasks": 12,
+    "workflows": 4,
+    "schedules": 2,
+    "documents": 8,
+    "profiles": 6,
+    "projects": 3
+  }
+}
+```
+
+</EndpointCard>
+
+## Environment Guard
+
+Both endpoints check `process.env.NODE_ENV` at request time. In production, they return an empty `404` response with no body. This prevents accidental data loss in deployed environments.
+
+## Error Format
+
+```json
+{
+  "success": false,
+  "error": "Human-readable error message"
+}
+```

@@ -1,0 +1,331 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Runtimes API"
+description: "Query the agent runtime catalog, get runtime suggestions for tasks, and manage local Ollama models."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Runtimes API
+
+Runtimes are the execution backends that run agent tasks and power chat conversations. Stagent supports five runtimes across three providers (Anthropic, OpenAI, Ollama). The Runtimes API exposes the runtime catalog, smart routing suggestions, and Ollama model management.
+
+## Quick Start
+
+Compare runtime capabilities and get a smart suggestion for which runtime to use for a task:
+
+<CodeExample ts={`// 1. Check which runtimes support the features you need
+//    The catalog is static — here's how to use it programmatically
+const capabilities: Record<string, RuntimeCaps> = {
+  'claude-code':              { resume: true,  cancel: true,  approvals: true,  mcp: true,  tests: true  },
+  'openai-codex-app-server':  { resume: true,  cancel: true,  approvals: true,  mcp: false, tests: false },
+  'anthropic-direct':         { resume: true,  cancel: true,  approvals: true,  mcp: true,  tests: false },
+  'openai-direct':            { resume: true,  cancel: true,  approvals: true,  mcp: false, tests: false },
+  'ollama':                   { resume: false, cancel: true,  approvals: false, mcp: false, tests: false },
+};
+
+// Find runtimes that support MCP servers (needed for custom tool integrations)
+const mcpRuntimes: string[] = Object.entries(capabilities)
+  .filter(([_, caps]) => caps.mcp)
+  .map(([id]) => id);
+console.log('MCP-capable:', mcpRuntimes);
+// → ["claude-code", "anthropic-direct"]
+
+// 2. Get a smart runtime suggestion based on task content and profile
+const suggestion: RuntimeSuggestion = await fetch('/api/runtimes/suggest', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'Refactor authentication module',
+    description: 'Split the monolithic auth into separate OAuth and JWT services',
+    profileId: 'code-reviewer',
+  }),
+}).then(r => r.json());
+
+console.log(\`Suggested: \${suggestion.runtimeId}\`);  // "claude-code"
+console.log(\`Reason: \${suggestion.reason}\`);
+// → "Profile prefers claude-code for code review tasks"
+
+// 3. Check local Ollama models if you want to run tasks locally
+const ollama: Response = await fetch('/api/runtimes/ollama');
+if (ollama.ok) {
+  const { models }: { models: OllamaModel[] } = await ollama.json();
+  const names = models.map(m => \`\${m.name} (\${(m.size / 1e9).toFixed(1)}GB)\`);
+  console.log('Local models:', names);
+} else {
+  console.log('Ollama not running — install from ollama.ai');
+}`} python={`import requests
+
+# 1. Check which runtimes support the features you need
+#    The catalog is static — here's how to use it programmatically
+capabilities = {
+    "claude-code":             {"resume": True,  "cancel": True,  "approvals": True,  "mcp": True,  "tests": True},
+    "openai-codex-app-server": {"resume": True,  "cancel": True,  "approvals": True,  "mcp": False, "tests": False},
+    "anthropic-direct":        {"resume": True,  "cancel": True,  "approvals": True,  "mcp": True,  "tests": False},
+    "openai-direct":           {"resume": True,  "cancel": True,  "approvals": True,  "mcp": False, "tests": False},
+    "ollama":                  {"resume": False, "cancel": True,  "approvals": False, "mcp": False, "tests": False},
+}
+
+# Find runtimes that support MCP servers
+mcp_runtimes = [rid for rid, caps in capabilities.items() if caps["mcp"]]
+print("MCP-capable:", mcp_runtimes)
+# → ["claude-code", "anthropic-direct"]
+
+# 2. Get a smart runtime suggestion based on task content and profile
+response = requests.post(
+    "http://localhost:3000/api/runtimes/suggest",
+    json={
+        "title": "Refactor authentication module",
+        "description": "Split the monolithic auth into separate OAuth and JWT services",
+        "profileId": "code-reviewer",
+    },
+)
+suggestion = response.json()
+
+print(f"Suggested: {suggestion['runtimeId']}")  # "claude-code"
+print(f"Reason: {suggestion['reason']}")
+
+# 3. Check local Ollama models if you want to run tasks locally
+ollama_response = requests.get("http://localhost:3000/api/runtimes/ollama")
+if ollama_response.ok:
+    models = ollama_response.json()["models"]
+    for m in models:
+        size_gb = m["size"] / 1e9
+        print(f"{m['name']} ({size_gb:.1f}GB)")
+else:
+    print("Ollama not running — install from ollama.ai")`} />
+
+## Base URL
+
+```
+/api/runtimes
+```
+
+## Endpoints
+
+### Suggest Runtime
+
+<EndpointCard method="POST" path="/api/runtimes/suggest" description="Get an intelligent runtime suggestion for a task based on its title, description, profile, and the user's routing preferences. Only considers runtimes that are configured and available.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'title', type: 'string', required: true, description: 'Task title for routing analysis' },
+  { name: 'description', type: 'string', required: false, description: 'Task description for additional context' },
+  { name: 'profileId', type: 'string', required: false, description: 'Profile ID — used to check preferred runtime and compatibility' },
+]} />
+
+**Response** `200` — Runtime suggestion object
+
+<SchemaTable title="Suggestion Response" fields={[
+  { name: 'runtimeId', type: 'enum', required: true, description: 'Suggested runtime ID' },
+  { name: 'reason', type: 'string', required: true, description: 'Human-readable explanation for the suggestion' },
+  { name: 'alternatives', type: 'object[]', required: false, description: 'Other viable runtimes with reasons' },
+]} />
+
+**Errors:** `400` — Missing title
+
+Get a runtime suggestion to auto-fill the agent assignment when creating tasks — the suggestion considers profile preferences, runtime availability, and task content:
+
+<CodeExample ts={`// Get a smart runtime suggestion for a task
+const suggestion: RuntimeSuggestion = await fetch('/api/runtimes/suggest', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'Refactor authentication module',
+    description: 'Split the monolithic auth into separate OAuth and JWT services',
+    profileId: 'code-reviewer',
+  }),
+}).then(r => r.json());
+
+console.log(\`Use: \${suggestion.runtimeId} — \${suggestion.reason}\`);
+
+// Show alternatives if the primary isn't available
+if (suggestion.alternatives?.length) {
+  console.log('Alternatives:');
+  suggestion.alternatives.forEach(alt => {
+    console.log(\`  \${alt.runtimeId}: \${alt.reason}\`);
+  });
+}`} python={`import requests
+
+# Get a smart runtime suggestion for a task
+response = requests.post(
+    "http://localhost:3000/api/runtimes/suggest",
+    json={
+        "title": "Refactor authentication module",
+        "description": "Split the monolithic auth into separate OAuth and JWT services",
+        "profileId": "code-reviewer",
+    },
+)
+suggestion: dict = response.json()
+
+print(f"Use: {suggestion['runtimeId']} — {suggestion['reason']}")
+
+# Show alternatives if the primary isn't available
+for alt in suggestion.get("alternatives", []):
+    print(f"  {alt['runtimeId']}: {alt['reason']}")`} />
+
+Example response:
+
+```json
+{
+  "runtimeId": "claude-code",
+  "reason": "Profile 'code-reviewer' prefers claude-code; task involves code refactoring which benefits from file system access",
+  "alternatives": [
+    {
+      "runtimeId": "anthropic-direct",
+      "reason": "Compatible with profile but lacks file system tools for refactoring"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### List Ollama Models
+
+<EndpointCard method="GET" path="/api/runtimes/ollama" description="List available models from the local Ollama instance. Proxies to Ollama's /api/tags endpoint with a 5-second timeout.">
+
+**Response** `200` — Ollama model list (passthrough from Ollama API)
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'models', type: 'object[]', required: true, description: 'Array of Ollama model objects' },
+  { name: 'models[].name', type: 'string', required: true, description: 'Model name (e.g., llama3.2, codellama)' },
+  { name: 'models[].size', type: 'number', required: true, description: 'Model size in bytes' },
+  { name: 'models[].digest', type: 'string', required: true, description: 'Model digest hash' },
+  { name: 'models[].modified_at', type: 'ISO 8601', required: true, description: 'Last modification timestamp' },
+]} />
+
+**Errors:** `502` — Ollama is not running or returned an error
+
+Check which models are available locally — useful for building a model picker for offline/private execution:
+
+<CodeExample ts={`// List local Ollama models with human-readable sizes
+const res: Response = await fetch('/api/runtimes/ollama');
+
+if (res.ok) {
+  const { models }: { models: OllamaModel[] } = await res.json();
+  models.forEach(m => {
+    const sizeGB: string = (m.size / 1_000_000_000).toFixed(1);
+    console.log(\`\${m.name} — \${sizeGB} GB\`);
+  });
+} else {
+  // 502 means Ollama isn't running
+  const { error, hint }: { error: string; hint: string } = await res.json();
+  console.log(\`Ollama unavailable: \${error}\`);
+  console.log(\`Hint: \${hint}\`);
+}`} python={`import requests
+
+# List local Ollama models with human-readable sizes
+response = requests.get("http://localhost:3000/api/runtimes/ollama")
+
+if response.ok:
+    models: list[dict] = response.json()["models"]
+    for m in models:
+        size_gb = m["size"] / 1_000_000_000
+        print(f"{m['name']} — {size_gb:.1f} GB")
+else:
+    # 502 means Ollama isn't running
+    data: dict = response.json()
+    print(f"Ollama unavailable: {data['error']}")
+    print(f"Hint: {data['hint']}")`} />
+
+Example response:
+
+```json
+{
+  "models": [
+    {
+      "name": "llama3.2:latest",
+      "size": 4661224676,
+      "digest": "a6990ed6be41...",
+      "modified_at": "2026-04-01T08:00:00.000Z"
+    },
+    {
+      "name": "codellama:7b",
+      "size": 3825819519,
+      "digest": "b7e1c2f3d4a5...",
+      "modified_at": "2026-03-28T14:30:00.000Z"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Pull Ollama Model
+
+<EndpointCard method="POST" path="/api/runtimes/ollama" description="Pull (download) a model to the local Ollama instance. The pull is synchronous — the request blocks until the download completes.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'action', type: 'string', required: true, description: 'Must be "pull"' },
+  { name: 'model', type: 'string', required: true, description: 'Model name to pull (e.g., llama3.2, codellama:7b)' },
+]} />
+
+**Response** `200` — `{ "status": "ok", "model": "llama3.2", ... }`
+
+**Errors:** `400` — Unknown action or missing model name, `502` — Ollama connection or pull failure
+
+Download a model to your local Ollama instance — the request blocks until the download finishes:
+
+<CodeExample ts={`// Pull a model — this blocks until download completes
+const res: Response = await fetch('/api/runtimes/ollama', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'pull', model: 'llama3.2' }),
+});
+
+if (res.ok) {
+  const result: { status: string; model: string } = await res.json();
+  console.log(\`Downloaded: \${result.model}\`);
+} else if (res.status === 502) {
+  console.log('Ollama not running — start it first');
+}`} python={`import requests
+
+# Pull a model — this blocks until download completes
+response = requests.post(
+    "http://localhost:3000/api/runtimes/ollama",
+    json={"action": "pull", "model": "llama3.2"},
+)
+
+if response.ok:
+    result: dict = response.json()
+    print(f"Downloaded: {result['model']}")
+elif response.status_code == 502:
+    print("Ollama not running — start it first")`} />
+
+</EndpointCard>
+
+## Runtime Catalog
+
+Stagent ships with five agent runtimes. Each runtime has different capabilities:
+
+| Runtime ID | Label | Provider | Resume | Cancel | Approvals | MCP | Profile Tests |
+|-----------|-------|----------|--------|--------|-----------|-----|---------------|
+| **claude-code** | Claude Code | Anthropic | Yes | Yes | Yes | Yes | Yes |
+| **openai-codex-app-server** | OpenAI Codex App Server | OpenAI | Yes | Yes | Yes | No | No |
+| **anthropic-direct** | Anthropic Direct API | Anthropic | Yes | Yes | Yes | Yes | No |
+| **openai-direct** | OpenAI Direct API | OpenAI | Yes | Yes | Yes | No | No |
+| **ollama** | Ollama (Local) | Ollama | No | Yes | No | No | No |
+
+### Capability Definitions
+
+| Capability | Description |
+|-----------|-------------|
+| **resume** | Can resume failed/cancelled tasks from last checkpoint |
+| **cancel** | Can send cancellation signals to running tasks |
+| **approvals** | Supports interactive permission requests during execution |
+| **mcpServers** | Can pass MCP server configurations from profiles |
+| **profileTests** | Can execute behavioral smoke tests for profiles |
+| **taskAssist** | Supports AI-assisted task generation |
+| **profileAssist** | Supports AI-assisted profile generation |
+| **authHealthCheck** | Can verify API key validity |
+
+## Constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| DEFAULT_AGENT_RUNTIME | claude-code | Default runtime when none is specified |
+| OLLAMA_DEFAULT_BASE_URL | http://localhost:11434 | Default Ollama server address |
+| OLLAMA_TIMEOUT | 5000ms | Timeout for Ollama API health checks |

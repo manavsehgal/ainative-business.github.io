@@ -1,0 +1,960 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Environment API"
+description: "Scan project environments, manage artifacts and checkpoints, synchronize configuration files, suggest agent profiles, and capture reusable templates."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Environment API
+
+The Environment API scans project directories to discover tools, frameworks, and configuration artifacts. It powers profile suggestions, checkpoint/rollback safety, config file synchronization, and template capture for repeatable setups.
+
+## Quick Start
+
+Scan a project directory, review discovered artifacts, and sync a config file — a typical onboarding flow:
+
+<CodeExample ts={`// 1. Trigger an environment scan on a project directory
+interface ScanSummary {
+  totalArtifacts: number;
+  personas: string[];
+  durationMs: number;
+}
+
+const { scan, summary }: { scan: { id: string }; summary: ScanSummary } =
+  await fetch('/api/environment/scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      projectDir: '/Users/team/my-app',
+      projectId: 'proj-8f3a-4b2c',
+    }),
+  }).then((r: Response) => r.json());
+
+console.log(\`Found \${summary.totalArtifacts} artifacts in \${summary.durationMs}ms\`);
+console.log(\`Personas: \${summary.personas.join(', ')}\`);
+
+// 2. Browse discovered artifacts (e.g. config files, dependencies)
+const { artifacts }: { artifacts: { name: string; tool: string }[] } =
+  await fetch('/api/environment/artifacts?category=config').then((r: Response) => r.json());
+artifacts.forEach((a) => console.log(\`  \${a.name} (\${a.tool})\`));
+
+// 3. Sync a configuration file (with automatic checkpoint for safety)
+const syncResult: { checkpointId: string; summary: { applied: number; failed: number } } =
+  await fetch('/api/environment/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      operations: [{ targetPath: '.prettierrc', content: '{ "semi": false, "singleQuote": true }' }],
+      label: 'Apply prettier config',
+    }),
+  }).then((r: Response) => r.json());
+
+// 4. Get profile suggestions based on the scan
+const { curated, discovered }: { curated: unknown[]; discovered: unknown[] } =
+  await fetch('/api/environment/profiles/suggest?tiered=true').then((r: Response) => r.json());
+console.log(\`\${curated.length} curated + \${discovered.length} discovered suggestions\`);`} python={`import requests
+
+# 1. Trigger an environment scan on a project directory
+response = requests.post(
+    "http://localhost:3000/api/environment/scan",
+    json={
+        "projectDir": "/Users/team/my-app",
+        "projectId": "proj-8f3a-4b2c",
+    },
+)
+data: dict = response.json()
+scan: dict = data["scan"]
+summary: dict = data["summary"]
+
+print(f"Found {summary['totalArtifacts']} artifacts in {summary['durationMs']}ms")
+print(f"Personas: {', '.join(summary['personas'])}")
+
+# 2. Browse discovered artifacts (e.g. config files, dependencies)
+art_res = requests.get(
+    "http://localhost:3000/api/environment/artifacts",
+    params={"category": "config"},
+)
+for a in art_res.json()["artifacts"]:
+    print(f"  {a['name']} ({a['tool']})")
+
+# 3. Sync a configuration file (with automatic checkpoint for safety)
+sync_res = requests.post(
+    "http://localhost:3000/api/environment/sync",
+    json={
+        "operations": [{"targetPath": ".prettierrc", "content": '{ "semi": false, "singleQuote": true }'}],
+        "label": "Apply prettier config",
+    },
+)
+sync_result: dict = sync_res.json()
+
+# 4. Get profile suggestions based on the scan
+suggest_res = requests.get(
+    "http://localhost:3000/api/environment/profiles/suggest",
+    params={"tiered": "true"},
+)
+suggestions: dict = suggest_res.json()
+print(f"{len(suggestions['curated'])} curated + {len(suggestions['discovered'])} discovered suggestions")`} />
+
+## Base URL
+
+```
+/api/environment
+```
+
+## Scanning
+
+### Trigger Environment Scan
+
+<EndpointCard method="POST" path="/api/environment/scan" description="Run a new environment scan against a project directory. Discovers artifacts, tools, and framework personas.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'projectDir', type: 'string', required: false, description: 'Directory to scan (defaults to launch CWD)' },
+  { name: 'projectId', type: 'string', required: false, description: 'Project ID to associate the scan with' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'scan', type: 'object', required: true, description: 'Scan record with ID, timestamps, and metadata' },
+  { name: 'summary.totalArtifacts', type: 'number', required: true, description: 'Total artifacts discovered' },
+  { name: 'summary.personas', type: 'string[]', required: true, description: 'Detected tool personas (e.g., node, python, rust)' },
+  { name: 'summary.categoryCounts', type: 'object', required: true, description: 'Artifact counts by category' },
+  { name: 'summary.toolCounts', type: 'object', required: true, description: 'Artifact counts by tool/framework' },
+  { name: 'summary.durationMs', type: 'number', required: true, description: 'Scan duration in milliseconds' },
+  { name: 'summary.errors', type: 'number', required: true, description: 'Number of scan errors' },
+]} />
+
+Scan a project to discover its toolchain and generate profile suggestions:
+
+<CodeExample ts={`// Scan a project directory to discover its environment
+interface ScanResult {
+  scan: { id: string };
+  summary: {
+    totalArtifacts: number;
+    personas: string[];
+    categoryCounts: Record<string, number>;
+    durationMs: number;
+  };
+}
+
+const { scan, summary }: ScanResult = await fetch('/api/environment/scan', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    projectDir: '/Users/team/my-app',
+    projectId: 'proj-8f3a-4b2c',
+  }),
+}).then((r: Response) => r.json());
+
+console.log(\`Scan \${scan.id}: \${summary.totalArtifacts} artifacts in \${summary.durationMs}ms\`);
+console.log(\`Personas: \${summary.personas.join(', ')}\`);
+console.log(\`Categories: \${JSON.stringify(summary.categoryCounts)}\`);`} python={`import requests
+
+# Scan a project directory to discover its environment
+response = requests.post(
+    "http://localhost:3000/api/environment/scan",
+    json={
+        "projectDir": "/Users/team/my-app",
+        "projectId": "proj-8f3a-4b2c",
+    },
+)
+data: dict = response.json()
+scan: dict = data["scan"]
+summary: dict = data["summary"]
+
+print(f"Scan {scan['id']}: {summary['totalArtifacts']} artifacts in {summary['durationMs']}ms")
+print(f"Personas: {', '.join(summary['personas'])}")
+print(f"Categories: {summary['categoryCounts']}")`} />
+
+Example response:
+
+```json
+{
+  "scan": {
+    "id": "scan-1a2b-3c4d",
+    "projectDir": "/Users/team/my-app",
+    "projectId": "proj-8f3a-4b2c",
+    "createdAt": "2026-04-03T10:00:00.000Z"
+  },
+  "summary": {
+    "totalArtifacts": 24,
+    "personas": ["node", "typescript", "react"],
+    "categoryCounts": { "config": 12, "dependency": 8, "build": 4 },
+    "toolCounts": { "node": 14, "typescript": 6, "eslint": 4 },
+    "durationMs": 342,
+    "errors": 0
+  }
+}
+```
+
+</EndpointCard>
+
+### Get Latest Scan
+
+<EndpointCard method="GET" path="/api/environment/scan" description="Retrieve the latest scan result. Auto-triggers a fresh scan if projectDir is provided and the cached scan is stale.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'projectId', type: 'string', required: false, description: 'Filter by project ID' },
+  { name: 'scanId', type: 'string', required: false, description: 'Fetch a specific scan by ID' },
+  { name: 'projectDir', type: 'string', required: false, description: 'Project directory (triggers auto-scan if stale)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'scan', type: 'object | null', required: true, description: 'Scan record or null if none found' },
+  { name: 'summary.categoryCounts', type: 'object', required: false, description: 'Artifact counts by category' },
+  { name: 'summary.toolCounts', type: 'object', required: false, description: 'Artifact counts by tool/framework' },
+]} />
+
+Fetch the latest scan for a project — or pass `projectDir` to auto-trigger a fresh scan if stale:
+
+<CodeExample ts={`// Get the latest scan, auto-refresh if stale
+const { scan, summary }: {
+  scan: { createdAt: string } | null;
+  summary: { categoryCounts: Record<string, number> };
+} = await fetch('/api/environment/scan?projectId=proj-8f3a-4b2c')
+  .then((r: Response) => r.json());
+
+if (scan) {
+  console.log(\`Last scanned: \${scan.createdAt}\`);
+  console.log(\`Artifacts: \${JSON.stringify(summary.categoryCounts)}\`);
+} else {
+  console.log('No scan found — trigger one with POST /api/environment/scan');
+}`} python={`import requests
+
+# Get the latest scan, auto-refresh if stale
+response = requests.get(
+    "http://localhost:3000/api/environment/scan",
+    params={"projectId": "proj-8f3a-4b2c"},
+)
+data: dict = response.json()
+
+if data["scan"]:
+    print(f"Last scanned: {data['scan']['createdAt']}")
+    print(f"Artifacts: {data['summary']['categoryCounts']}")
+else:
+    print("No scan found — trigger one with POST /api/environment/scan")`} />
+
+</EndpointCard>
+
+## Artifacts
+
+### List Artifacts
+
+<EndpointCard method="GET" path="/api/environment/artifacts" description="Filtered artifact list from the latest (or specified) scan.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'scanId', type: 'string', required: false, description: 'Scan ID (defaults to latest)' },
+  { name: 'category', type: 'string', required: false, description: 'Filter by artifact category' },
+  { name: 'tool', type: 'string', required: false, description: 'Filter by tool persona' },
+  { name: 'scope', type: 'string', required: false, description: 'Filter by artifact scope' },
+  { name: 'search', type: 'string', required: false, description: 'Free-text search across artifact names' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'artifacts', type: 'object[]', required: true, description: 'Array of artifact objects' },
+  { name: 'count', type: 'number', required: true, description: 'Total matching artifacts' },
+]} />
+
+Browse discovered config files for a specific tool — useful for reviewing what the scanner found:
+
+<CodeExample ts={`// List Node.js config artifacts
+interface Artifact {
+  name: string;
+  filePath: string;
+}
+
+const { artifacts, count }: { artifacts: Artifact[]; count: number } =
+  await fetch('/api/environment/artifacts?category=config&tool=node')
+    .then((r: Response) => r.json());
+
+console.log(\`\${count} Node.js config artifacts:\`);
+artifacts.forEach((a: Artifact) => console.log(\`  \${a.name} — \${a.filePath}\`));`} python={`import requests
+
+# List Node.js config artifacts
+response = requests.get(
+    "http://localhost:3000/api/environment/artifacts",
+    params={"category": "config", "tool": "node"},
+)
+data: dict = response.json()
+
+print(f"{data['count']} Node.js config artifacts:")
+for a in data["artifacts"]:
+    print(f"  {a['name']} — {a['filePath']}")`} />
+
+Example response:
+
+```json
+{
+  "artifacts": [
+    {
+      "id": "art-5e6f-7g8h",
+      "scanId": "scan-1a2b-3c4d",
+      "name": "package.json",
+      "category": "config",
+      "tool": "node",
+      "scope": "project",
+      "filePath": "/Users/team/my-app/package.json"
+    },
+    {
+      "id": "art-9i0j-1k2l",
+      "scanId": "scan-1a2b-3c4d",
+      "name": ".nvmrc",
+      "category": "config",
+      "tool": "node",
+      "scope": "project",
+      "filePath": "/Users/team/my-app/.nvmrc"
+    }
+  ],
+  "count": 2
+}
+```
+
+</EndpointCard>
+
+### Get Artifact
+
+<EndpointCard method="GET" path="/api/environment/artifacts/{id}" description="Retrieve a single artifact with full detail.">
+
+**Response** `200` — `{ "artifact": <object> }`
+
+<CodeExample ts={`const { artifact }: { artifact: { name: string; tool: string; filePath: string } } =
+  await fetch('/api/environment/artifacts/art-5e6f-7g8h').then((r: Response) => r.json());
+console.log(\`\${artifact.name} (\${artifact.tool}) at \${artifact.filePath}\`);`} python={`import requests
+
+response = requests.get("http://localhost:3000/api/environment/artifacts/art-5e6f-7g8h")
+artifact: dict = response.json()["artifact"]
+print(f"{artifact['name']} ({artifact['tool']}) at {artifact['filePath']}")`} />
+
+**Errors:** `404` — Artifact not found
+
+</EndpointCard>
+
+## Checkpoints
+
+### List Checkpoints
+
+<EndpointCard method="GET" path="/api/environment/checkpoints" description="List all checkpoints, optionally filtered by project.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'projectId', type: 'string', required: false, description: 'Filter checkpoints by project ID' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'checkpoints', type: 'object[]', required: true, description: 'Array of checkpoint records' },
+]} />
+
+<CodeExample ts={`// List checkpoints for a project
+interface Checkpoint {
+  label: string;
+  status: string;
+  filesCount: number;
+  createdAt: string;
+}
+
+const { checkpoints }: { checkpoints: Checkpoint[] } =
+  await fetch('/api/environment/checkpoints?projectId=proj-8f3a-4b2c')
+    .then((r: Response) => r.json());
+
+checkpoints.forEach((cp: Checkpoint) => {
+  console.log(\`\${cp.label} [\${cp.status}] — \${cp.filesCount} files — \${cp.createdAt}\`);
+});`} python={`import requests
+
+# List checkpoints for a project
+response = requests.get(
+    "http://localhost:3000/api/environment/checkpoints",
+    params={"projectId": "proj-8f3a-4b2c"},
+)
+data: dict = response.json()
+
+for cp in data["checkpoints"]:
+    print(f"{cp['label']} [{cp['status']}] — {cp['filesCount']} files — {cp['createdAt']}")`} />
+
+</EndpointCard>
+
+### Create Checkpoint
+
+<EndpointCard method="POST" path="/api/environment/checkpoints" description="Create a new checkpoint with git tag and/or file backup. Git repos get a tagged commit; global config files are backed up to a timestamped directory.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'label', type: 'string', required: false, description: 'Checkpoint label (auto-generated if omitted)' },
+  { name: 'checkpointType', type: 'enum', required: false, description: 'pre-sync, manual, or pre-onboard (default: manual)' },
+  { name: 'projectDir', type: 'string', required: false, description: 'Project directory for git checkpoint' },
+  { name: 'globalPaths', type: 'string[]', required: false, description: 'Specific file paths to back up (defaults to common config files)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'checkpoint.id', type: 'string', required: true, description: 'Checkpoint identifier' },
+  { name: 'checkpoint.label', type: 'string', required: true, description: 'Checkpoint label' },
+  { name: 'checkpoint.gitTag', type: 'string', required: false, description: 'Git tag name if applicable' },
+  { name: 'checkpoint.gitCommitSha', type: 'string', required: false, description: 'Git commit SHA' },
+  { name: 'checkpoint.backupPath', type: 'string', required: false, description: 'Path to file backup directory' },
+  { name: 'checkpoint.filesCount', type: 'number', required: true, description: 'Number of files captured' },
+]} />
+
+Create a checkpoint before making risky changes — captures git state and config files for rollback:
+
+<CodeExample ts={`// Create a manual checkpoint before risky changes
+interface CheckpointResponse {
+  checkpoint: {
+    id: string;
+    filesCount: number;
+    gitTag?: string;
+    gitCommitSha?: string;
+  };
+}
+
+const { checkpoint }: CheckpointResponse = await fetch('/api/environment/checkpoints', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    label: 'Before dependency upgrade',
+    projectDir: '/Users/team/my-app',
+  }),
+}).then((r: Response) => r.json());
+
+console.log(\`Checkpoint \${checkpoint.id}: \${checkpoint.filesCount} files captured\`);
+if (checkpoint.gitTag) {
+  console.log(\`Git tag: \${checkpoint.gitTag} (\${checkpoint.gitCommitSha})\`);
+}`} python={`import requests
+
+# Create a manual checkpoint before risky changes
+response = requests.post(
+    "http://localhost:3000/api/environment/checkpoints",
+    json={
+        "label": "Before dependency upgrade",
+        "projectDir": "/Users/team/my-app",
+    },
+)
+checkpoint: dict = response.json()["checkpoint"]
+
+print(f"Checkpoint {checkpoint['id']}: {checkpoint['filesCount']} files captured")
+if checkpoint.get("gitTag"):
+    print(f"Git tag: {checkpoint['gitTag']} ({checkpoint['gitCommitSha']})")`} />
+
+Example response:
+
+```json
+{
+  "checkpoint": {
+    "id": "cp-4d5e-6f7g",
+    "label": "Before dependency upgrade",
+    "checkpointType": "manual",
+    "status": "active",
+    "gitTag": "stagent-cp-4d5e-6f7g",
+    "gitCommitSha": "a1b2c3d4e5f6",
+    "backupPath": "/Users/team/.stagent/checkpoints/cp-4d5e-6f7g",
+    "filesCount": 8,
+    "createdAt": "2026-04-03T10:00:00.000Z"
+  }
+}
+```
+
+</EndpointCard>
+
+### Get Checkpoint Detail
+
+<EndpointCard method="GET" path="/api/environment/checkpoints/{id}" description="Get checkpoint details including sync operations and git diff from the checkpoint commit to current HEAD.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'checkpoint', type: 'object', required: true, description: 'Checkpoint record' },
+  { name: 'syncOps', type: 'object[]', required: true, description: 'Sync operations associated with this checkpoint' },
+  { name: 'diff', type: 'string | null', required: true, description: 'Git diff since checkpoint (null if no git data)' },
+]} />
+
+Review what changed since a checkpoint — the diff shows all git changes since the checkpoint commit:
+
+<CodeExample ts={`// Review changes since checkpoint
+const { checkpoint, syncOps, diff }: {
+  checkpoint: { label: string; status: string };
+  syncOps: unknown[];
+  diff: string | null;
+} = await fetch('/api/environment/checkpoints/cp-4d5e-6f7g')
+  .then((r: Response) => r.json());
+
+console.log(\`\${checkpoint.label} [\${checkpoint.status}]\`);
+console.log(\`\${syncOps.length} sync operations\`);
+if (diff) {
+  console.log(\`Git changes since checkpoint:\\n\${diff}\`);
+}`} python={`import requests
+
+# Review changes since checkpoint
+response = requests.get("http://localhost:3000/api/environment/checkpoints/cp-4d5e-6f7g")
+data: dict = response.json()
+
+print(f"{data['checkpoint']['label']} [{data['checkpoint']['status']}]")
+print(f"{len(data['syncOps'])} sync operations")
+if data["diff"]:
+    print(f"Git changes since checkpoint:\\n{data['diff']}")`} />
+
+**Errors:** `404` — Checkpoint not found
+
+</EndpointCard>
+
+### Rollback to Checkpoint
+
+<EndpointCard method="POST" path="/api/environment/checkpoints/{id}" description="Rollback to a checkpoint. Restores git state and file backups. Only works on checkpoints with status 'active'.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'message', type: 'string', required: true, description: 'Rollback confirmation message' },
+  { name: 'results.git', type: 'object', required: false, description: 'Git rollback result (success, error)' },
+  { name: 'results.backup', type: 'object', required: false, description: 'File restore result (restored count, errors)' },
+]} />
+
+Rollback to a checkpoint when changes went wrong — restores both git state and backed-up files:
+
+<CodeExample ts={`// Rollback to a checkpoint
+interface RollbackResult {
+  message: string;
+  results: {
+    git?: { success: boolean; error?: string };
+    backup?: { restored: number };
+  };
+}
+
+const result: RollbackResult = await fetch('/api/environment/checkpoints/cp-4d5e-6f7g', {
+  method: 'POST',
+}).then((r: Response) => r.json());
+
+console.log(result.message);
+if (result.results.git) {
+  console.log(\`Git rollback: \${result.results.git.success ? 'OK' : result.results.git.error}\`);
+}
+if (result.results.backup) {
+  console.log(\`Restored \${result.results.backup.restored} files\`);
+}`} python={`import requests
+
+# Rollback to a checkpoint
+response = requests.post("http://localhost:3000/api/environment/checkpoints/cp-4d5e-6f7g")
+result: dict = response.json()
+
+print(result["message"])
+if result["results"].get("git"):
+    git = result["results"]["git"]
+    print(f"Git rollback: {'OK' if git['success'] else git['error']}")
+if result["results"].get("backup"):
+    print(f"Restored {result['results']['backup']['restored']} files")`} />
+
+**Errors:** `400` — Checkpoint not in active status, `404` — Not found, `500` — Git rollback failure
+
+</EndpointCard>
+
+## Profile Suggestions
+
+### Suggest Profiles
+
+<EndpointCard method="GET" path="/api/environment/profiles/suggest" description="Suggest agent profiles based on the latest environment scan. Supports flat or tiered (curated vs. discovered) response formats.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'scanId', type: 'string', required: false, description: 'Scan ID (defaults to latest)' },
+  { name: 'tiered', type: 'string', required: false, description: 'When "true", return curated and discovered tiers separately' },
+]} />
+
+<SchemaTable title="Response Body (flat)" fields={[
+  { name: 'suggestions', type: 'object[]', required: true, description: 'Array of profile suggestions' },
+  { name: 'count', type: 'number', required: true, description: 'Total suggestions' },
+]} />
+
+<SchemaTable title="Response Body (tiered)" fields={[
+  { name: 'curated', type: 'object[]', required: true, description: 'High-confidence profile suggestions' },
+  { name: 'discovered', type: 'object[]', required: true, description: 'Lower-confidence discovered suggestions' },
+  { name: 'curatedCount', type: 'number', required: true, description: 'Number of curated suggestions' },
+  { name: 'discoveredCount', type: 'number', required: true, description: 'Number of discovered suggestions' },
+]} />
+
+Get tiered profile suggestions — curated suggestions are high confidence based on detected toolchains:
+
+<CodeExample ts={`// Get tiered profile suggestions
+interface Suggestion {
+  name: string;
+  description: string;
+}
+
+const { curated, discovered }: { curated: Suggestion[]; discovered: Suggestion[] } =
+  await fetch('/api/environment/profiles/suggest?tiered=true')
+    .then((r: Response) => r.json());
+
+console.log('Recommended profiles:');
+curated.forEach((s: Suggestion) => console.log(\`  [curated] \${s.name} — \${s.description}\`));
+discovered.forEach((s: Suggestion) => console.log(\`  [discovered] \${s.name} — \${s.description}\`));`} python={`import requests
+
+# Get tiered profile suggestions
+response = requests.get(
+    "http://localhost:3000/api/environment/profiles/suggest",
+    params={"tiered": "true"},
+)
+data: dict = response.json()
+
+print("Recommended profiles:")
+for s in data["curated"]:
+    print(f"  [curated] {s['name']} — {s['description']}")
+for s in data["discovered"]:
+    print(f"  [discovered] {s['name']} — {s['description']}")`} />
+
+Example response:
+
+```json
+{
+  "curated": [
+    {
+      "ruleId": "node-fullstack",
+      "name": "Node.js Fullstack",
+      "description": "Full-stack Node.js development with TypeScript and React",
+      "confidence": 0.95,
+      "matchedArtifacts": ["package.json", "tsconfig.json", "next.config.js"]
+    }
+  ],
+  "discovered": [
+    {
+      "ruleId": "docker-ops",
+      "name": "Docker Ops",
+      "description": "Container management and Dockerfile optimization",
+      "confidence": 0.6,
+      "matchedArtifacts": ["Dockerfile"]
+    }
+  ],
+  "curatedCount": 1,
+  "discoveredCount": 1
+}
+```
+
+</EndpointCard>
+
+### Create Profile from Suggestion
+
+<EndpointCard method="POST" path="/api/environment/profiles/create" description="Create an agent profile from a scan-based suggestion with optional overrides.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'suggestion', type: 'object', required: true, description: 'Profile suggestion object from /profiles/suggest' },
+  { name: 'overrides.name', type: 'string', required: false, description: 'Override the suggested profile name' },
+  { name: 'overrides.description', type: 'string', required: false, description: 'Override the suggested description' },
+  { name: 'overrides.systemPrompt', type: 'string', required: false, description: 'Override the suggested system prompt' },
+]} />
+
+**Response** `201` — `{ "message": "Profile created", "profileId": "env-<ruleId>" }`
+
+Create a profile from a suggestion — optionally override the name or system prompt:
+
+<CodeExample ts={`// Create a profile from the top curated suggestion
+const profile: { message: string; profileId: string } = await fetch('/api/environment/profiles/create', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    suggestion: curated[0],
+    overrides: { name: 'My Node Profile' },
+  }),
+}).then((r: Response) => r.json());
+
+console.log(\`Profile created: \${profile.profileId}\`);`} python={`import requests
+
+# Create a profile from the top curated suggestion
+response = requests.post(
+    "http://localhost:3000/api/environment/profiles/create",
+    json={
+        "suggestion": {"ruleId": "node-fullstack", "name": "Node.js Fullstack"},
+        "overrides": {"name": "My Node Profile"},
+    },
+)
+profile: dict = response.json()
+
+print(f"Profile created: {profile['profileId']}")`} />
+
+**Errors:** `400` — Missing suggestion or creation failure
+
+</EndpointCard>
+
+## Config Sync
+
+### Preview Sync
+
+<EndpointCard method="POST" path="/api/environment/sync/preview" description="Dry-run sync operations to see what would change without modifying any files.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'operations', type: 'SyncRequest[]', required: true, description: 'Array of sync operations to preview' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'previews', type: 'object[]', required: true, description: 'Preview results with diffs and conflict flags' },
+  { name: 'summary.total', type: 'number', required: true, description: 'Total operations' },
+  { name: 'summary.conflicts', type: 'number', required: true, description: 'Operations with conflicts' },
+  { name: 'summary.newFiles', type: 'number', required: true, description: 'New files that would be created' },
+  { name: 'summary.totalAdditions', type: 'number', required: true, description: 'Total lines added' },
+  { name: 'summary.totalDeletions', type: 'number', required: true, description: 'Total lines removed' },
+]} />
+
+Preview a sync before executing — check for conflicts and see what would change:
+
+<CodeExample ts={`// Preview what would change before applying
+interface PreviewResult {
+  previews: unknown[];
+  summary: {
+    total: number;
+    conflicts: number;
+    totalAdditions: number;
+    totalDeletions: number;
+  };
+}
+
+const preview: PreviewResult = await fetch('/api/environment/sync/preview', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    operations: [
+      { targetPath: '.prettierrc', content: '{ "semi": false, "singleQuote": true }' },
+    ],
+  }),
+}).then((r: Response) => r.json());
+
+console.log(\`\${preview.summary.total} operations, \${preview.summary.conflicts} conflicts\`);
+console.log(\`+\${preview.summary.totalAdditions} / -\${preview.summary.totalDeletions} lines\`);`} python={`import requests
+
+# Preview what would change before applying
+response = requests.post(
+    "http://localhost:3000/api/environment/sync/preview",
+    json={
+        "operations": [
+            {"targetPath": ".prettierrc", "content": '{ "semi": false, "singleQuote": true }'},
+        ],
+    },
+)
+preview: dict = response.json()
+summary: dict = preview["summary"]
+
+print(f"{summary['total']} operations, {summary['conflicts']} conflicts")
+print(f"+{summary['totalAdditions']} / -{summary['totalDeletions']} lines")`} />
+
+Example response:
+
+```json
+{
+  "previews": [
+    {
+      "targetPath": ".prettierrc",
+      "status": "new_file",
+      "hasConflict": false,
+      "diff": "+{ \"semi\": false, \"singleQuote\": true }"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "conflicts": 0,
+    "newFiles": 1,
+    "totalAdditions": 1,
+    "totalDeletions": 0
+  }
+}
+```
+
+</EndpointCard>
+
+### Execute Sync
+
+<EndpointCard method="POST" path="/api/environment/sync" description="Execute sync operations with an automatic pre-sync checkpoint for safety. Previews all operations first, then applies changes.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'operations', type: 'SyncRequest[]', required: true, description: 'Array of sync operations to execute' },
+  { name: 'label', type: 'string', required: false, description: 'Label for the auto-created checkpoint' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'checkpointId', type: 'string', required: true, description: 'ID of the auto-created pre-sync checkpoint' },
+  { name: 'operations', type: 'object[]', required: true, description: 'Operation results with status per operation' },
+  { name: 'summary.applied', type: 'number', required: true, description: 'Successfully applied operations' },
+  { name: 'summary.failed', type: 'number', required: true, description: 'Failed operations' },
+  { name: 'summary.total', type: 'number', required: true, description: 'Total operations attempted' },
+]} />
+
+Execute sync with a labeled checkpoint — the checkpoint is created automatically before any files are modified:
+
+<CodeExample ts={`// Sync config files (automatic checkpoint created for safety)
+interface SyncResult {
+  checkpointId: string;
+  summary: { applied: number; failed: number };
+}
+
+const result: SyncResult = await fetch('/api/environment/sync', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    operations: [
+      { targetPath: '.prettierrc', content: '{ "semi": false, "singleQuote": true }' },
+    ],
+    label: 'Apply prettier config',
+  }),
+}).then((r: Response) => r.json());
+
+console.log(\`Checkpoint: \${result.checkpointId}\`);
+console.log(\`Applied: \${result.summary.applied}, Failed: \${result.summary.failed}\`);`} python={`import requests
+
+# Sync config files (automatic checkpoint created for safety)
+response = requests.post(
+    "http://localhost:3000/api/environment/sync",
+    json={
+        "operations": [
+            {"targetPath": ".prettierrc", "content": '{ "semi": false, "singleQuote": true }'},
+        ],
+        "label": "Apply prettier config",
+    },
+)
+result: dict = response.json()
+
+print(f"Checkpoint: {result['checkpointId']}")
+print(f"Applied: {result['summary']['applied']}, Failed: {result['summary']['failed']}")`} />
+
+**Errors:** `400` — No operations provided or no valid operations
+
+</EndpointCard>
+
+### Sync History
+
+<EndpointCard method="GET" path="/api/environment/sync/history" description="List past sync operations grouped by their pre-sync checkpoints.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'projectId', type: 'string', required: false, description: 'Filter by project ID' },
+  { name: 'limit', type: 'number', required: false, description: 'Max checkpoints to return (default: 20)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'history', type: 'object[]', required: true, description: 'Array of { checkpoint, operations } objects' },
+  { name: 'count', type: 'number', required: true, description: 'Number of history entries' },
+]} />
+
+Review past sync operations to see what was changed and when:
+
+<CodeExample ts={`// Review recent sync history
+interface SyncHistoryEntry {
+  checkpoint: { label: string; createdAt: string };
+  operations: unknown[];
+}
+
+const { history }: { history: SyncHistoryEntry[] } =
+  await fetch('/api/environment/sync/history?limit=5').then((r: Response) => r.json());
+
+history.forEach((entry: SyncHistoryEntry) => {
+  console.log(\`\${entry.checkpoint.label} — \${entry.operations.length} ops — \${entry.checkpoint.createdAt}\`);
+});`} python={`import requests
+
+# Review recent sync history
+response = requests.get(
+    "http://localhost:3000/api/environment/sync/history",
+    params={"limit": "5"},
+)
+data: dict = response.json()
+
+for entry in data["history"]:
+    cp = entry["checkpoint"]
+    print(f"{cp['label']} — {len(entry['operations'])} ops — {cp['createdAt']}")`} />
+
+</EndpointCard>
+
+## Templates
+
+### List Templates
+
+<EndpointCard method="GET" path="/api/environment/templates" description="List all captured environment templates.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'templates', type: 'object[]', required: true, description: 'Array of template records' },
+]} />
+
+<CodeExample ts={`// List available environment templates
+interface Template {
+  name: string;
+  description: string;
+}
+
+const { templates }: { templates: Template[] } =
+  await fetch('/api/environment/templates').then((r: Response) => r.json());
+templates.forEach((t: Template) => console.log(\`\${t.name} — \${t.description}\`));`} python={`import requests
+
+# List available environment templates
+response = requests.get("http://localhost:3000/api/environment/templates")
+data: dict = response.json()
+
+for t in data["templates"]:
+    print(f"{t['name']} — {t['description']}")`} />
+
+</EndpointCard>
+
+### Capture Template
+
+<EndpointCard method="POST" path="/api/environment/templates" description="Capture a new template from an existing scan, preserving the environment configuration for reuse.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'scanId', type: 'string', required: true, description: 'Scan ID to capture from' },
+  { name: 'name', type: 'string', required: true, description: 'Template name' },
+  { name: 'description', type: 'string', required: false, description: 'Template description' },
+]} />
+
+**Response** `201` — `{ "template": <object> }`
+
+Capture a well-configured project environment as a reusable template:
+
+<CodeExample ts={`// Capture the current environment as a template
+const { template }: { template: { id: string } } = await fetch('/api/environment/templates', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    scanId: 'scan-1a2b-3c4d',
+    name: 'Next.js Starter',
+    description: 'Next.js 15 + TypeScript + Tailwind baseline configuration',
+  }),
+}).then((r: Response) => r.json());
+
+console.log(\`Template saved: \${template.id}\`);`} python={`import requests
+
+# Capture the current environment as a template
+response = requests.post(
+    "http://localhost:3000/api/environment/templates",
+    json={
+        "scanId": "scan-1a2b-3c4d",
+        "name": "Next.js Starter",
+        "description": "Next.js 15 + TypeScript + Tailwind baseline configuration",
+    },
+)
+template: dict = response.json()["template"]
+
+print(f"Template saved: {template['id']}")`} />
+
+**Errors:** `400` — Missing scanId or name
+
+</EndpointCard>
+
+### Get Template
+
+<EndpointCard method="GET" path="/api/environment/templates/{id}" description="Get template detail with parsed manifest showing all captured configuration.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'template', type: 'object', required: true, description: 'Template record' },
+  { name: 'manifest', type: 'object', required: true, description: 'Parsed manifest with artifacts and config' },
+]} />
+
+<CodeExample ts={`const { template, manifest }: {
+  template: { name: string };
+  manifest: { artifacts: unknown[] };
+} = await fetch('/api/environment/templates/tpl-1a2b-3c4d')
+  .then((r: Response) => r.json());
+console.log(\`\${template.name}: \${manifest.artifacts.length} artifacts\`);`} python={`import requests
+
+response = requests.get("http://localhost:3000/api/environment/templates/tpl-1a2b-3c4d")
+data: dict = response.json()
+print(f"{data['template']['name']}: {len(data['manifest']['artifacts'])} artifacts")`} />
+
+**Errors:** `404` — Template not found
+
+</EndpointCard>
+
+### Delete Template
+
+<EndpointCard method="DELETE" path="/api/environment/templates/{id}" description="Permanently delete a template.">
+
+**Response** `200` — `{ "message": "Template deleted" }`
+
+<CodeExample ts={`await fetch('/api/environment/templates/tpl-1a2b-3c4d', { method: 'DELETE' });`} python={`import requests
+
+requests.delete("http://localhost:3000/api/environment/templates/tpl-1a2b-3c4d")`} />
+
+**Errors:** `404` — Template not found
+
+</EndpointCard>

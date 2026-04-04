@@ -1,0 +1,517 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Documents API"
+description: "Upload, retrieve, search, version, and manage documents with full-text extraction, preprocessing, and file download support."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Documents API
+
+Documents are files ingested into Stagent for use as agent context, task outputs, or project references. Each document tracks its original file, extracted text, processing status, and version history. Documents can be linked to tasks, projects, or both.
+
+## Quick Start
+
+Upload a document from the local filesystem, wait for processing, then download the file — a typical integration flow:
+
+<CodeExample ts={`// 1. Upload a document from a local file path
+const res = await fetch('/api/documents', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    file_path: '/Users/team/reports/q2-analysis.pdf',
+    projectId: 'proj-8f3a-4b2c',
+    direction: 'input',
+    metadata: { department: 'finance', quarter: 'Q2' },
+  }),
+});
+const doc: { documentId: string; status: string; processingStatus: string } = await res.json();
+// → { documentId: "doc-7b2e-...", status: "uploaded", processingStatus: "queued" }
+
+// 2. Poll until processing completes (text extraction, thumbnails)
+let document: { status: string; extractedText: string };
+do {
+  await new Promise((r) => setTimeout(r, 1000));
+  document = await fetch(\`/api/documents/\${doc.documentId}\`).then((r) => r.json());
+} while (document.status === 'processing');
+
+console.log(document.status);        // "ready"
+console.log(document.extractedText); // "Q2 2026 Revenue Report..."
+
+// 3. Download the original file
+const fileUrl: string = \`/api/documents/\${doc.documentId}/file\`;
+window.open(fileUrl); // triggers browser download
+
+// 4. Check version history (output documents only)
+const versions: Array<{ id: string; version: number }> = await fetch(
+  \`/api/documents/\${doc.documentId}/versions\`
+).then((r) => r.json());
+console.log(\`\${versions.length} version(s) available\`);`} python={`import requests
+import time
+
+# 1. Upload a document from a local file path
+response = requests.post(
+    "http://localhost:3000/api/documents",
+    json={
+        "file_path": "/Users/team/reports/q2-analysis.pdf",
+        "projectId": "proj-8f3a-4b2c",
+        "direction": "input",
+        "metadata": {"department": "finance", "quarter": "Q2"},
+    },
+)
+doc = response.json()
+# → { "documentId": "doc-7b2e-...", "status": "uploaded", "processingStatus": "queued" }
+
+# 2. Poll until processing completes (text extraction, thumbnails)
+doc_id = doc["documentId"]
+while True:
+    time.sleep(1)
+    document = requests.get(
+        f"http://localhost:3000/api/documents/{doc_id}"
+    ).json()
+    if document["status"] != "processing":
+        break
+
+print(document["status"])         # "ready"
+print(document["extractedText"])  # "Q2 2026 Revenue Report..."
+
+# 3. Download the original file
+file_response = requests.get(
+    f"http://localhost:3000/api/documents/{doc_id}/file"
+)
+with open("q2-analysis.pdf", "wb") as f:
+    f.write(file_response.content)
+
+# 4. Check version history (output documents only)
+versions = requests.get(
+    f"http://localhost:3000/api/documents/{doc_id}/versions"
+).json()
+print(f"{len(versions)} version(s) available")`} />
+
+## Base URL
+
+```
+/api/documents
+```
+
+## Endpoints
+
+### List Documents
+
+<EndpointCard method="GET" path="/api/documents" description="Retrieve all documents with optional filtering by task, project, status, direction, or full-text search. Results include joined task, project, and workflow metadata.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'taskId', type: 'string', description: 'Filter by task ID' },
+  { name: 'projectId', type: 'string', description: 'Filter by project ID' },
+  { name: 'status', type: 'enum', description: 'uploaded, processing, ready, or error' },
+  { name: 'direction', type: 'enum', description: 'input or output' },
+  { name: 'search', type: 'string', description: 'Full-text search across originalName and extractedText' },
+]} />
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Document identifier' },
+  { name: 'taskId', type: 'string (UUID)', required: false, description: 'Linked task ID' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Linked project ID' },
+  { name: 'filename', type: 'string', required: true, description: 'Stored filename (UUID-based)' },
+  { name: 'originalName', type: 'string', required: true, description: 'Original filename at upload' },
+  { name: 'mimeType', type: 'string', required: true, description: 'MIME type (e.g. text/markdown, application/pdf)' },
+  { name: 'size', type: 'number', required: true, description: 'File size in bytes' },
+  { name: 'storagePath', type: 'string', required: true, description: 'Absolute path to stored file' },
+  { name: 'version', type: 'number', required: true, description: 'Document version number' },
+  { name: 'direction', type: 'enum', required: true, description: 'input or output' },
+  { name: 'category', type: 'string', required: false, description: 'Document category or metadata JSON' },
+  { name: 'status', type: 'enum', required: true, description: 'uploaded, processing, ready, or error' },
+  { name: 'extractedText', type: 'string', required: false, description: 'Full text extracted during processing' },
+  { name: 'processedPath', type: 'string', required: false, description: 'Path to processed/thumbnail version' },
+  { name: 'processingError', type: 'string', required: false, description: 'Error message if processing failed' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification' },
+  { name: 'taskTitle', type: 'string', required: false, description: 'Joined task title' },
+  { name: 'projectName', type: 'string', required: false, description: 'Joined project name' },
+  { name: 'workflowId', type: 'string', required: false, description: 'Joined workflow ID (via task)' },
+  { name: 'workflowName', type: 'string', required: false, description: 'Joined workflow name' },
+  { name: 'workflowRunNumber', type: 'number', required: false, description: 'Workflow run number from task' },
+]} />
+
+Fetch all ready documents for a project — useful for building a document library or attaching context to tasks:
+
+<CodeExample ts={`// Fetch ready documents for a project and group by direction
+const response: Response = await fetch(
+  '/api/documents?projectId=proj-8f3a-4b2c&status=ready'
+);
+const docs: Array<{ direction: string }> = await response.json();
+
+const inputs = docs.filter((d) => d.direction === 'input');
+const outputs = docs.filter((d) => d.direction === 'output');
+console.log(\`\${inputs.length} input docs, \${outputs.length} output docs\`);`} python={`import requests
+
+# Fetch ready documents for a project and group by direction
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/documents",
+    params={"projectId": "proj-8f3a-4b2c", "status": "ready"},
+)
+docs: list[dict] = response.json()
+
+inputs: list[dict] = [d for d in docs if d["direction"] == "input"]
+outputs: list[dict] = [d for d in docs if d["direction"] == "output"]
+print(f"{len(inputs)} input docs, {len(outputs)} output docs")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "doc-7b2e-3f9a",
+    "originalName": "q2-analysis.pdf",
+    "mimeType": "application/pdf",
+    "size": 245780,
+    "version": 1,
+    "direction": "input",
+    "status": "ready",
+    "extractedText": "Q2 2026 Revenue Report...",
+    "projectId": "proj-8f3a-4b2c",
+    "projectName": "Marketing Analysis",
+    "createdAt": "2026-04-03T09:15:00.000Z",
+    "updatedAt": "2026-04-03T09:15:12.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Document (from file path)
+
+<EndpointCard method="POST" path="/api/documents" description="Create a document by copying a file from the local filesystem into Stagent's managed storage. Triggers asynchronous text extraction and preprocessing. Paths are validated against security rules.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'file_path', type: 'string', required: true, description: 'Absolute path to a local file' },
+  { name: 'taskId', type: 'string (UUID)', required: false, description: 'Link to a task' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Link to a project' },
+  { name: 'direction', type: 'enum', required: false, description: 'input or output (default: output)' },
+  { name: 'metadata', type: 'Record<string, string>', required: false, description: 'Key-value metadata pairs' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'documentId', type: 'string (UUID)', required: true, description: 'New document ID' },
+  { name: 'status', type: 'string', required: true, description: 'Always "uploaded"' },
+  { name: 'processingStatus', type: 'string', required: true, description: 'Always "queued"' },
+  { name: 'originalName', type: 'string', required: true, description: 'Original filename' },
+  { name: 'mimeType', type: 'string', required: true, description: 'Detected MIME type' },
+  { name: 'size', type: 'number', required: true, description: 'File size in bytes' },
+]} />
+
+**Response** `201 Created`
+
+**Errors:** `400` — Validation failure or file not found, `403` — Path traversal or restricted directory
+
+**Path Security:** Files must reside under the user's home directory or `/tmp`. System directories (`/etc`, `/var`, `/proc`, `/sys`, `/dev`, `/root`) and sensitive home directories (`.ssh`, `.gnupg`, `.aws`, `.config`, `.env`) are blocked.
+
+**Supported MIME Types:** `.md`, `.txt`, `.json`, `.csv`, `.html`, `.pdf`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.docx`, `.xlsx`
+
+Ingest a PDF report as input context for a project — the file is copied into managed storage and text extraction begins automatically:
+
+<CodeExample ts={`// Ingest a local file — processing starts automatically
+const response: Response = await fetch('/api/documents', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    file_path: '/Users/team/reports/q2-analysis.pdf',
+    projectId: 'proj-8f3a-4b2c',
+    direction: 'input',
+    metadata: { department: 'finance', quarter: 'Q2' },
+  }),
+});
+const doc: { documentId: string; processingStatus: string } = await response.json();
+
+console.log(doc.documentId);       // "doc-7b2e-..."
+console.log(doc.processingStatus); // "queued"`} python={`import requests
+
+# Ingest a local file — processing starts automatically
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/documents",
+    json={
+        "file_path": "/Users/team/reports/q2-analysis.pdf",
+        "projectId": "proj-8f3a-4b2c",
+        "direction": "input",
+        "metadata": {"department": "finance", "quarter": "Q2"},
+    },
+)
+doc: dict = response.json()
+
+print(doc["documentId"])       # "doc-7b2e-..."
+print(doc["processingStatus"]) # "queued"`} />
+
+Example response:
+
+```json
+{
+  "documentId": "doc-7b2e-3f9a",
+  "status": "uploaded",
+  "processingStatus": "queued",
+  "originalName": "q2-analysis.pdf",
+  "mimeType": "application/pdf",
+  "size": 245780
+}
+```
+
+**Errors:** `400` — Zod validation failure or file not found
+
+```json
+{
+  "error": "File not found at specified path"
+}
+```
+
+</EndpointCard>
+
+### Get Document
+
+<EndpointCard method="GET" path="/api/documents/{id}" description="Retrieve a single document by ID with full metadata including joined task, project, and workflow details.">
+
+**Response** `200` — Document object (same schema as list item)
+
+Fetch a document to check its processing status and read extracted text:
+
+<CodeExample ts={`// Check processing status and read extracted text
+const doc: { status: string; extractedText: string; processingError: string } =
+  await fetch('/api/documents/doc-7b2e-3f9a').then((r) => r.json());
+
+if (doc.status === 'ready') {
+  console.log(\`Extracted \${doc.extractedText.length} characters\`);
+} else if (doc.status === 'error') {
+  console.error(\`Processing failed: \${doc.processingError}\`);
+}`} python={`import requests
+
+# Check processing status and read extracted text
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a"
+)
+doc: dict = response.json()
+
+if doc["status"] == "ready":
+    print(f"Extracted {len(doc['extractedText'])} characters")
+elif doc["status"] == "error":
+    print(f"Processing failed: {doc['processingError']}")`} />
+
+Example response:
+
+```json
+{
+  "id": "doc-7b2e-3f9a",
+  "originalName": "q2-analysis.pdf",
+  "mimeType": "application/pdf",
+  "size": 245780,
+  "status": "ready",
+  "direction": "input",
+  "version": 1,
+  "extractedText": "Q2 2026 Revenue Report\n\nTotal revenue grew 18% quarter-over-quarter...",
+  "projectId": "proj-8f3a-4b2c",
+  "projectName": "Marketing Analysis",
+  "createdAt": "2026-04-03T09:15:00.000Z",
+  "updatedAt": "2026-04-03T09:15:12.000Z"
+}
+```
+
+**Errors:** `404` — `{ "error": "Document not found" }`
+
+</EndpointCard>
+
+### Update Document
+
+<EndpointCard method="PATCH" path="/api/documents/{id}" description="Update document associations, category, metadata, or trigger reprocessing. Metadata is merged into the existing category JSON.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'taskId', type: 'string (UUID) | null', required: false, description: 'Reassign or unlink task' },
+  { name: 'projectId', type: 'string (UUID) | null', required: false, description: 'Reassign or unlink project' },
+  { name: 'category', type: 'string', required: false, description: 'Category label (max 100 chars)' },
+  { name: 'metadata', type: 'Record<string, string>', required: false, description: 'Key-value pairs merged into category JSON' },
+  { name: 'reprocess', type: 'boolean', required: false, description: 'Set true to re-run text extraction' },
+]} />
+
+**Response** `200` — Updated document object
+
+Reassign a document to a different project and trigger reprocessing after the source file changed:
+
+<CodeExample ts={`// Tag the document and trigger reprocessing
+await fetch('/api/documents/doc-7b2e-3f9a', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    category: 'report',
+    metadata: { reviewed: 'true' },
+    reprocess: true,
+  }),
+});`} python={`import requests
+
+# Tag the document and trigger reprocessing
+requests.patch(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a",
+    json={
+        "category": "report",
+        "metadata": {"reviewed": "true"},
+        "reprocess": True,
+    },
+)`} />
+
+**Errors:** `400` — Validation failure, `404` — Not found
+
+</EndpointCard>
+
+### Delete Document
+
+<EndpointCard method="DELETE" path="/api/documents/{id}" description="Permanently delete a document and its stored file. If the document is linked to a task, cascade confirmation is required.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'cascadeDelete', type: 'boolean', description: 'Set to true to confirm deletion of task-linked documents' },
+]} />
+
+**Response** `204 No Content`
+
+Delete a document that is linked to a task — requires the cascade flag to confirm:
+
+<CodeExample ts={`// Delete a task-linked document (requires cascade confirmation)
+const res: Response = await fetch(
+  '/api/documents/doc-7b2e-3f9a?cascadeDelete=true',
+  { method: 'DELETE' }
+);
+
+if (res.status === 409) {
+  console.log('Document is linked to a task — add ?cascadeDelete=true');
+}`} python={`import requests
+
+# Delete a task-linked document (requires cascade confirmation)
+response: requests.Response = requests.delete(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a",
+    params={"cascadeDelete": "true"},
+)
+
+if response.status_code == 409:
+    print("Document is linked to a task — add ?cascadeDelete=true")`} />
+
+**Errors:** `404` — Not found, `409` — Document linked to a task (add `?cascadeDelete=true` to confirm)
+
+</EndpointCard>
+
+### Download Document File
+
+<EndpointCard method="GET" path="/api/documents/{id}/file" description="Download the raw file content with appropriate Content-Type and Content-Disposition headers. Supports inline display for images and PDFs, and thumbnail mode.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'inline', type: '0 | 1', description: 'Set to 1 for inline display (images and PDFs only)' },
+  { name: 'thumb', type: '0 | 1', description: 'Set to 1 to serve the processed/thumbnail version if available' },
+]} />
+
+**Response** `200` — Raw file bytes with `Content-Type` and `Content-Disposition` headers
+
+Download or display a document inline — useful for embedding PDFs or images in a preview panel:
+
+<CodeExample ts={`// Embed a document preview in the UI
+const previewUrl: string = '/api/documents/doc-7b2e-3f9a/file?inline=1';
+const img: HTMLImageElement = document.createElement('img');
+img.src = previewUrl;
+
+// Or trigger a download
+const link: HTMLAnchorElement = document.createElement('a');
+link.href = '/api/documents/doc-7b2e-3f9a/file';
+link.download = '';
+link.click();`} python={`import requests
+
+# Download the file as attachment
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a/file"
+)
+with open("q2-analysis.pdf", "wb") as f:
+    f.write(response.content)
+
+# Get inline version (images and PDFs)
+inline: requests.Response = requests.get(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a/file",
+    params={"inline": "1"},
+)
+
+# Get thumbnail version
+thumb: requests.Response = requests.get(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a/file",
+    params={"thumb": "1"},
+)`} />
+
+**Errors:** `404` — Document or file not found
+
+</EndpointCard>
+
+### List Document Versions
+
+<EndpointCard method="GET" path="/api/documents/{id}/versions" description="Retrieve version history for an output document. Finds all documents with the same originalName and projectId, ordered by version descending. Only output documents with a project binding have version history.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Version document ID' },
+  { name: 'version', type: 'number', required: true, description: 'Version number' },
+  { name: 'size', type: 'number', required: true, description: 'File size in bytes' },
+  { name: 'status', type: 'enum', required: true, description: 'Processing status' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'When this version was created' },
+  { name: 'workflowRunNumber', type: 'number', required: false, description: 'Workflow run that produced this version' },
+]} />
+
+Track how an output document evolves across workflow runs — useful for auditing agent-generated reports:
+
+<CodeExample ts={`// List all versions of an output document
+const versions: Array<{ version: number; size: number; createdAt: string }> =
+  await fetch('/api/documents/doc-7b2e-3f9a/versions').then((r) => r.json());
+
+versions.forEach((v) => {
+  console.log(\`v\${v.version} — \${(v.size / 1024).toFixed(1)} KB — \${v.createdAt}\`);
+});`} python={`import requests
+
+# List all versions of an output document
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/documents/doc-7b2e-3f9a/versions"
+)
+versions: list[dict] = response.json()
+
+for v in versions:
+    size_kb: float = v["size"] / 1024
+    print(f"v{v['version']} — {size_kb:.1f} KB — {v['createdAt']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "doc-7b2e-3f9a",
+    "version": 3,
+    "size": 312400,
+    "status": "ready",
+    "createdAt": "2026-04-03T14:20:00.000Z",
+    "workflowRunNumber": 5
+  },
+  {
+    "id": "doc-6a1d-2e8b",
+    "version": 2,
+    "size": 287600,
+    "status": "ready",
+    "createdAt": "2026-04-02T10:10:00.000Z",
+    "workflowRunNumber": 4
+  }
+]
+```
+
+</EndpointCard>
+
+## Document Statuses
+
+| Status | Description |
+|--------|-------------|
+| **uploaded** | File stored, processing not yet started. |
+| **processing** | Text extraction and preprocessing in progress. |
+| **ready** | Processing complete, extracted text available. |
+| **error** | Processing failed. See `processingError` for details. |
+
+## Document Directions
+
+| Direction | Description |
+|-----------|-------------|
+| **input** | Reference material provided to agents. |
+| **output** | Artifact produced by agent execution. |

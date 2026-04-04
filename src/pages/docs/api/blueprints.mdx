@@ -1,0 +1,478 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Blueprints API"
+description: "Register, import, instantiate, and manage workflow blueprints — reusable YAML templates with typed variables and multi-step execution patterns."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Blueprints API
+
+Blueprints are reusable workflow templates defined in YAML. Each blueprint declares typed variables, ordered steps with prompt templates, and an execution pattern (sequence, planner-executor, or checkpoint). The Blueprints API supports listing, creating, importing from GitHub, instantiating into live workflows, and deleting user-created blueprints.
+
+## Quick Start
+
+Browse available blueprints, instantiate one with your variables, and check the resulting workflow:
+
+<CodeExample ts={`// 1. List available blueprints to find one that fits your use case
+const blueprints: Blueprint[] = await fetch('/api/blueprints').then(r => r.json());
+
+const codeReview = blueprints.find(bp => bp.tags.includes('code-review'));
+console.log(\`\${codeReview.name} (\${codeReview.pattern})\`);
+console.log(\`Variables: \${codeReview.variables.map(v => v.id).join(', ')}\`);
+// → "Code Review Pipeline (sequence)"
+// → "Variables: repo_url, branch, focus_areas"
+
+// 2. Instantiate the blueprint — supply values for its declared variables
+const workflow: Workflow = await fetch(\`/api/blueprints/\${codeReview.id}/instantiate\`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    variables: {
+      repo_url: 'https://github.com/acme/payments-service',
+      branch: 'feature/stripe-v3',
+      focus_areas: 'security, error handling',
+    },
+    projectId: 'proj-8f3a-4b2c',
+  }),
+}).then(r => r.json());
+// → Live workflow with all steps created, prompts populated with your variables
+
+// 3. Execute the instantiated workflow
+await fetch(\`/api/workflows/\${workflow.id}/execute\`, { method: 'POST' });
+
+// 4. Check workflow status to track step progress
+const status: WorkflowStatus = await fetch(\`/api/workflows/\${workflow.id}/status\`)
+  .then(r => r.json());
+
+for (const step of status.steps) {
+  console.log(\`  \${step.stepId}: \${step.status}\`);
+}`} python={`import requests
+
+# 1. List available blueprints to find one that fits your use case
+blueprints: list[dict] = requests.get("http://localhost:3000/api/blueprints").json()
+
+code_review = next(bp for bp in blueprints if "code-review" in bp["tags"])
+print(f"{code_review['name']} ({code_review['pattern']})")
+var_ids = ", ".join(v["id"] for v in code_review["variables"])
+print(f"Variables: {var_ids}")
+# → "Code Review Pipeline (sequence)"
+# → "Variables: repo_url, branch, focus_areas"
+
+# 2. Instantiate the blueprint — supply values for its declared variables
+workflow: dict = requests.post(
+    f"http://localhost:3000/api/blueprints/{code_review['id']}/instantiate",
+    json={
+        "variables": {
+            "repo_url": "https://github.com/acme/payments-service",
+            "branch": "feature/stripe-v3",
+            "focus_areas": "security, error handling",
+        },
+        "projectId": "proj-8f3a-4b2c",
+    },
+).json()
+# → Live workflow with all steps created, prompts populated with your variables
+
+# 3. Execute the instantiated workflow
+requests.post(f"http://localhost:3000/api/workflows/{workflow['id']}/execute")
+
+# 4. Check workflow status to track step progress
+status: dict = requests.get(
+    f"http://localhost:3000/api/workflows/{workflow['id']}/status"
+).json()
+
+for step in status["steps"]:
+    print(f"  {step['stepId']}: {step['status']}")`} />
+
+## Base URL
+
+```
+/api/blueprints
+```
+
+## Endpoints
+
+### List Blueprints
+
+<EndpointCard method="GET" path="/api/blueprints" description="Retrieve all registered blueprints, including built-in and user-created entries.">
+
+**Response** `200` — Array of blueprint objects
+
+<SchemaTable title="Blueprint Object" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Blueprint identifier' },
+  { name: 'name', type: 'string', required: true, description: 'Display name' },
+  { name: 'description', type: 'string', required: true, description: 'What this blueprint does' },
+  { name: 'version', type: 'string', required: true, description: 'Semver version (e.g. 1.0.0)' },
+  { name: 'domain', type: 'enum', required: true, description: 'work or personal' },
+  { name: 'tags', type: 'string[]', required: true, description: 'Categorization tags' },
+  { name: 'pattern', type: 'enum', required: true, description: 'Execution pattern: sequence, planner-executor, or checkpoint' },
+  { name: 'variables', type: 'Variable[]', required: true, description: 'Typed input variables for instantiation' },
+  { name: 'steps', type: 'Step[]', required: true, description: 'Ordered workflow steps' },
+  { name: 'author', type: 'string', required: false, description: 'Blueprint author' },
+  { name: 'source', type: 'string (URL)', required: false, description: 'Source repository URL' },
+  { name: 'estimatedDuration', type: 'string', required: false, description: 'Estimated execution time' },
+  { name: 'difficulty', type: 'enum', required: false, description: 'beginner, intermediate, or advanced' },
+]} />
+
+Fetch all blueprints to display a template gallery — filter by domain or tags for your use case:
+
+<CodeExample ts={`// List all blueprints and group by domain
+const blueprints: Blueprint[] = await fetch('/api/blueprints').then(r => r.json());
+
+const work = blueprints.filter(bp => bp.domain === 'work');
+const personal = blueprints.filter(bp => bp.domain === 'personal');
+
+console.log(\`\${work.length} work blueprints, \${personal.length} personal\`);
+work.forEach(bp => console.log(\`  \${bp.name} [\${bp.pattern}] — \${bp.tags.join(', ')}\`));`} python={`import requests
+
+# List all blueprints and group by domain
+response = requests.get("http://localhost:3000/api/blueprints")
+blueprints: list[dict] = response.json()
+
+work = [bp for bp in blueprints if bp["domain"] == "work"]
+personal = [bp for bp in blueprints if bp["domain"] == "personal"]
+
+print(f"{len(work)} work blueprints, {len(personal)} personal")
+for bp in work:
+    tags = ", ".join(bp["tags"])
+    print(f"  {bp['name']} [{bp['pattern']}] — {tags}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "code-review-pipeline",
+    "name": "Code Review Pipeline",
+    "description": "Automated multi-step code review with security analysis and style checking",
+    "version": "1.2.0",
+    "domain": "work",
+    "tags": ["code-review", "security", "automation"],
+    "pattern": "sequence",
+    "variables": [
+      { "id": "repo_url", "type": "text", "label": "Repository URL", "required": true },
+      { "id": "branch", "type": "text", "label": "Branch", "required": true, "default": "main" },
+      { "id": "focus_areas", "type": "textarea", "label": "Focus Areas", "required": false }
+    ],
+    "steps": [
+      { "name": "Security Scan", "profileId": "code-reviewer", "promptTemplate": "Review {{repo_url}} branch {{branch}} for security vulnerabilities", "requiresApproval": false },
+      { "name": "Style Review", "profileId": "code-reviewer", "promptTemplate": "Check code style and patterns in {{repo_url}}", "requiresApproval": false },
+      { "name": "Final Report", "profileId": "technical-writer", "promptTemplate": "Compile findings into a review report focusing on {{focus_areas}}", "requiresApproval": true }
+    ],
+    "author": "Stagent Team",
+    "estimatedDuration": "10–15 minutes",
+    "difficulty": "beginner"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Blueprint
+
+<EndpointCard method="POST" path="/api/blueprints" description="Register a new blueprint by providing its YAML definition. The YAML is validated against the blueprint schema.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'yaml', type: 'string', required: true, description: 'Complete blueprint YAML content' },
+]} />
+
+**Response** `201 Created` — The registered blueprint object
+
+**Errors:** `400` — YAML parse error or schema validation failure
+
+Register a custom blueprint from YAML — the YAML is validated against the blueprint schema before saving:
+
+<CodeExample ts={`// Register a blueprint from YAML content
+const yaml: string = \`
+id: daily-standup-report
+name: Daily Standup Report
+description: Generate a daily standup summary from project tasks
+version: 1.0.0
+domain: work
+tags: [standup, reporting]
+pattern: sequence
+variables:
+  - id: project_name
+    type: text
+    label: Project Name
+    required: true
+steps:
+  - name: Gather Status
+    profileId: project-manager
+    promptTemplate: "List all tasks updated in the last 24 hours for {{project_name}}"
+    requiresApproval: false
+  - name: Write Summary
+    profileId: technical-writer
+    promptTemplate: "Write a standup summary from the task status data"
+    requiresApproval: false
+\`.trim();
+
+const blueprint: Blueprint = await fetch('/api/blueprints', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ yaml }),
+}).then(r => r.json());
+
+console.log(\`Registered: \${blueprint.id}\`);`} python={`import requests
+
+# Register a blueprint from YAML content
+yaml_content: str = """
+id: daily-standup-report
+name: Daily Standup Report
+description: Generate a daily standup summary from project tasks
+version: 1.0.0
+domain: work
+tags: [standup, reporting]
+pattern: sequence
+variables:
+  - id: project_name
+    type: text
+    label: Project Name
+    required: true
+steps:
+  - name: Gather Status
+    profileId: project-manager
+    promptTemplate: "List all tasks updated in the last 24 hours for {{project_name}}"
+    requiresApproval: false
+  - name: Write Summary
+    profileId: technical-writer
+    promptTemplate: "Write a standup summary from the task status data"
+    requiresApproval: false
+""".strip()
+
+response = requests.post(
+    "http://localhost:3000/api/blueprints",
+    json={"yaml": yaml_content},
+)
+blueprint: dict = response.json()
+print(f"Registered: {blueprint['id']}")`} />
+
+</EndpointCard>
+
+### Import Blueprint from GitHub
+
+<EndpointCard method="POST" path="/api/blueprints/import" description="Import a blueprint from a GitHub URL pointing to a YAML file. Supports both github.com blob/tree URLs and raw.githubusercontent.com URLs.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'url', type: 'string (URL)', required: true, description: 'GitHub URL to a blueprint YAML file' },
+]} />
+
+**Response** `201 Created`
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'ok', type: 'boolean', required: true, description: 'Always true on success' },
+  { name: 'id', type: 'string', required: true, description: 'Registered blueprint ID' },
+  { name: 'name', type: 'string', required: true, description: 'Blueprint display name' },
+]} />
+
+**Errors:**
+- `400` — URL missing, not a GitHub URL, fetch failed, or YAML validation error
+
+Import a blueprint directly from a GitHub repository — Stagent fetches the YAML, validates it, and registers it:
+
+<CodeExample ts={`// Import a blueprint from GitHub — validates and registers automatically
+const { id, name }: { id: string; name: string } = await fetch('/api/blueprints/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    url: 'https://github.com/acme/stagent-blueprints/blob/main/blueprints/code-review.yaml',
+  }),
+}).then(r => r.json());
+
+console.log(\`Imported "\${name}" as \${id}\`);`} python={`import requests
+
+# Import a blueprint from GitHub — validates and registers automatically
+response = requests.post(
+    "http://localhost:3000/api/blueprints/import",
+    json={"url": "https://github.com/acme/stagent-blueprints/blob/main/blueprints/code-review.yaml"},
+)
+data: dict = response.json()
+print(f"Imported \\"{data['name']}\\" as {data['id']}")`} />
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "id": "code-review-pipeline",
+  "name": "Code Review Pipeline"
+}
+```
+
+</EndpointCard>
+
+### Get Blueprint
+
+<EndpointCard method="GET" path="/api/blueprints/{id}" description="Retrieve a single blueprint by ID.">
+
+**Response** `200` — Blueprint object
+
+**Errors:** `404` — Blueprint not found
+
+Fetch a blueprint to inspect its variables before instantiation:
+
+<CodeExample ts={`// Fetch a blueprint to build a dynamic form for its variables
+const bp: Blueprint = await fetch('/api/blueprints/code-review-pipeline')
+  .then(r => r.json());
+
+// Build a form from the variable schema
+bp.variables.forEach(v => {
+  console.log(\`\${v.label} (\${v.type})\${v.required ? ' *' : ''}\`);
+  if (v.default) console.log(\`  default: \${v.default}\`);
+});`} python={`import requests
+
+# Fetch a blueprint to build a dynamic form for its variables
+response = requests.get("http://localhost:3000/api/blueprints/code-review-pipeline")
+bp: dict = response.json()
+
+# Build a form from the variable schema
+for v in bp["variables"]:
+    required = " *" if v["required"] else ""
+    print(f"{v['label']} ({v['type']}){required}")
+    if v.get("default"):
+        print(f"  default: {v['default']}")`} />
+
+</EndpointCard>
+
+### Instantiate Blueprint
+
+<EndpointCard method="POST" path="/api/blueprints/{id}/instantiate" description="Create a live workflow from a blueprint by supplying values for its declared variables. Each variable is substituted into the step prompt templates.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'variables', type: 'object', required: true, description: 'Key-value map of variable IDs to their values' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Project to associate the created workflow with' },
+]} />
+
+**Response** `201 Created` — The instantiated workflow object with all steps created
+
+**Errors:** `400` — Variables object missing, blueprint not found, or variable validation failure
+
+Instantiate a blueprint into a live workflow — variables are substituted into every step's prompt template:
+
+<CodeExample ts={`// Instantiate — variables are substituted into step prompts
+const workflow: Workflow = await fetch('/api/blueprints/code-review-pipeline/instantiate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    variables: {
+      repo_url: 'https://github.com/acme/payments-service',
+      branch: 'feature/stripe-v3',
+      focus_areas: 'security, error handling, input validation',
+    },
+    projectId: 'proj-8f3a-4b2c',
+  }),
+}).then(r => r.json());
+
+console.log(\`Created workflow: \${workflow.id}\`);
+console.log(\`Status: \${workflow.status}\`); // "draft" — execute to start`} python={`import requests
+
+# Instantiate — variables are substituted into step prompts
+response = requests.post(
+    "http://localhost:3000/api/blueprints/code-review-pipeline/instantiate",
+    json={
+        "variables": {
+            "repo_url": "https://github.com/acme/payments-service",
+            "branch": "feature/stripe-v3",
+            "focus_areas": "security, error handling, input validation",
+        },
+        "projectId": "proj-8f3a-4b2c",
+    },
+)
+workflow: dict = response.json()
+
+print(f"Created workflow: {workflow['id']}")
+print(f"Status: {workflow['status']}")  # "draft" — execute to start`} />
+
+Example response:
+
+```json
+{
+  "id": "wf-9b3d-2e7c",
+  "name": "Code Review Pipeline",
+  "projectId": "proj-8f3a-4b2c",
+  "status": "draft",
+  "runNumber": 0,
+  "createdAt": "2026-04-03T10:30:00.000Z",
+  "updatedAt": "2026-04-03T10:30:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Delete Blueprint
+
+<EndpointCard method="DELETE" path="/api/blueprints/{id}" description="Remove a user-created blueprint. Built-in blueprints cannot be deleted.">
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:**
+- `403` — Cannot delete a built-in blueprint
+- `400` — Delete failed
+
+<CodeExample ts={`// Delete a user-created blueprint — built-ins are protected
+const res: Response = await fetch('/api/blueprints/daily-standup-report', {
+  method: 'DELETE',
+});
+
+if (res.status === 403) {
+  console.log('Cannot delete built-in blueprints');
+}`} python={`import requests
+
+# Delete a user-created blueprint — built-ins are protected
+response = requests.delete("http://localhost:3000/api/blueprints/daily-standup-report")
+
+if response.status_code == 403:
+    print("Cannot delete built-in blueprints")`} />
+
+</EndpointCard>
+
+## Variable Schema
+
+Each blueprint declares typed variables that must be supplied at instantiation time.
+
+<SchemaTable title="Variable Object" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Variable identifier used in prompt templates' },
+  { name: 'type', type: 'enum', required: true, description: 'Input type: text, textarea, select, number, boolean, or file' },
+  { name: 'label', type: 'string', required: true, description: 'Human-readable label' },
+  { name: 'description', type: 'string', required: false, description: 'Help text for the variable' },
+  { name: 'required', type: 'boolean', required: true, description: 'Whether a value must be provided' },
+  { name: 'default', type: 'any', required: false, description: 'Default value if not supplied' },
+  { name: 'placeholder', type: 'string', required: false, description: 'Placeholder text for input fields' },
+  { name: 'options', type: 'Option[]', required: false, description: 'Choices for select type: [{ value, label }]' },
+  { name: 'min', type: 'number', required: false, description: 'Minimum value (number type only)' },
+  { name: 'max', type: 'number', required: false, description: 'Maximum value (number type only)' },
+]} />
+
+## Step Schema
+
+Each step defines an agent task to execute within the workflow.
+
+<SchemaTable title="Step Object" fields={[
+  { name: 'name', type: 'string', required: true, description: 'Step display name' },
+  { name: 'profileId', type: 'string', required: true, description: 'Agent profile to use for execution' },
+  { name: 'promptTemplate', type: 'string', required: true, description: 'Prompt with {{variable}} placeholders' },
+  { name: 'requiresApproval', type: 'boolean', required: true, description: 'Whether the step needs manual approval before running' },
+  { name: 'expectedOutput', type: 'string', required: false, description: 'Description of expected output' },
+  { name: 'condition', type: 'string', required: false, description: 'Conditional expression to skip this step' },
+]} />
+
+## Execution Patterns
+
+| Pattern | Description |
+|---------|-------------|
+| **sequence** | Steps execute in order, one after the other |
+| **planner-executor** | A planner step generates sub-tasks, then executor steps process them |
+| **checkpoint** | Steps execute with approval gates between stages |
+
+## Error Format
+
+All errors follow a consistent JSON format:
+
+```json
+{
+  "error": "Descriptive error message"
+}
+```

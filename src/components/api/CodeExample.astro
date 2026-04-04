@@ -1,0 +1,125 @@
+---
+import { Code } from 'astro:components';
+
+interface Props {
+  ts: string;
+  python?: string;
+}
+
+const { ts, python } = Astro.props;
+const exampleId = `code-${Math.random().toString(36).slice(2, 8)}`;
+---
+<div class="api-code-example mb-4" data-code-example={exampleId}>
+  <div class="api-code-header">
+    <div class="flex gap-1">
+      <button
+        data-tab="ts"
+        class="api-code-tab active font-mono text-xs px-3 py-1.5 border-b-2 border-transparent transition-colors"
+        type="button"
+      >
+        TypeScript
+      </button>
+      {python && (
+        <button
+          data-tab="python"
+          class="api-code-tab font-mono text-xs px-3 py-1.5 border-b-2 border-transparent transition-colors"
+          type="button"
+        >
+          Python
+        </button>
+      )}
+    </div>
+    <button class="api-code-copy" type="button" title="Copy code" aria-label="Copy code">
+      <svg class="api-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      <svg class="api-check-icon hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </button>
+  </div>
+  <div data-panel="ts" class="api-code-panel api-code-panel-dark">
+    <Code code={ts} lang="typescript" theme="github-dark" />
+  </div>
+  {python && (
+    <div data-panel="python" class="api-code-panel api-code-panel-dark hidden">
+      <Code code={python} lang="python" theme="github-dark" />
+    </div>
+  )}
+</div>
+
+<script>
+  const STORAGE_KEY = 'api-docs-lang';
+
+  function initCodeTabs() {
+    const preferred = localStorage.getItem(STORAGE_KEY);
+
+    document.querySelectorAll('[data-code-example]').forEach(wrapper => {
+      const tabs = wrapper.querySelectorAll('.api-code-tab');
+      const panels = wrapper.querySelectorAll('.api-code-panel');
+      const copyBtn = wrapper.querySelector('.api-code-copy');
+
+      function activateTab(target: string) {
+        tabs.forEach(t => {
+          const isTarget = (t as HTMLElement).dataset.tab === target;
+          t.classList.toggle('active', isTarget);
+        });
+        panels.forEach(p => {
+          p.classList.toggle('hidden', (p as HTMLElement).dataset.panel !== target);
+        });
+      }
+
+      // Restore preference if that tab exists in this block
+      if (preferred) {
+        const hasTab = Array.from(tabs).some(t => (t as HTMLElement).dataset.tab === preferred);
+        if (hasTab) activateTab(preferred);
+      }
+
+      // Tab click: switch locally, save preference, broadcast to all blocks
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = (tab as HTMLElement).dataset.tab!;
+          activateTab(target);
+          localStorage.setItem(STORAGE_KEY, target);
+          // Sync all other code examples on the page
+          document.querySelectorAll('[data-code-example]').forEach(other => {
+            if (other === wrapper) return;
+            const otherTabs = other.querySelectorAll('.api-code-tab');
+            const otherPanels = other.querySelectorAll('.api-code-panel');
+            const hasTab = Array.from(otherTabs).some(t => (t as HTMLElement).dataset.tab === target);
+            if (hasTab) {
+              otherTabs.forEach(t => {
+                t.classList.toggle('active', (t as HTMLElement).dataset.tab === target);
+              });
+              otherPanels.forEach(p => {
+                p.classList.toggle('hidden', (p as HTMLElement).dataset.panel !== target);
+              });
+            }
+          });
+        });
+      });
+
+      // Copy button
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          const activePanel = wrapper.querySelector('.api-code-panel:not(.hidden)');
+          const code = activePanel?.querySelector('code')?.textContent || '';
+          navigator.clipboard.writeText(code).then(() => {
+            const copyIcon = copyBtn.querySelector('.api-copy-icon');
+            const checkIcon = copyBtn.querySelector('.api-check-icon');
+            copyIcon?.classList.add('hidden');
+            checkIcon?.classList.remove('hidden');
+            setTimeout(() => {
+              copyIcon?.classList.remove('hidden');
+              checkIcon?.classList.add('hidden');
+            }, 1500);
+          });
+        });
+      }
+    });
+  }
+
+  initCodeTabs();
+  document.addEventListener('astro:after-swap', initCodeTabs);
+</script>

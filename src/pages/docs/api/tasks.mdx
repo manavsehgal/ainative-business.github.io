@@ -1,0 +1,681 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Tasks API"
+description: "Create, execute, cancel, and monitor tasks with lifecycle state transitions, fire-and-forget execution, and SSE log streaming."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Tasks API
+
+Tasks are the unit of execution inside Stagent. Each task moves through explicit lifecycle states and can be executed by any configured agent runtime. The Tasks API supports CRUD operations, fire-and-forget execution, real-time log streaming, and workflow-aware sibling queries.
+
+## Quick Start
+
+Create a task, queue it, execute it, and stream the logs — a typical integration flow:
+
+<CodeExample ts={`// 1. Create a task — starts in "planned" state
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  priority: number;
+  projectId?: string;
+  assignedAgent?: string;
+  agentProfile?: string;
+}
+
+const taskRes: Response = await fetch("http://localhost:3000/api/tasks", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title: "Analyze Q4 revenue trends",
+    description: "Review revenue data and produce a summary report with charts",
+    projectId: "proj-8f3a-4b2c",
+    priority: 1,
+    assignedAgent: "claude-code",
+    agentProfile: "data-analyst",
+  }),
+});
+const task: Task = await taskRes.json();
+// → { id: "task-9d4e...", status: "planned", ... }
+
+// 2. Queue the task, then execute it
+await fetch(\`http://localhost:3000/api/tasks/\${task.id}\`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ status: "queued" }),
+});
+
+const exec: Response = await fetch(\`http://localhost:3000/api/tasks/\${task.id}/execute\`, { method: "POST" });
+// → 202 Accepted — agent is now running in the background
+
+// 3. Stream logs in real time
+const logs = new EventSource(\`http://localhost:3000/api/tasks/\${task.id}/logs\`);
+logs.onmessage = (e: MessageEvent) => {
+  const entry: { eventType: string; message: string } = JSON.parse(e.data);
+  console.log(\`[\${entry.eventType}] \${entry.message}\`);
+};
+
+// 4. When done, fetch the result
+interface TaskOutput {
+  taskId: string;
+  status: string;
+  result: string;
+  contentType: string;
+}
+const outputRes: Response = await fetch(\`http://localhost:3000/api/tasks/\${task.id}/output\`);
+const output: TaskOutput = await outputRes.json();
+// → { taskId: "task-9d4e...", status: "completed", result: "...", contentType: "markdown" }`} python={`import requests
+
+# 1. Create a task — starts in "planned" state
+task_res = requests.post("http://localhost:3000/api/tasks", json={
+    "title": "Analyze Q4 revenue trends",
+    "description": "Review revenue data and produce a summary report with charts",
+    "projectId": "proj-8f3a-4b2c",
+    "priority": 1,
+    "assignedAgent": "claude-code",
+    "agentProfile": "data-analyst",
+})
+task: dict = task_res.json()
+# → { "id": "task-9d4e...", "status": "planned", ... }
+
+# 2. Queue the task, then execute it
+requests.patch(f"http://localhost:3000/api/tasks/{task['id']}", json={
+    "status": "queued",
+})
+
+exec_res = requests.post(f"http://localhost:3000/api/tasks/{task['id']}/execute")
+# → 202 Accepted — agent is now running in the background
+
+# 3. Stream logs in real time
+response = requests.get(f"http://localhost:3000/api/tasks/{task['id']}/logs", stream=True)
+for line in response.iter_lines():
+    if line:
+        decoded = line.decode("utf-8")
+        if decoded.startswith("data: "):
+            import json
+            entry: dict = json.loads(decoded[6:])
+            print(f"[{entry['eventType']}] {entry['message']}")
+
+# 4. When done, fetch the result
+output_res = requests.get(f"http://localhost:3000/api/tasks/{task['id']}/output")
+output: dict = output_res.json()
+# → { "taskId": "task-9d4e...", "status": "completed", "result": "...", "contentType": "markdown" }`} />
+
+## Base URL
+
+```
+/api/tasks
+```
+
+## Endpoints
+
+### List Tasks
+
+<EndpointCard method="GET" path="/api/tasks" description="Retrieve all tasks with optional filtering by project and status. Results are ordered by priority, then newest first.">
+
+<ParamTable params={[
+  { name: 'projectId', type: 'string', required: false, description: 'Filter tasks by project UUID' },
+  { name: 'status', type: 'enum', required: false, description: 'Filter by lifecycle state', example: 'running' },
+]} />
+
+**Response** `200` — Array of task objects
+
+<SchemaTable title="Task Object" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Task identifier' },
+  { name: 'title', type: 'string', required: true, description: 'Task title' },
+  { name: 'description', type: 'string', required: false, description: 'Detailed task brief' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Associated project' },
+  { name: 'status', type: 'enum', required: true, description: 'Lifecycle state: planned, queued, running, completed, failed, cancelled' },
+  { name: 'priority', type: 'number (0–3)', required: true, description: '0 = P0 Critical, 3 = P3 Low' },
+  { name: 'assignedAgent', type: 'string', required: false, description: 'Agent runtime ID' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Profile ID for execution' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification timestamp' },
+]} />
+
+Fetch all running tasks for a specific project — useful for building a dashboard or monitoring view:
+
+<CodeExample ts={`// Fetch running tasks for a project
+const response: Response = await fetch("http://localhost:3000/api/tasks?projectId=proj-8f3a&status=running");
+const tasks: Task[] = await response.json();
+
+console.log(\`\${tasks.length} running tasks\`);
+tasks.forEach((t: Task) => console.log(\`  [\${t.priority}] \${t.title}\`));`} python={`import requests
+
+# Fetch running tasks for a project
+response = requests.get("http://localhost:3000/api/tasks", params={"projectId": "proj-8f3a", "status": "running"})
+tasks: list[dict] = response.json()
+
+print(f"{len(tasks)} running tasks")
+for t in tasks:
+    print(f"  [{t['priority']}] {t['title']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "task-9d4e-a1b2",
+    "title": "Analyze Q4 revenue trends",
+    "status": "running",
+    "priority": 1,
+    "projectId": "proj-8f3a-4b2c",
+    "assignedAgent": "claude-code",
+    "agentProfile": "data-analyst",
+    "createdAt": "2026-04-03T10:30:00.000Z",
+    "updatedAt": "2026-04-03T10:31:15.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Task
+
+<EndpointCard method="POST" path="/api/tasks" description="Create a new task. The task starts in planned state. Optionally link documents and assign an agent profile.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'title', type: 'string', required: true, description: 'Task title (1–200 characters)' },
+  { name: 'description', type: 'string', required: false, description: 'Task brief (max 2000 characters)' },
+  { name: 'projectId', type: 'string (UUID)', required: false, description: 'Project to associate with' },
+  { name: 'priority', type: 'number', required: false, description: 'Priority level 0–3', default: '2' },
+  { name: 'assignedAgent', type: 'enum', required: false, description: 'Agent runtime: claude-code, openai-codex-app-server, anthropic-direct, openai-direct, ollama' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Profile ID for agent configuration' },
+  { name: 'documentIds', type: 'string[]', required: false, description: 'Document UUIDs to attach as context' },
+]} />
+
+**Response** `201 Created` — The created task object with a generated UUID
+
+Create a task with documents attached — the agent will receive these files as context during execution:
+
+<CodeExample ts={`// Create a task with attached documents
+const response: Response = await fetch("http://localhost:3000/api/tasks", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title: "Summarize meeting notes",
+    description: "Extract action items and decisions from the uploaded transcript",
+    projectId: "proj-8f3a-4b2c",
+    priority: 1,
+    assignedAgent: "claude-code",
+    agentProfile: "technical-writer",
+    documentIds: ["doc-meeting-transcript-001"],
+  }),
+});
+const task: Task = await response.json();
+
+console.log(task.id);     // "task-a7c2-..."
+console.log(task.status); // "planned"`} python={`import requests
+
+# Create a task with attached documents
+response = requests.post("http://localhost:3000/api/tasks", json={
+    "title": "Summarize meeting notes",
+    "description": "Extract action items and decisions from the uploaded transcript",
+    "projectId": "proj-8f3a-4b2c",
+    "priority": 1,
+    "assignedAgent": "claude-code",
+    "agentProfile": "technical-writer",
+    "documentIds": ["doc-meeting-transcript-001"],
+})
+task: dict = response.json()
+
+print(task["id"])     # "task-a7c2-..."
+print(task["status"]) # "planned"`} />
+
+**Errors:** `400` — Zod validation failure or runtime/profile incompatibility
+
+```json
+{
+  "error": {
+    "formErrors": [],
+    "fieldErrors": {
+      "title": ["String must contain at least 1 character(s)"]
+    }
+  }
+}
+```
+
+</EndpointCard>
+
+### Get Task
+
+<EndpointCard method="GET" path="/api/tasks/{id}" description="Retrieve a single task with resolved relationship names and aggregated usage data from the cost ledger.">
+
+**Response** `200` — Task object with enriched fields
+
+<SchemaTable title="Additional Fields (beyond standard task object)" fields={[
+  { name: 'projectName', type: 'string', required: false, description: 'Resolved project name' },
+  { name: 'workflowName', type: 'string', required: false, description: 'Parent workflow name (if step task)' },
+  { name: 'scheduleName', type: 'string', required: false, description: 'Parent schedule name (if scheduled)' },
+  { name: 'usage.inputTokens', type: 'number', required: false, description: 'Total input tokens consumed' },
+  { name: 'usage.outputTokens', type: 'number', required: false, description: 'Total output tokens consumed' },
+  { name: 'usage.totalTokens', type: 'number', required: false, description: 'Combined token count' },
+  { name: 'usage.costMicros', type: 'number', required: false, description: 'Total cost in microdollars (divide by 1,000,000 for USD)' },
+  { name: 'usage.modelId', type: 'string', required: false, description: 'Model used for execution' },
+  { name: 'usage.startedAt', type: 'ISO 8601', required: false, description: 'Execution start time' },
+  { name: 'usage.finishedAt', type: 'ISO 8601', required: false, description: 'Execution end time' },
+]} />
+
+The `usage` field is only present if the task has execution records in the cost ledger. Use `costMicros / 1_000_000` to get USD.
+
+<CodeExample ts={`// Fetch task with usage data to check cost
+const response: Response = await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2");
+const task: Task & { usage?: { costMicros: number; modelId: string; totalTokens: number } } = await response.json();
+
+if (task.usage) {
+  const costUSD: number = task.usage.costMicros / 1_000_000;
+  console.log(\`Model: \${task.usage.modelId}\`);
+  console.log(\`Tokens: \${task.usage.totalTokens.toLocaleString()}\`);
+  console.log(\`Cost: $\${costUSD.toFixed(4)}\`);
+}`} python={`import requests
+
+# Fetch task with usage data to check cost
+response = requests.get("http://localhost:3000/api/tasks/task-9d4e-a1b2")
+task: dict = response.json()
+
+if "usage" in task:
+    cost_usd: float = task["usage"]["costMicros"] / 1_000_000
+    print(f"Model: {task['usage']['modelId']}")
+    print(f"Tokens: {task['usage']['totalTokens']:,}")
+    print(f"Cost: \${cost_usd:.4f}")`} />
+
+Example response for a completed task:
+
+```json
+{
+  "id": "task-9d4e-a1b2",
+  "title": "Analyze Q4 revenue trends",
+  "status": "completed",
+  "projectName": "Marketing Analysis",
+  "usage": {
+    "inputTokens": 12450,
+    "outputTokens": 3200,
+    "totalTokens": 15650,
+    "costMicros": 48200,
+    "modelId": "claude-sonnet-4-6-20250514",
+    "startedAt": "2026-04-03T10:31:15.000Z",
+    "finishedAt": "2026-04-03T10:32:44.000Z"
+  }
+}
+```
+
+**Errors:** `404` — Task not found
+
+</EndpointCard>
+
+### Update Task
+
+<EndpointCard method="PATCH" path="/api/tasks/{id}" description="Update task fields. Status changes are validated against the transition table. Document bindings can be replaced atomically.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'title', type: 'string', required: false, description: 'Updated title (1–200 chars)' },
+  { name: 'description', type: 'string', required: false, description: 'Updated brief (max 2000 chars)' },
+  { name: 'status', type: 'enum', required: false, description: 'New lifecycle state (validated against transitions)' },
+  { name: 'priority', type: 'number', required: false, description: 'Updated priority (0–3)' },
+  { name: 'assignedAgent', type: 'enum', required: false, description: 'New agent runtime' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'New profile ID' },
+  { name: 'result', type: 'string', required: false, description: 'Execution result text' },
+  { name: 'documentIds', type: 'string[]', required: false, description: 'Replace all document bindings atomically' },
+]} />
+
+Promote a planned task to the queue and escalate its priority:
+
+<CodeExample ts={`// Escalate and queue a task for immediate execution
+await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2", {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ status: "queued", priority: 0 }),
+});`} python={`import requests
+
+# Escalate and queue a task for immediate execution
+requests.patch("http://localhost:3000/api/tasks/task-9d4e-a1b2", json={
+    "status": "queued",
+    "priority": 0,
+})`} />
+
+**Errors:** `400` — Invalid status transition (e.g. `planned → completed`) or validation failure, `404` — Not found
+
+</EndpointCard>
+
+### Delete Task
+
+<EndpointCard method="DELETE" path="/api/tasks/{id}" description="Permanently remove a task and its associated data.">
+
+**Response** `200` — `{ "success": true }`
+
+<CodeExample ts={`// Permanently remove a task
+await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2", { method: "DELETE" });`} python={`import requests
+
+# Permanently remove a task
+requests.delete("http://localhost:3000/api/tasks/task-9d4e-a1b2")`} />
+
+**Errors:** `404` — Task not found
+
+</EndpointCard>
+
+### Execute Task
+
+<EndpointCard method="POST" path="/api/tasks/{id}/execute" description="Start agent execution. Returns 202 immediately — the agent runs asynchronously in the background. Task must be in queued status.">
+
+**Response** `202 Accepted` — `{ "message": "Execution started" }`
+
+The agent runtime is selected from the task's `assignedAgent` field. If no profile is set, Stagent auto-classifies one based on the task description. Budget guardrails are enforced before execution begins.
+
+<CodeExample ts={`// Fire-and-forget execution — poll status or stream logs to track progress
+const res: Response = await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/execute", {
+  method: "POST",
+});
+
+if (res.status === 202) {
+  console.log("Agent is running — stream /logs to follow progress");
+} else if (res.status === 429) {
+  console.log("Budget exceeded — increase budget in Settings");
+}`} python={`import requests
+
+# Fire-and-forget execution — poll status or stream logs to track progress
+res = requests.post("http://localhost:3000/api/tasks/task-9d4e-a1b2/execute")
+
+if res.status_code == 202:
+    print("Agent is running — stream /logs to follow progress")
+elif res.status_code == 429:
+    print("Budget exceeded — increase budget in Settings")`} />
+
+**Errors:**
+- `400` — Task not in `queued` state, or runtime/profile incompatibility
+- `404` — Task not found
+- `429` — Budget limit exceeded
+
+</EndpointCard>
+
+### Resume Task
+
+<EndpointCard method="POST" path="/api/tasks/{id}/resume" description="Resume a failed or cancelled task from its last session checkpoint. Requires a previous execution session. Maximum 3 resumes per task.">
+
+**Response** `202 Accepted` — `{ "message": "Resume started" }`
+
+Resume picks up the agent conversation from the last checkpoint, preserving context. If the resume limit (3) is reached, re-queue the task for a fresh start instead.
+
+<CodeExample ts={`// Resume a failed task — the agent continues where it left off
+const res: Response = await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/resume", {
+  method: "POST",
+});
+
+if (res.status === 400) {
+  const err: { error: string } = await res.json();
+  if (err.error.includes("Resume limit")) {
+    // Re-queue for fresh execution instead
+    await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "queued" }),
+    });
+  }
+}`} python={`import requests
+
+# Resume a failed task — the agent continues where it left off
+res = requests.post("http://localhost:3000/api/tasks/task-9d4e-a1b2/resume")
+
+if res.status_code == 400:
+    err: dict = res.json()
+    if "Resume limit" in err.get("error", ""):
+        # Re-queue for fresh execution instead
+        requests.patch("http://localhost:3000/api/tasks/task-9d4e-a1b2", json={
+            "status": "queued",
+        })`} />
+
+**Errors:**
+- `400` — No session to resume, resume limit reached (max 3), or task not in failed/cancelled state
+- `404` — Task not found
+- `429` — Budget limit exceeded
+
+</EndpointCard>
+
+### Cancel Task
+
+<EndpointCard method="POST" path="/api/tasks/{id}/cancel" description="Cancel a running or queued task. Sends a cancellation signal to the active agent runtime.">
+
+**Response** `200` — `{ "success": true }`
+
+<CodeExample ts={`// Cancel a runaway task
+await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/cancel", { method: "POST" });`} python={`import requests
+
+# Cancel a runaway task
+requests.post("http://localhost:3000/api/tasks/task-9d4e-a1b2/cancel")`} />
+
+**Errors:** `404` — Task not found
+
+</EndpointCard>
+
+### Respond to Permission Request
+
+<EndpointCard method="POST" path="/api/tasks/{id}/respond" description="Allow or deny a pending permission request from an executing agent. Optionally save an always-allow rule so the agent won't ask again.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'notificationId', type: 'string', required: true, description: 'ID of the pending notification' },
+  { name: 'behavior', type: 'enum', required: true, description: 'allow or deny' },
+  { name: 'message', type: 'string', required: false, description: 'Optional message back to the agent' },
+  { name: 'updatedInput', type: 'object', required: false, description: 'Modified tool input (keys validated against original)' },
+  { name: 'alwaysAllow', type: 'boolean', required: false, description: 'Save as permanent permission rule' },
+  { name: 'permissionPattern', type: 'string', required: false, description: 'Glob pattern for the always-allow rule' },
+]} />
+
+Allow a file write permission and remember the decision for future runs:
+
+<CodeExample ts={`// Auto-approve file writes to the reports directory
+await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/respond", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    notificationId: "notif-456",
+    behavior: "allow",
+    alwaysAllow: true,
+    permissionPattern: "write:/reports/*",
+  }),
+});`} python={`import requests
+
+# Auto-approve file writes to the reports directory
+requests.post("http://localhost:3000/api/tasks/task-9d4e-a1b2/respond", json={
+    "notificationId": "notif-456",
+    "behavior": "allow",
+    "alwaysAllow": True,
+    "permissionPattern": "write:/reports/*",
+})`} />
+
+**Response** `200` — `{ "success": true }`
+
+**Errors:** `400` — Validation failure or disallowed input keys, `404` — Notification not found, `409` — Already responded
+
+</EndpointCard>
+
+### Get Task Output
+
+<EndpointCard method="GET" path="/api/tasks/{id}/output" description="Retrieve the execution result with auto-detected content type. The contentType field tells you how to render it.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'taskId', type: 'string', required: true, description: 'Task identifier' },
+  { name: 'status', type: 'string', required: true, description: 'Current task status' },
+  { name: 'result', type: 'string', required: true, description: 'Execution output text' },
+  { name: 'contentType', type: 'enum', required: true, description: 'Auto-detected: text, markdown, code, json, or unknown' },
+]} />
+
+<CodeExample ts={`// Fetch output and render based on detected content type
+const response: Response = await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/output");
+const output: { taskId: string; status: string; result: string; contentType: string } = await response.json();
+
+switch (output.contentType) {
+  case "markdown": renderMarkdown(output.result); break;
+  case "json":     renderJSON(JSON.parse(output.result)); break;
+  case "code":     renderCode(output.result); break;
+  default:         renderPlainText(output.result);
+}`} python={`import requests
+
+# Fetch output and render based on detected content type
+response = requests.get("http://localhost:3000/api/tasks/task-9d4e-a1b2/output")
+output: dict = response.json()
+
+match output["contentType"]:
+    case "markdown": render_markdown(output["result"])
+    case "json":     render_json(output["result"])
+    case "code":     render_code(output["result"])
+    case _:          render_plain_text(output["result"])`} />
+
+Example response:
+
+```json
+{
+  "taskId": "task-9d4e-a1b2",
+  "status": "completed",
+  "result": "## Q4 Revenue Analysis\n\nRevenue grew 23% QoQ...",
+  "contentType": "markdown"
+}
+```
+
+**Errors:** `404` — Task not found
+
+</EndpointCard>
+
+### Stream Task Logs
+
+<EndpointCard method="SSE" path="/api/tasks/{id}/logs" description="Real-time Server-Sent Events stream of agent log entries. Polls every 500ms with 15-second keepalive heartbeats.">
+
+**Response** — `text/event-stream` with JSON log objects
+
+Each event contains a serialized log entry with `eventType`, `message`, and `timestamp`. The stream stays open until the client disconnects or the task completes.
+
+<CodeExample ts={`// Stream agent logs in real time
+const source = new EventSource("http://localhost:3000/api/tasks/task-9d4e-a1b2/logs");
+
+source.onmessage = (event: MessageEvent) => {
+  const log: { eventType: string; message: string; timestamp: string } = JSON.parse(event.data);
+  const time: string = new Date(log.timestamp).toLocaleTimeString();
+  console.log(\`[\${time}] [\${log.eventType}] \${log.message}\`);
+};
+
+source.onerror = () => {
+  console.log("Stream ended — task may have completed");
+  source.close();
+};`} python={`import requests
+
+# Stream agent logs in real time using SSE
+response = requests.get("http://localhost:3000/api/tasks/task-9d4e-a1b2/logs", stream=True)
+
+for line in response.iter_lines():
+    if line:
+        decoded: str = line.decode("utf-8")
+        if decoded.startswith("data: "):
+            import json
+            log: dict = json.loads(decoded[6:])
+            print(f"[{log['eventType']}] {log['message']}")`} />
+
+Example stream events:
+
+```
+data: {"eventType":"tool_use","message":"Reading file: src/data/revenue.csv","timestamp":"2026-04-03T10:31:16Z"}
+
+data: {"eventType":"assistant","message":"Analyzing quarterly trends...","timestamp":"2026-04-03T10:31:18Z"}
+
+data: {"eventType":"tool_use","message":"Writing report to /reports/q4-analysis.md","timestamp":"2026-04-03T10:31:22Z"}
+```
+
+</EndpointCard>
+
+### Get Task Provenance
+
+<EndpointCard method="GET" path="/api/tasks/{id}/provenance" description="Retrieve the execution provenance graph — shows how the task was created, what triggered it, and its lineage chain.">
+
+**Response** `200` — Provenance graph object
+
+Provenance traces the origin of a task: was it created manually, spawned by a workflow, triggered by a schedule, or promoted from AI Assist?
+
+<CodeExample ts={`// Trace where a task came from
+const response: Response = await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/provenance");
+const prov: { sourceType: string; parentId: string } = await response.json();
+
+console.log(\`Source: \${prov.sourceType}\`);  // "workflow", "schedule", "manual"
+console.log(\`Parent: \${prov.parentId}\`);`} python={`import requests
+
+# Trace where a task came from
+response = requests.get("http://localhost:3000/api/tasks/task-9d4e-a1b2/provenance")
+prov: dict = response.json()
+
+print(f"Source: {prov['sourceType']}")  # "workflow", "schedule", "manual"
+print(f"Parent: {prov['parentId']}")`} />
+
+**Errors:** `404` — Task not found
+
+</EndpointCard>
+
+### Get Sibling Tasks
+
+<EndpointCard method="GET" path="/api/tasks/{id}/siblings" description="List other tasks in the same workflow run. Returns an empty array if the task is not part of a workflow.">
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'Sibling task ID' },
+  { name: 'title', type: 'string', required: true, description: 'Task title' },
+  { name: 'status', type: 'string', required: true, description: 'Current lifecycle state' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+]} />
+
+Useful for building workflow progress views — shows all steps alongside the current task:
+
+<CodeExample ts={`// Show workflow progress alongside current task
+const response: Response = await fetch("http://localhost:3000/api/tasks/task-9d4e-a1b2/siblings");
+const siblings: { id: string; title: string; status: string }[] = await response.json();
+
+siblings.forEach((s) => {
+  const icon: string = s.status === "completed" ? "✓" : s.status === "running" ? "⟳" : "○";
+  console.log(\`\${icon} \${s.title} (\${s.status})\`);
+});`} python={`import requests
+
+# Show workflow progress alongside current task
+response = requests.get("http://localhost:3000/api/tasks/task-9d4e-a1b2/siblings")
+siblings: list[dict] = response.json()
+
+for s in siblings:
+    icon = "✓" if s["status"] == "completed" else "⟳" if s["status"] == "running" else "○"
+    print(f"{icon} {s['title']} ({s['status']})")`} />
+
+</EndpointCard>
+
+## Status Transitions
+
+Tasks follow a strict lifecycle. Invalid transitions return `400`.
+
+| From | Allowed Targets |
+|------|----------------|
+| **planned** | queued, cancelled |
+| **queued** | running, planned, cancelled |
+| **running** | completed, failed, cancelled |
+| **completed** | planned |
+| **failed** | planned, queued, running |
+| **cancelled** | planned, running |
+
+## Error Format
+
+All validation errors follow the Zod flattened format:
+
+```json
+{
+  "error": {
+    "formErrors": [],
+    "fieldErrors": {
+      "title": ["String must contain at least 1 character(s)"],
+      "priority": ["Number must be less than or equal to 3"]
+    }
+  }
+}
+```
+
+## Constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| MAX_RESUME_COUNT | 3 | Maximum resumes per task |
+| DEFAULT_MAX_TURNS | 50 | Default agent conversation turns |
+| DEFAULT_MAX_BUDGET_USD | 2.00 | Default per-task budget |
+| WORKFLOW_STEP_MAX_BUDGET_USD | 5.00 | Budget cap for workflow step tasks |

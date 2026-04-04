@@ -87,6 +87,12 @@ const docsPages = [
         </div>
       </div>
       <a
+        href="/docs/api/"
+        class="font-mono text-xs tracking-widest text-text-muted hover:text-primary transition-colors"
+      >
+        API
+      </a>
+      <a
         href="https://github.com/manavsehgal/stagent.github.io"
         target="_blank"
         rel="noopener noreferrer"
@@ -129,6 +135,7 @@ const docsPages = [
       <a href="/research/" class="font-mono text-sm text-text-muted hover:text-primary transition-colors py-2">Research</a>
       <a href="/projects/" class="font-mono text-sm text-text-muted hover:text-primary transition-colors py-2">Projects</a>
       <a href="/docs/" class="font-mono text-sm text-text-muted hover:text-primary transition-colors py-2">Docs</a>
+      <a href="/docs/api/" class="font-mono text-sm text-text-muted hover:text-primary transition-colors py-2">API</a>
       <hr class="border-border" />
       {docsPages.map(({ href, label }) => (
         <a href={href} class="text-sm text-text-muted hover:text-primary transition-colors py-1 pl-4">{label}</a>

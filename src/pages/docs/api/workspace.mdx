@@ -1,0 +1,368 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Workspace API"
+description: "Discover, import, and inspect workspace context for project directories with automatic environment scanning and streaming import progress."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Workspace API
+
+The Workspace API provides discovery of project directories on the filesystem, bulk import into Stagent with automatic environment scanning, and runtime context about the current workspace. The import endpoint uses SSE to stream progress as each project is created and scanned.
+
+## Quick Start
+
+Discover projects in a parent directory, then import the new ones with streamed progress:
+
+<CodeExample ts={`// 1. Discover project directories under ~/Developer
+interface DiscoveredProject {
+  path: string;
+  name: string;
+  markers: string[];
+  alreadyImported: boolean;
+}
+
+const { projects }: { projects: DiscoveredProject[] } = await fetch('/api/workspace/discover', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    parentDir: '~/Developer',
+    maxDepth: 2,
+    markers: ['package.json', 'Cargo.toml', 'go.mod'],
+  }),
+}).then((r: Response) => r.json());
+
+// 2. Filter to projects not yet imported
+const newProjects: DiscoveredProject[] = projects.filter((p) => !p.alreadyImported);
+console.log(\`Found \${projects.length} projects, \${newProjects.length} new\`);
+
+// 3. Import new projects with streamed progress (SSE)
+const res: Response = await fetch('/api/workspace/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    projects: newProjects.map((p) => ({ path: p.path, name: p.name })),
+  }),
+});
+
+const reader: ReadableStreamDefaultReader<Uint8Array> = res.body!.getReader();
+const decoder: TextDecoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const text: string = decoder.decode(value);
+  for (const line of text.split('\\n')) {
+    if (line.startsWith('data: ')) {
+      const event: { type: string; name?: string; status?: string; created?: number; failed?: number } =
+        JSON.parse(line.slice(6));
+      if (event.type === 'progress') {
+        console.log(\`\${event.name}: \${event.status}\`);
+      } else if (event.type === 'complete') {
+        console.log(\`Done! \${event.created} imported, \${event.failed} failed\`);
+      }
+    }
+  }
+}`} python={`import requests
+import json
+
+# 1. Discover project directories under ~/Developer
+discover_res = requests.post(
+    "http://localhost:3000/api/workspace/discover",
+    json={
+        "parentDir": "~/Developer",
+        "maxDepth": 2,
+        "markers": ["package.json", "Cargo.toml", "go.mod"],
+    },
+)
+projects: list[dict] = discover_res.json()["projects"]
+
+# 2. Filter to projects not yet imported
+new_projects: list[dict] = [p for p in projects if not p["alreadyImported"]]
+print(f"Found {len(projects)} projects, {len(new_projects)} new")
+
+# 3. Import new projects with streamed progress (SSE)
+import_res = requests.post(
+    "http://localhost:3000/api/workspace/import",
+    json={
+        "projects": [{"path": p["path"], "name": p["name"]} for p in new_projects],
+    },
+    stream=True,
+)
+
+for line in import_res.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        event: dict = json.loads(line[6:])
+        if event["type"] == "progress":
+            print(f"{event['name']}: {event['status']}")
+        elif event["type"] == "complete":
+            print(f"Done! {event['created']} imported, {event['failed']} failed")`} />
+
+## Base URL
+
+```
+/api/workspace
+```
+
+## Endpoints
+
+### Get Workspace Context
+
+<EndpointCard method="GET" path="/api/workspace/context" description="Return the current workspace context including launch directory, platform info, and runtime state. Cached for 60 seconds.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'cwd', type: 'string', required: true, description: 'Current working directory at launch' },
+  { name: 'platform', type: 'string', required: true, description: 'Operating system platform' },
+  { name: 'arch', type: 'string', required: true, description: 'CPU architecture' },
+  { name: 'nodeVersion', type: 'string', required: true, description: 'Node.js version' },
+  { name: 'homedir', type: 'string', required: true, description: 'User home directory' },
+]} />
+
+Get runtime context — useful for displaying workspace info in the UI or setting default paths:
+
+<CodeExample ts={`// Get workspace context for the UI
+interface WorkspaceContext {
+  cwd: string;
+  platform: string;
+  arch: string;
+  nodeVersion: string;
+  homedir: string;
+}
+
+const context: WorkspaceContext = await fetch('/api/workspace/context')
+  .then((r: Response) => r.json());
+
+console.log(\`CWD: \${context.cwd}\`);
+console.log(\`Platform: \${context.platform} (\${context.arch})\`);
+console.log(\`Node: \${context.nodeVersion}\`);
+console.log(\`Home: \${context.homedir}\`);`} python={`import requests
+
+# Get workspace context for the UI
+response = requests.get("http://localhost:3000/api/workspace/context")
+context: dict = response.json()
+
+print(f"CWD: {context['cwd']}")
+print(f"Platform: {context['platform']} ({context['arch']})")
+print(f"Node: {context['nodeVersion']}")
+print(f"Home: {context['homedir']}")`} />
+
+Example response:
+
+```json
+{
+  "cwd": "/Users/team/Developer",
+  "platform": "darwin",
+  "arch": "arm64",
+  "nodeVersion": "v22.4.0",
+  "homedir": "/Users/team"
+}
+```
+
+</EndpointCard>
+
+### Discover Projects
+
+<EndpointCard method="POST" path="/api/workspace/discover" description="Scan a parent directory for project directories using configurable marker files (package.json, Cargo.toml, etc.). Flags projects that are already imported into Stagent.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'parentDir', type: 'string', required: true, description: 'Parent directory to scan (supports ~ expansion)' },
+  { name: 'maxDepth', type: 'number', required: false, description: 'Maximum directory depth to search' },
+  { name: 'markers', type: 'string[]', required: false, description: 'Marker filenames to detect projects (e.g., package.json, .git)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'projects', type: 'object[]', required: true, description: 'Discovered project directories' },
+  { name: 'projects[].path', type: 'string', required: true, description: 'Absolute path to the project' },
+  { name: 'projects[].name', type: 'string', required: true, description: 'Directory name' },
+  { name: 'projects[].markers', type: 'string[]', required: true, description: 'Which marker files were found' },
+  { name: 'projects[].alreadyImported', type: 'boolean', required: true, description: 'Whether this project already exists in Stagent' },
+]} />
+
+**Errors:** `400` — Validation failure or directory not found
+
+Scan a developer directory to find all project directories — already-imported projects are flagged so you can skip them:
+
+<CodeExample ts={`// Discover project directories
+interface DiscoveredProject {
+  path: string;
+  name: string;
+  markers: string[];
+  alreadyImported: boolean;
+}
+
+const { projects }: { projects: DiscoveredProject[] } = await fetch('/api/workspace/discover', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    parentDir: '~/Developer',
+    maxDepth: 2,
+  }),
+}).then((r: Response) => r.json());
+
+// Show discovered projects, highlighting new ones
+projects.forEach((p: DiscoveredProject) => {
+  const status: string = p.alreadyImported ? 'imported' : 'NEW';
+  console.log(\`[\${status}] \${p.name} — \${p.path} (\${p.markers.join(', ')})\`);
+});
+
+const newProjects: DiscoveredProject[] = projects.filter((p) => !p.alreadyImported);
+console.log(\`\${newProjects.length} new projects ready to import\`);`} python={`import requests
+
+# Discover project directories
+response = requests.post(
+    "http://localhost:3000/api/workspace/discover",
+    json={
+        "parentDir": "~/Developer",
+        "maxDepth": 2,
+    },
+)
+data: dict = response.json()
+
+# Show discovered projects, highlighting new ones
+for p in data["projects"]:
+    status: str = "imported" if p["alreadyImported"] else "NEW"
+    markers: str = ", ".join(p["markers"])
+    print(f"[{status}] {p['name']} — {p['path']} ({markers})")
+
+new_projects: list[dict] = [p for p in data["projects"] if not p["alreadyImported"]]
+print(f"{len(new_projects)} new projects ready to import")`} />
+
+Example response:
+
+```json
+{
+  "projects": [
+    {
+      "path": "/Users/team/Developer/my-app",
+      "name": "my-app",
+      "markers": ["package.json", ".git"],
+      "alreadyImported": false
+    },
+    {
+      "path": "/Users/team/Developer/api-server",
+      "name": "api-server",
+      "markers": ["package.json", ".git"],
+      "alreadyImported": true
+    },
+    {
+      "path": "/Users/team/Developer/rust-cli",
+      "name": "rust-cli",
+      "markers": ["Cargo.toml", ".git"],
+      "alreadyImported": false
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Import Projects (SSE)
+
+<EndpointCard method="SSE" path="/api/workspace/import" description="Bulk-import discovered projects into Stagent. Each project is created with an automatic environment scan. Progress is streamed via Server-Sent Events so the UI can update in real time.">
+
+<SchemaTable title="Request Body (POST)" fields={[
+  { name: 'projects', type: 'object[]', required: true, description: 'Array of projects to import' },
+  { name: 'projects[].path', type: 'string', required: true, description: 'Absolute path to the project directory' },
+  { name: 'projects[].name', type: 'string', required: true, description: 'Project name' },
+]} />
+
+**SSE Event Types:**
+
+| Event type | Fields | Description |
+|------------|--------|-------------|
+| `progress` | `index`, `name`, `status: "creating"` | Import started for a project |
+| `progress` | `index`, `name`, `status: "done"`, `projectId`, `artifactCount` | Project created and scanned |
+| `progress` | `index`, `name`, `status: "failed"`, `error` | Import failed for a project |
+| `complete` | `created`, `failed` | All imports finished |
+
+**Errors:** `400` — Validation failure
+
+Import multiple projects at once and stream progress to the UI — each project gets an environment scan automatically:
+
+<CodeExample ts={`// Import projects with streamed progress
+const res: Response = await fetch('/api/workspace/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    projects: [
+      { path: '/Users/team/Developer/my-app', name: 'My App' },
+      { path: '/Users/team/Developer/rust-cli', name: 'Rust CLI' },
+    ],
+  }),
+});
+
+// Read the SSE stream
+const reader: ReadableStreamDefaultReader<Uint8Array> = res.body!.getReader();
+const decoder: TextDecoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const text: string = decoder.decode(value);
+  for (const line of text.split('\\n')) {
+    if (line.startsWith('data: ')) {
+      const event: Record<string, unknown> = JSON.parse(line.slice(6));
+
+      if (event.type === 'progress') {
+        if (event.status === 'creating') {
+          console.log(\`Importing \${event.name}...\`);
+        } else if (event.status === 'done') {
+          console.log(\`  Done: \${event.projectId} (\${event.artifactCount} artifacts)\`);
+        } else if (event.status === 'failed') {
+          console.error(\`  Failed: \${event.error}\`);
+        }
+      } else if (event.type === 'complete') {
+        console.log(\`Import complete: \${event.created} created, \${event.failed} failed\`);
+      }
+    }
+  }
+}`} python={`import requests
+import json
+
+# Import projects with streamed progress
+response = requests.post(
+    "http://localhost:3000/api/workspace/import",
+    json={
+        "projects": [
+            {"path": "/Users/team/Developer/my-app", "name": "My App"},
+            {"path": "/Users/team/Developer/rust-cli", "name": "Rust CLI"},
+        ],
+    },
+    stream=True,
+)
+
+# Read the SSE stream
+for line in response.iter_lines(decode_unicode=True):
+    if line.startswith("data: "):
+        event: dict = json.loads(line[6:])
+
+        if event["type"] == "progress":
+            if event["status"] == "creating":
+                print(f"Importing {event['name']}...")
+            elif event["status"] == "done":
+                print(f"  Done: {event['projectId']} ({event['artifactCount']} artifacts)")
+            elif event["status"] == "failed":
+                print(f"  Failed: {event['error']}")
+        elif event["type"] == "complete":
+            print(f"Import complete: {event['created']} created, {event['failed']} failed")`} />
+
+Example stream events:
+
+```
+data: {"type":"progress","index":0,"name":"My App","status":"creating"}
+
+data: {"type":"progress","index":0,"name":"My App","status":"done","projectId":"proj-1a2b-3c4d","artifactCount":24}
+
+data: {"type":"progress","index":1,"name":"Rust CLI","status":"creating"}
+
+data: {"type":"progress","index":1,"name":"Rust CLI","status":"done","projectId":"proj-5e6f-7g8h","artifactCount":12}
+
+data: {"type":"complete","created":2,"failed":0}
+```
+
+</EndpointCard>

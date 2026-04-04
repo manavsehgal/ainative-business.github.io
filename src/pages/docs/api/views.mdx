@@ -1,0 +1,320 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Views API"
+description: "Save and manage custom views with filters, sorting, column visibility, and density preferences for any UI surface."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Views API
+
+Views let users save and recall custom filter, sort, column, and density configurations for any list surface in the UI. Each view is scoped to a surface (e.g. `tasks`, `documents`, `tables`) and one view per surface can be marked as the default.
+
+## Quick Start
+
+Create a saved view with filters, apply it as the default, then update it later:
+
+<CodeExample ts={`// 1. Create a saved view for the tasks surface
+const view: { id: string; surface: string; name: string; isDefault: boolean } =
+  await fetch('/api/views', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      surface: 'tasks',
+      name: 'High Priority Active',
+      filters: { priority: [0, 1], status: ['running', 'queued'] },
+      sorting: { column: 'priority', direction: 'asc' },
+      columns: { visible: ['title', 'status', 'priority', 'assignedAgent'], order: ['priority', 'title', 'status', 'assignedAgent'] },
+      density: 'compact',
+      isDefault: true,
+    }),
+  }).then((r) => r.json());
+// → { id: "view-4a2b-8c9d", surface: "tasks", name: "High Priority Active", isDefault: true }
+
+// 2. List all views for the tasks surface
+const views: Array<{ name: string; isDefault: boolean }> =
+  await fetch('/api/views?surface=tasks').then((r) => r.json());
+// Default view is always first in the list
+console.log(\`\${views.length} saved views, default: \${views[0].name}\`);
+
+// 3. Update the view — add a new filter without changing the rest
+await fetch(\`/api/views/\${view.id}\`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    filters: { priority: [0, 1], status: ['running', 'queued'], assignedAgent: 'claude-code' },
+  }),
+});
+
+// 4. Delete a view when no longer needed
+await fetch(\`/api/views/\${view.id}\`, { method: 'DELETE' });`} python={`import requests
+
+# 1. Create a saved view for the tasks surface
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/views",
+    json={
+        "surface": "tasks",
+        "name": "High Priority Active",
+        "filters": {"priority": [0, 1], "status": ["running", "queued"]},
+        "sorting": {"column": "priority", "direction": "asc"},
+        "columns": {
+            "visible": ["title", "status", "priority", "assignedAgent"],
+            "order": ["priority", "title", "status", "assignedAgent"],
+        },
+        "density": "compact",
+        "isDefault": True,
+    },
+)
+view: dict = response.json()
+# -> { "id": "view-4a2b-8c9d", "surface": "tasks", "name": "High Priority Active", "isDefault": true }
+
+# 2. List all views for the tasks surface
+views: list[dict] = requests.get(
+    "http://localhost:3000/api/views",
+    params={"surface": "tasks"},
+).json()
+# Default view is always first in the list
+print(f"{len(views)} saved views, default: {views[0]['name']}")
+
+# 3. Update the view — add a new filter without changing the rest
+requests.patch(
+    f"http://localhost:3000/api/views/{view['id']}",
+    json={
+        "filters": {"priority": [0, 1], "status": ["running", "queued"], "assignedAgent": "claude-code"},
+    },
+)
+
+# 4. Delete a view when no longer needed
+requests.delete(f"http://localhost:3000/api/views/{view['id']}")`} />
+
+## Base URL
+
+```
+/api/views
+```
+
+## Endpoints
+
+### List Views
+
+<EndpointCard method="GET" path="/api/views" description="List all saved views for a given surface. Results are ordered with the default view first, then alphabetically by name.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'surface', type: 'string', description: 'Required. The UI surface to list views for (e.g. tasks, documents, tables)' },
+]} />
+
+<SchemaTable title="Response Body (Array)" fields={[
+  { name: 'id', type: 'string (UUID)', required: true, description: 'View identifier' },
+  { name: 'surface', type: 'string', required: true, description: 'UI surface this view applies to' },
+  { name: 'name', type: 'string', required: true, description: 'View display name' },
+  { name: 'filters', type: 'JSON string | null', required: false, description: 'Serialized filter configuration' },
+  { name: 'sorting', type: 'JSON string | null', required: false, description: 'Serialized sort configuration' },
+  { name: 'columns', type: 'JSON string | null', required: false, description: 'Serialized column visibility/order' },
+  { name: 'density', type: 'enum', required: true, description: 'comfortable, compact, or spacious' },
+  { name: 'isDefault', type: 'boolean', required: true, description: 'Whether this is the default view for the surface' },
+  { name: 'createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+  { name: 'updatedAt', type: 'ISO 8601', required: true, description: 'Last modification' },
+]} />
+
+**Errors:** `400` — Missing `surface` parameter
+
+Fetch all saved views for a surface — the default view is always listed first:
+
+<CodeExample ts={`// List views and find the default
+const views: Array<{ name: string; isDefault: boolean; density: string }> =
+  await fetch('/api/views?surface=tasks').then((r) => r.json());
+
+const defaultView = views.find((v) => v.isDefault);
+if (defaultView) {
+  console.log(\`Default view: \${defaultView.name} (\${defaultView.density})\`);
+}
+views.forEach((v) => console.log(\`  \${v.isDefault ? '*' : ' '} \${v.name}\`));`} python={`import requests
+
+# List views and find the default
+response: requests.Response = requests.get(
+    "http://localhost:3000/api/views",
+    params={"surface": "tasks"},
+)
+views: list[dict] = response.json()
+
+default_view: dict | None = next((v for v in views if v["isDefault"]), None)
+if default_view:
+    print(f"Default view: {default_view['name']} ({default_view['density']})")
+for v in views:
+    marker: str = "*" if v["isDefault"] else " "
+    print(f"  {marker} {v['name']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "view-4a2b-8c9d",
+    "surface": "tasks",
+    "name": "High Priority Active",
+    "filters": "{\"priority\":[0,1],\"status\":[\"running\",\"queued\"]}",
+    "sorting": "{\"column\":\"priority\",\"direction\":\"asc\"}",
+    "columns": "{\"visible\":[\"title\",\"status\",\"priority\",\"assignedAgent\"]}",
+    "density": "compact",
+    "isDefault": true,
+    "createdAt": "2026-04-03T10:00:00.000Z",
+    "updatedAt": "2026-04-03T10:00:00.000Z"
+  },
+  {
+    "id": "view-5b3c-9d0e",
+    "surface": "tasks",
+    "name": "All Tasks",
+    "filters": null,
+    "sorting": null,
+    "columns": null,
+    "density": "comfortable",
+    "isDefault": false,
+    "createdAt": "2026-04-02T08:00:00.000Z",
+    "updatedAt": "2026-04-02T08:00:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+### Create View
+
+<EndpointCard method="POST" path="/api/views" description="Create a new saved view. If isDefault is true, any existing default for the same surface is automatically unset.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'surface', type: 'string', required: true, description: 'UI surface (e.g. tasks, documents, tables)' },
+  { name: 'name', type: 'string', required: true, description: 'View display name' },
+  { name: 'filters', type: 'object', required: false, description: 'Filter configuration (stored as JSON)' },
+  { name: 'sorting', type: 'object', required: false, description: 'Sort configuration (stored as JSON)' },
+  { name: 'columns', type: 'object', required: false, description: 'Column visibility and ordering (stored as JSON)' },
+  { name: 'density', type: 'enum', required: false, description: 'comfortable (default), compact, or spacious' },
+  { name: 'isDefault', type: 'boolean', required: false, description: 'Set as default view for this surface' },
+]} />
+
+**Response** `201 Created` — New view object
+
+Create a compact view showing only high-priority active tasks — setting it as the default automatically clears any previous default:
+
+<CodeExample ts={`// Create a default view for the tasks surface
+const view: { id: string; isDefault: boolean } = await fetch('/api/views', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    surface: 'tasks',
+    name: 'High Priority Active',
+    filters: { priority: [0, 1], status: ['running', 'queued'] },
+    sorting: { column: 'priority', direction: 'asc' },
+    columns: { visible: ['title', 'status', 'priority', 'assignedAgent'] },
+    density: 'compact',
+    isDefault: true,
+  }),
+}).then((r) => r.json());
+
+console.log(\`Created view: \${view.id} (default: \${view.isDefault})\`);`} python={`import requests
+
+# Create a default view for the tasks surface
+response: requests.Response = requests.post(
+    "http://localhost:3000/api/views",
+    json={
+        "surface": "tasks",
+        "name": "High Priority Active",
+        "filters": {"priority": [0, 1], "status": ["running", "queued"]},
+        "sorting": {"column": "priority", "direction": "asc"},
+        "columns": {"visible": ["title", "status", "priority", "assignedAgent"]},
+        "density": "compact",
+        "isDefault": True,
+    },
+)
+view: dict = response.json()
+
+print(f"Created view: {view['id']} (default: {view['isDefault']})")`} />
+
+Example response:
+
+```json
+{
+  "id": "view-4a2b-8c9d",
+  "surface": "tasks",
+  "name": "High Priority Active",
+  "filters": "{\"priority\":[0,1],\"status\":[\"running\",\"queued\"]}",
+  "sorting": "{\"column\":\"priority\",\"direction\":\"asc\"}",
+  "columns": "{\"visible\":[\"title\",\"status\",\"priority\",\"assignedAgent\"]}",
+  "density": "compact",
+  "isDefault": true,
+  "createdAt": "2026-04-03T10:00:00.000Z",
+  "updatedAt": "2026-04-03T10:00:00.000Z"
+}
+```
+
+**Errors:** `400` — Missing surface or name
+
+</EndpointCard>
+
+### Update View
+
+<EndpointCard method="PATCH" path="/api/views/{id}" description="Update a saved view. If isDefault is set to true, any existing default for the same surface is automatically cleared.">
+
+<SchemaTable title="Request Body (all fields optional)" fields={[
+  { name: 'name', type: 'string', required: false, description: 'Updated display name' },
+  { name: 'filters', type: 'object', required: false, description: 'Updated filter configuration' },
+  { name: 'sorting', type: 'object', required: false, description: 'Updated sort configuration' },
+  { name: 'columns', type: 'object', required: false, description: 'Updated column visibility/order' },
+  { name: 'density', type: 'enum', required: false, description: 'comfortable, compact, or spacious' },
+  { name: 'isDefault', type: 'boolean', required: false, description: 'Set or unset as default' },
+]} />
+
+**Response** `200` — Updated view object
+
+Update a view's density and rename it — useful when refining saved views over time:
+
+<CodeExample ts={`// Refine an existing view
+await fetch('/api/views/view-4a2b-8c9d', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Critical Tasks Only',
+    filters: { priority: [0], status: ['running', 'queued'] },
+    density: 'spacious',
+  }),
+});`} python={`import requests
+
+# Refine an existing view
+requests.patch(
+    "http://localhost:3000/api/views/view-4a2b-8c9d",
+    json={
+        "name": "Critical Tasks Only",
+        "filters": {"priority": [0], "status": ["running", "queued"]},
+        "density": "spacious",
+    },
+)`} />
+
+**Errors:** `404` — View not found
+
+</EndpointCard>
+
+### Delete View
+
+<EndpointCard method="DELETE" path="/api/views/{id}" description="Permanently delete a saved view.">
+
+**Response** `200` — `{ "ok": true }`
+
+<CodeExample ts={`// Delete a view that is no longer needed
+await fetch('/api/views/view-4a2b-8c9d', { method: 'DELETE' });`} python={`import requests
+
+# Delete a view that is no longer needed
+requests.delete("http://localhost:3000/api/views/view-4a2b-8c9d")`} />
+
+**Errors:** `404` — View not found
+
+</EndpointCard>
+
+## View Density Options
+
+| Density | Description |
+|---------|-------------|
+| **comfortable** | Default spacing. Good for scanning. |
+| **compact** | Reduced padding. Shows more rows per screen. |
+| **spacious** | Extra breathing room. Good for detailed review. |

@@ -1,0 +1,857 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Settings API"
+description: "Configure provider authentication, budget guardrails, model routing, runtime behavior, browser tools, and more across 14 specialized sub-routes."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Settings API
+
+Settings control every aspect of Stagent's behavior — from API key management and budget limits to model routing and runtime tuning. Each configuration domain lives under its own sub-route, so clients only fetch and update what they need.
+
+## Quick Start
+
+Check provider status, configure an API key, and set a budget limit — a typical setup flow:
+
+<CodeExample ts={`// 1. Get the current provider overview
+const res1: Response = await fetch('/api/settings/providers');
+const { providers, routingPreference }: { providers: Record<string, any>; routingPreference: string } = await res1.json();
+console.log(\`Anthropic configured: \${providers.anthropic.configured}\`);
+console.log(\`Routing: \${routingPreference}\`);
+
+// 2. Set an Anthropic API key
+await fetch('/api/settings', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ apiKey: 'sk-ant-api03-...' }),
+});
+
+// 3. Set a daily and monthly budget limit
+await fetch('/api/settings/budgets', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ dailyLimit: 10.00, monthlyLimit: 200.00 }),
+});
+
+// 4. Route to the cheapest available model
+await fetch('/api/settings/routing', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ preference: 'cost' }),
+});
+
+// 5. Test the connection
+const testRes: Response = await fetch('/api/settings/test', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ runtime: 'claude-code' }),
+});
+const test: { connected: boolean } = await testRes.json();
+console.log(\`Connected: \${test.connected}\`);`} python={`import requests
+
+# 1. Get the current provider overview
+res1: requests.Response = requests.get("http://localhost:3000/api/settings/providers")
+data: dict = res1.json()
+providers: dict = data["providers"]
+print(f"Anthropic configured: {providers['anthropic']['configured']}")
+print(f"Routing: {data['routingPreference']}")
+
+# 2. Set an Anthropic API key
+requests.post(
+    "http://localhost:3000/api/settings",
+    json={"apiKey": "sk-ant-api03-..."},
+)
+
+# 3. Set a daily and monthly budget limit
+requests.post(
+    "http://localhost:3000/api/settings/budgets",
+    json={"dailyLimit": 10.00, "monthlyLimit": 200.00},
+)
+
+# 4. Route to the cheapest available model
+requests.post(
+    "http://localhost:3000/api/settings/routing",
+    json={"preference": "cost"},
+)
+
+# 5. Test the connection
+test_res: requests.Response = requests.post(
+    "http://localhost:3000/api/settings/test",
+    json={"runtime": "claude-code"},
+)
+test: dict = test_res.json()
+print(f"Connected: {test['connected']}")`} />
+
+## Base URL
+
+```
+/api/settings
+```
+
+## Provider Configuration
+
+### Get Provider Overview
+
+<EndpointCard method="GET" path="/api/settings/providers" description="Aggregated provider status including configured runtimes, auth methods, dual-billing detection, and routing preference.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'providers.anthropic.configured', type: 'boolean', required: true, description: 'Whether any Anthropic runtime is configured' },
+  { name: 'providers.anthropic.authMethod', type: 'string', required: true, description: 'Current auth method (oauth, api-key, etc.)' },
+  { name: 'providers.anthropic.hasKey', type: 'boolean', required: true, description: 'Whether an API key is present' },
+  { name: 'providers.anthropic.dualBilling', type: 'boolean', required: true, description: 'True when both OAuth and API key are active' },
+  { name: 'providers.anthropic.runtimes', type: 'object[]', required: true, description: 'Runtime setup states for Claude Code and Anthropic Direct' },
+  { name: 'providers.openai.configured', type: 'boolean', required: true, description: 'Whether any OpenAI runtime is configured' },
+  { name: 'providers.openai.hasKey', type: 'boolean', required: true, description: 'Whether an OpenAI API key is present' },
+  { name: 'providers.openai.runtimes', type: 'object[]', required: true, description: 'Runtime setup states for Codex and OpenAI Direct' },
+  { name: 'routingPreference', type: 'enum', required: true, description: 'cost, latency, quality, or manual' },
+  { name: 'configuredProviderCount', type: 'number', required: true, description: 'Number of providers with at least one runtime configured' },
+]} />
+
+Check which providers are ready before assigning tasks to agents:
+
+<CodeExample ts={`// Check provider readiness before creating tasks
+const res: Response = await fetch('http://localhost:3000/api/settings/providers');
+const { providers, routingPreference, configuredProviderCount }: {
+  providers: Record<string, any>;
+  routingPreference: string;
+  configuredProviderCount: number;
+} = await res.json();
+
+console.log(\`\${configuredProviderCount} provider(s) configured\`);
+console.log(\`Anthropic: \${providers.anthropic.configured ? 'ready' : 'not configured'}\`);
+console.log(\`OpenAI: \${providers.openai.configured ? 'ready' : 'not configured'}\`);
+console.log(\`Routing: \${routingPreference}\`);
+
+// Warn about dual billing
+if (providers.anthropic.dualBilling) {
+  console.warn('Both OAuth and API key active — may cause double billing');
+}`} python={`import requests
+
+# Check provider readiness before creating tasks
+res: requests.Response = requests.get("http://localhost:3000/api/settings/providers")
+data: dict = res.json()
+providers: dict = data["providers"]
+
+print(f"{data['configuredProviderCount']} provider(s) configured")
+print(f"Anthropic: {'ready' if providers['anthropic']['configured'] else 'not configured'}")
+print(f"OpenAI: {'ready' if providers['openai']['configured'] else 'not configured'}")
+print(f"Routing: {data['routingPreference']}")
+
+# Warn about dual billing
+if providers["anthropic"]["dualBilling"]:
+    print("WARNING: Both OAuth and API key active — may cause double billing")`} />
+
+Example response:
+
+```json
+{
+  "providers": {
+    "anthropic": {
+      "configured": true,
+      "authMethod": "api-key",
+      "hasKey": true,
+      "dualBilling": false,
+      "runtimes": [
+        { "id": "claude-code", "name": "Claude Code", "status": "ready" },
+        { "id": "anthropic-direct", "name": "Anthropic Direct", "status": "ready" }
+      ]
+    },
+    "openai": {
+      "configured": false,
+      "hasKey": false,
+      "runtimes": [
+        { "id": "openai-codex-app-server", "name": "Codex", "status": "not_configured" }
+      ]
+    }
+  },
+  "routingPreference": "quality",
+  "configuredProviderCount": 1
+}
+```
+
+</EndpointCard>
+
+### Get Anthropic Auth Settings
+
+<EndpointCard method="GET" path="/api/settings" description="Read current Anthropic authentication settings (key presence, auth method, API key source).">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'method', type: 'string', required: true, description: 'Auth method (oauth, api-key)' },
+  { name: 'hasKey', type: 'boolean', required: true, description: 'Whether an API key is stored' },
+  { name: 'apiKeySource', type: 'string', required: false, description: 'Key origin (manual, oauth, env)' },
+]} />
+
+<CodeExample ts={`// Read current Anthropic auth settings
+const res: Response = await fetch('http://localhost:3000/api/settings');
+const auth: { method: string; hasKey: boolean; apiKeySource?: string } = await res.json();
+console.log(\`Auth method: \${auth.method}, key present: \${auth.hasKey}\`);`} python={`import requests
+
+# Read current Anthropic auth settings
+res: requests.Response = requests.get("http://localhost:3000/api/settings")
+auth: dict = res.json()
+print(f"Auth method: {auth['method']}, key present: {auth['hasKey']}")`} />
+
+Example response:
+
+```json
+{
+  "method": "api-key",
+  "hasKey": true,
+  "apiKeySource": "manual"
+}
+```
+
+</EndpointCard>
+
+### Update Anthropic Auth Settings
+
+<EndpointCard method="POST" path="/api/settings" description="Update Anthropic authentication configuration. Validated with Zod.">
+
+**Response** `200` — Updated auth settings object
+
+Set or rotate the Anthropic API key:
+
+<CodeExample ts={`// Set or rotate the Anthropic API key
+await fetch('http://localhost:3000/api/settings', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ apiKey: 'sk-ant-api03-...' }),
+});`} python={`import requests
+
+# Set or rotate the Anthropic API key
+requests.post(
+    "http://localhost:3000/api/settings",
+    json={"apiKey": "sk-ant-api03-..."},
+)`} />
+
+**Errors:** `400` — Zod validation failure
+
+</EndpointCard>
+
+### Get OpenAI Auth Settings
+
+<EndpointCard method="GET" path="/api/settings/openai" description="Read current OpenAI authentication settings.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'hasKey', type: 'boolean', required: true, description: 'Whether an OpenAI API key is stored' },
+  { name: 'apiKeySource', type: 'string', required: false, description: 'Key origin (manual, env)' },
+]} />
+
+<CodeExample ts={`// Read current OpenAI auth settings
+const res: Response = await fetch('http://localhost:3000/api/settings/openai');
+const openai: { hasKey: boolean; apiKeySource?: string } = await res.json();
+console.log(\`OpenAI key present: \${openai.hasKey}\`);`} python={`import requests
+
+# Read current OpenAI auth settings
+res: requests.Response = requests.get("http://localhost:3000/api/settings/openai")
+openai: dict = res.json()
+print(f"OpenAI key present: {openai['hasKey']}")`} />
+
+</EndpointCard>
+
+### Update OpenAI Auth Settings
+
+<EndpointCard method="POST" path="/api/settings/openai" description="Update OpenAI authentication configuration. Validated with Zod.">
+
+**Response** `200` — Updated OpenAI auth settings object
+
+<CodeExample ts={`// Configure OpenAI for Codex runtime access
+await fetch('http://localhost:3000/api/settings/openai', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ apiKey: 'sk-proj-...' }),
+});`} python={`import requests
+
+# Configure OpenAI for Codex runtime access
+requests.post(
+    "http://localhost:3000/api/settings/openai",
+    json={"apiKey": "sk-proj-..."},
+)`} />
+
+**Errors:** `400` — Zod validation failure
+
+</EndpointCard>
+
+## Budget Guardrails
+
+### Get Budget Snapshot
+
+<EndpointCard method="GET" path="/api/settings/budgets" description="Retrieve the current budget guardrail snapshot including limits and spend-to-date.">
+
+Check current spend against limits before queuing expensive tasks:
+
+<CodeExample ts={`// Check budget before running a large task
+const res: Response = await fetch('http://localhost:3000/api/settings/budgets');
+const budget: {
+  dailyLimit: number; monthlyLimit: number;
+  dailySpend: number; monthlySpend: number;
+  alertThreshold: number;
+} = await res.json();
+
+console.log(\`Daily: $\${budget.dailySpend.toFixed(2)} / $\${budget.dailyLimit.toFixed(2)}\`);
+console.log(\`Monthly: $\${budget.monthlySpend.toFixed(2)} / $\${budget.monthlyLimit.toFixed(2)}\`);
+
+if (budget.dailySpend / budget.dailyLimit > 0.8) {
+  console.warn('Approaching daily budget limit');
+}`} python={`import requests
+
+# Check budget before running a large task
+res: requests.Response = requests.get("http://localhost:3000/api/settings/budgets")
+budget: dict = res.json()
+
+print(f"Daily: \${budget['dailySpend']:.2f} / \${budget['dailyLimit']:.2f}")
+print(f"Monthly: \${budget['monthlySpend']:.2f} / \${budget['monthlyLimit']:.2f}")
+
+if budget["dailySpend"] / budget["dailyLimit"] > 0.8:
+    print("WARNING: Approaching daily budget limit")`} />
+
+Example response:
+
+```json
+{
+  "dailyLimit": 10.00,
+  "monthlyLimit": 200.00,
+  "dailySpend": 4.23,
+  "monthlySpend": 87.50,
+  "alertThreshold": 0.8,
+  "updatedAt": "2026-04-03T12:00:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Update Budget Policy
+
+<EndpointCard method="POST" path="/api/settings/budgets" description="Set budget guardrail policy (daily/monthly limits, alert thresholds). Validated with Zod.">
+
+**Response** `200` — Updated budget snapshot
+
+Set conservative budget limits for a team environment:
+
+<CodeExample ts={`// Set budget guardrails
+await fetch('http://localhost:3000/api/settings/budgets', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    dailyLimit: 10.00,
+    monthlyLimit: 200.00,
+    alertThreshold: 0.8, // warn at 80% usage
+  }),
+});`} python={`import requests
+
+# Set budget guardrails
+requests.post(
+    "http://localhost:3000/api/settings/budgets",
+    json={
+        "dailyLimit": 10.00,
+        "monthlyLimit": 200.00,
+        "alertThreshold": 0.8,  # warn at 80% usage
+    },
+)`} />
+
+**Errors:** `400` — Zod validation failure
+
+</EndpointCard>
+
+## Model Routing
+
+### Get Routing Preference
+
+<EndpointCard method="GET" path="/api/settings/routing" description="Read the current model routing preference.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'preference', type: 'enum', required: true, description: 'cost, latency, quality, or manual' },
+]} />
+
+<CodeExample ts={`// Read current routing preference
+const res: Response = await fetch('http://localhost:3000/api/settings/routing');
+const { preference }: { preference: string } = await res.json();
+console.log(\`Current routing: \${preference}\`);`} python={`import requests
+
+# Read current routing preference
+res: requests.Response = requests.get("http://localhost:3000/api/settings/routing")
+data: dict = res.json()
+print(f"Current routing: {data['preference']}")`} />
+
+</EndpointCard>
+
+### Set Routing Preference
+
+<EndpointCard method="POST" path="/api/settings/routing" description="Update the model routing strategy.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'preference', type: 'enum', required: true, description: 'One of: cost, latency, quality, manual' },
+]} />
+
+**Response** `200` — `{ "preference": "<value>" }`
+
+Switch between routing strategies depending on your current needs:
+
+<CodeExample ts={`// Switch to cost-optimized routing
+await fetch('http://localhost:3000/api/settings/routing', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ preference: 'cost' }),
+});`} python={`import requests
+
+# Switch to cost-optimized routing
+requests.post(
+    "http://localhost:3000/api/settings/routing",
+    json={"preference": "cost"},
+)`} />
+
+**Errors:** `400` — Invalid preference value
+
+</EndpointCard>
+
+## Pricing Registry
+
+### Get Pricing Snapshot
+
+<EndpointCard method="GET" path="/api/settings/pricing" description="Return the current pricing registry snapshot with per-model token costs.">
+
+View token pricing for all available models — useful for cost estimation before execution:
+
+<CodeExample ts={`// Check model pricing for cost estimation
+const res: Response = await fetch('http://localhost:3000/api/settings/pricing');
+const pricing: { models: Array<{ modelId: string; inputPer1M: number; outputPer1M: number }> } = await res.json();
+
+pricing.models.forEach((m) => {
+  console.log(\`\${m.modelId}: $\${m.inputPer1M}/M input, $\${m.outputPer1M}/M output\`);
+});`} python={`import requests
+
+# Check model pricing for cost estimation
+res: requests.Response = requests.get("http://localhost:3000/api/settings/pricing")
+pricing: dict = res.json()
+
+for m in pricing["models"]:
+    print(f"{m['modelId']}: \${m['inputPer1M']}/M input, \${m['outputPer1M']}/M output")`} />
+
+Example response:
+
+```json
+{
+  "models": [
+    { "modelId": "claude-sonnet-4-6-20250514", "inputPer1M": 3.00, "outputPer1M": 15.00 },
+    { "modelId": "claude-haiku-4-20250414", "inputPer1M": 0.80, "outputPer1M": 4.00 }
+  ],
+  "updatedAt": "2026-04-03T00:00:00.000Z"
+}
+```
+
+</EndpointCard>
+
+### Refresh Pricing
+
+<EndpointCard method="POST" path="/api/settings/pricing" description="Force a refresh of the pricing registry from upstream sources.">
+
+**Response** `200` — Refreshed pricing snapshot
+
+<CodeExample ts={`// Force a pricing refresh after provider announcements
+const res: Response = await fetch('http://localhost:3000/api/settings/pricing', { method: 'POST' });
+const pricing: { models: Array<{ modelId: string }> } = await res.json();
+console.log(\`Pricing updated: \${pricing.models.length} models\`);`} python={`import requests
+
+# Force a pricing refresh after provider announcements
+res: requests.Response = requests.post("http://localhost:3000/api/settings/pricing")
+pricing: dict = res.json()
+print(f"Pricing updated: {len(pricing['models'])} models")`} />
+
+</EndpointCard>
+
+## Chat Settings
+
+### Get Chat Model
+
+<EndpointCard method="GET" path="/api/settings/chat" description="Read the default chat model.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'defaultModel', type: 'string', required: true, description: 'Model ID used for new conversations' },
+]} />
+
+<CodeExample ts={`// Read the default chat model
+const res: Response = await fetch('http://localhost:3000/api/settings/chat');
+const { defaultModel }: { defaultModel: string } = await res.json();
+console.log(\`Chat model: \${defaultModel}\`);`} python={`import requests
+
+# Read the default chat model
+res: requests.Response = requests.get("http://localhost:3000/api/settings/chat")
+data: dict = res.json()
+print(f"Chat model: {data['defaultModel']}")`} />
+
+</EndpointCard>
+
+### Set Chat Model
+
+<EndpointCard method="PUT" path="/api/settings/chat" description="Update the default chat model.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'defaultModel', type: 'string', required: true, description: 'Valid model ID from the supported models list' },
+]} />
+
+Change the default model for new chat conversations:
+
+<CodeExample ts={`// Switch the default chat model
+await fetch('http://localhost:3000/api/settings/chat', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ defaultModel: 'claude-sonnet-4-6-20250514' }),
+});`} python={`import requests
+
+# Switch the default chat model
+requests.put(
+    "http://localhost:3000/api/settings/chat",
+    json={"defaultModel": "claude-sonnet-4-6-20250514"},
+)`} />
+
+**Errors:** `400` — Invalid model ID
+
+</EndpointCard>
+
+## Runtime Settings
+
+### Get Runtime Config
+
+<EndpointCard method="GET" path="/api/settings/runtime" description="Read SDK timeout and max-turns settings for agent execution.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'sdkTimeoutSeconds', type: 'string', required: true, description: 'SDK call timeout in seconds (default: 60)' },
+  { name: 'maxTurns', type: 'string', required: true, description: 'Maximum agent turns per execution (default: 10)' },
+]} />
+
+<CodeExample ts={`// Read SDK timeout and max-turns settings
+const res: Response = await fetch('http://localhost:3000/api/settings/runtime');
+const runtime: { sdkTimeoutSeconds: string; maxTurns: string } = await res.json();
+console.log(\`Timeout: \${runtime.sdkTimeoutSeconds}s, Max turns: \${runtime.maxTurns}\`);`} python={`import requests
+
+# Read SDK timeout and max-turns settings
+res: requests.Response = requests.get("http://localhost:3000/api/settings/runtime")
+runtime: dict = res.json()
+print(f"Timeout: {runtime['sdkTimeoutSeconds']}s, Max turns: {runtime['maxTurns']}")`} />
+
+</EndpointCard>
+
+### Update Runtime Config
+
+<EndpointCard method="POST" path="/api/settings/runtime" description="Update SDK timeout and/or max-turns settings.">
+
+<SchemaTable title="Request Body (all optional)" fields={[
+  { name: 'sdkTimeoutSeconds', type: 'string', required: false, description: 'Timeout in seconds (10–300)' },
+  { name: 'maxTurns', type: 'string', required: false, description: 'Max agent turns (1–50)' },
+]} />
+
+Increase timeout and turns for complex tasks that need more agent interaction:
+
+<CodeExample ts={`// Increase limits for complex agent tasks
+await fetch('http://localhost:3000/api/settings/runtime', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ sdkTimeoutSeconds: '120', maxTurns: '25' }),
+});`} python={`import requests
+
+# Increase limits for complex agent tasks
+requests.post(
+    "http://localhost:3000/api/settings/runtime",
+    json={"sdkTimeoutSeconds": "120", "maxTurns": "25"},
+)`} />
+
+**Errors:** `400` — Value out of range
+
+</EndpointCard>
+
+## Ollama Settings
+
+### Get Ollama Config
+
+<EndpointCard method="GET" path="/api/settings/ollama" description="Read Ollama connection settings.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'baseUrl', type: 'string', required: true, description: 'Ollama server URL (default: http://localhost:11434)' },
+  { name: 'defaultModel', type: 'string', required: true, description: 'Default model name (empty if not set)' },
+]} />
+
+<CodeExample ts={`// Read Ollama connection settings
+const res: Response = await fetch('http://localhost:3000/api/settings/ollama');
+const ollama: { baseUrl: string; defaultModel: string } = await res.json();
+console.log(\`Ollama: \${ollama.baseUrl}, model: \${ollama.defaultModel || '(not set)'}\`);`} python={`import requests
+
+# Read Ollama connection settings
+res: requests.Response = requests.get("http://localhost:3000/api/settings/ollama")
+ollama: dict = res.json()
+print(f"Ollama: {ollama['baseUrl']}, model: {ollama['defaultModel'] or '(not set)'}")`} />
+
+</EndpointCard>
+
+### Update Ollama Config
+
+<EndpointCard method="POST" path="/api/settings/ollama" description="Update Ollama base URL and/or default model.">
+
+<SchemaTable title="Request Body (all optional)" fields={[
+  { name: 'baseUrl', type: 'string', required: false, description: 'Ollama server URL' },
+  { name: 'defaultModel', type: 'string', required: false, description: 'Default model name' },
+]} />
+
+Configure a local Ollama instance for offline agent execution:
+
+<CodeExample ts={`// Point to a local Ollama instance
+await fetch('http://localhost:3000/api/settings/ollama', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ baseUrl: 'http://localhost:11434', defaultModel: 'llama3.1' }),
+});`} python={`import requests
+
+# Point to a local Ollama instance
+requests.post(
+    "http://localhost:3000/api/settings/ollama",
+    json={"baseUrl": "http://localhost:11434", "defaultModel": "llama3.1"},
+)`} />
+
+</EndpointCard>
+
+## Learning Context
+
+### Get Learning Settings
+
+<EndpointCard method="GET" path="/api/settings/learning" description="Read the learning context character limit.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'contextCharLimit', type: 'string', required: true, description: 'Max characters for learning context (default: 8000)' },
+]} />
+
+<CodeExample ts={`// Read the learning context character limit
+const res: Response = await fetch('http://localhost:3000/api/settings/learning');
+const { contextCharLimit }: { contextCharLimit: string } = await res.json();
+console.log(\`Learning context limit: \${Number(contextCharLimit).toLocaleString()} chars\`);`} python={`import requests
+
+# Read the learning context character limit
+res: requests.Response = requests.get("http://localhost:3000/api/settings/learning")
+data: dict = res.json()
+print(f"Learning context limit: {int(data['contextCharLimit']):,} chars")`} />
+
+</EndpointCard>
+
+### Update Learning Settings
+
+<EndpointCard method="POST" path="/api/settings/learning" description="Update the learning context character limit.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'contextCharLimit', type: 'string', required: true, description: 'Limit in characters (2,000–32,000, step 1,000)' },
+]} />
+
+Increase the learning context window so agents retain more project-specific knowledge:
+
+<CodeExample ts={`// Double the learning context window
+await fetch('http://localhost:3000/api/settings/learning', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ contextCharLimit: '16000' }),
+});`} python={`import requests
+
+# Double the learning context window
+requests.post(
+    "http://localhost:3000/api/settings/learning",
+    json={"contextCharLimit": "16000"},
+)`} />
+
+**Errors:** `400` — Value out of range or not a multiple of 1,000
+
+</EndpointCard>
+
+## Browser Tools
+
+### Get Browser Tool Settings
+
+<EndpointCard method="GET" path="/api/settings/browser-tools" description="Read MCP browser tool enablement and configuration.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'chromeDevtoolsEnabled', type: 'boolean', required: true, description: 'Whether Chrome DevTools MCP is enabled' },
+  { name: 'playwrightEnabled', type: 'boolean', required: true, description: 'Whether Playwright MCP is enabled' },
+  { name: 'chromeDevtoolsConfig', type: 'string', required: true, description: 'Chrome DevTools MCP config (JSON string or empty)' },
+  { name: 'playwrightConfig', type: 'string', required: true, description: 'Playwright MCP config (JSON string or empty)' },
+]} />
+
+<CodeExample ts={`// Read browser tool enablement
+const res: Response = await fetch('http://localhost:3000/api/settings/browser-tools');
+const tools: { chromeDevtoolsEnabled: boolean; playwrightEnabled: boolean } = await res.json();
+console.log(\`Chrome DevTools: \${tools.chromeDevtoolsEnabled ? 'on' : 'off'}\`);
+console.log(\`Playwright: \${tools.playwrightEnabled ? 'on' : 'off'}\`);`} python={`import requests
+
+# Read browser tool enablement
+res: requests.Response = requests.get("http://localhost:3000/api/settings/browser-tools")
+tools: dict = res.json()
+print(f"Chrome DevTools: {'on' if tools['chromeDevtoolsEnabled'] else 'off'}")
+print(f"Playwright: {'on' if tools['playwrightEnabled'] else 'off'}")`} />
+
+</EndpointCard>
+
+### Update Browser Tool Settings
+
+<EndpointCard method="POST" path="/api/settings/browser-tools" description="Enable/disable browser tools and update their MCP configurations.">
+
+<SchemaTable title="Request Body (all optional)" fields={[
+  { name: 'chromeDevtoolsEnabled', type: 'boolean', required: false, description: 'Toggle Chrome DevTools MCP' },
+  { name: 'playwrightEnabled', type: 'boolean', required: false, description: 'Toggle Playwright MCP' },
+  { name: 'chromeDevtoolsConfig', type: 'string', required: false, description: 'Chrome DevTools MCP config JSON' },
+  { name: 'playwrightConfig', type: 'string', required: false, description: 'Playwright MCP config JSON' },
+]} />
+
+Enable Chrome DevTools for agents that need browser automation:
+
+<CodeExample ts={`// Enable Chrome DevTools MCP for browser-based tasks
+await fetch('http://localhost:3000/api/settings/browser-tools', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    chromeDevtoolsEnabled: true,
+    playwrightEnabled: false,
+  }),
+});`} python={`import requests
+
+# Enable Chrome DevTools MCP for browser-based tasks
+requests.post(
+    "http://localhost:3000/api/settings/browser-tools",
+    json={"chromeDevtoolsEnabled": True, "playwrightEnabled": False},
+)`} />
+
+</EndpointCard>
+
+## Web Search
+
+### Get Web Search Settings
+
+<EndpointCard method="GET" path="/api/settings/web-search" description="Read Exa web search MCP enablement.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'exaSearchEnabled', type: 'boolean', required: true, description: 'Whether Exa Search MCP is enabled' },
+]} />
+
+<CodeExample ts={`// Read Exa web search enablement
+const res: Response = await fetch('http://localhost:3000/api/settings/web-search');
+const { exaSearchEnabled }: { exaSearchEnabled: boolean } = await res.json();
+console.log(\`Web search: \${exaSearchEnabled ? 'enabled' : 'disabled'}\`);`} python={`import requests
+
+# Read Exa web search enablement
+res: requests.Response = requests.get("http://localhost:3000/api/settings/web-search")
+data: dict = res.json()
+print(f"Web search: {'enabled' if data['exaSearchEnabled'] else 'disabled'}")`} />
+
+</EndpointCard>
+
+### Update Web Search Settings
+
+<EndpointCard method="POST" path="/api/settings/web-search" description="Enable or disable Exa web search MCP.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'exaSearchEnabled', type: 'boolean', required: true, description: 'Toggle Exa Search MCP' },
+]} />
+
+<CodeExample ts={`// Enable web search for research-oriented agents
+await fetch('http://localhost:3000/api/settings/web-search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ exaSearchEnabled: true }),
+});`} python={`import requests
+
+# Enable web search for research-oriented agents
+requests.post(
+    "http://localhost:3000/api/settings/web-search",
+    json={"exaSearchEnabled": True},
+)`} />
+
+</EndpointCard>
+
+## Utility
+
+### Get Default Author
+
+<EndpointCard method="GET" path="/api/settings/author-default" description="Return the OS username as the default task author.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'author', type: 'string', required: true, description: 'OS username of the current user' },
+]} />
+
+<CodeExample ts={`// Get the OS username as default author
+const res: Response = await fetch('http://localhost:3000/api/settings/author-default');
+const { author }: { author: string } = await res.json();
+console.log(\`Default author: \${author}\`);`} python={`import requests
+
+# Get the OS username as default author
+res: requests.Response = requests.get("http://localhost:3000/api/settings/author-default")
+data: dict = res.json()
+print(f"Default author: {data['author']}")`} />
+
+</EndpointCard>
+
+### Test Runtime Connection
+
+<EndpointCard method="POST" path="/api/settings/test" description="Test connectivity to a specific agent runtime. Returns connection status and runtime capabilities.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'runtime', type: 'string', required: false, description: 'Runtime ID to test (default: system default runtime)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'connected', type: 'boolean', required: true, description: 'Whether the runtime responded successfully' },
+  { name: 'runtime', type: 'string', required: true, description: 'Runtime ID that was tested' },
+  { name: 'capabilities', type: 'object', required: true, description: 'Runtime capability flags' },
+  { name: 'error', type: 'string', required: false, description: 'Error message if connection failed' },
+]} />
+
+Test connectivity before running tasks — helpful for diagnosing configuration issues:
+
+<CodeExample ts={`// Test runtime connectivity
+const res: Response = await fetch('http://localhost:3000/api/settings/test', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ runtime: 'claude-code' }),
+});
+const result: { connected: boolean; runtime: string; capabilities: Record<string, any>; error?: string } = await res.json();
+
+if (result.connected) {
+  console.log(\`\${result.runtime} is ready\`);
+  console.log('Capabilities:', result.capabilities);
+} else {
+  console.error(\`Connection failed: \${result.error}\`);
+}`} python={`import requests
+
+# Test runtime connectivity
+res: requests.Response = requests.post(
+    "http://localhost:3000/api/settings/test",
+    json={"runtime": "claude-code"},
+)
+result: dict = res.json()
+
+if result["connected"]:
+    print(f"{result['runtime']} is ready")
+    print(f"Capabilities: {result['capabilities']}")
+else:
+    print(f"Connection failed: {result.get('error')}")`} />
+
+Example response:
+
+```json
+{
+  "connected": true,
+  "runtime": "claude-code",
+  "capabilities": {
+    "streaming": true,
+    "toolUse": true,
+    "maxTokens": 128000
+  }
+}
+```
+
+</EndpointCard>
+
+## Routing Preferences
+
+| Value | Description |
+|-------|-------------|
+| **cost** | Route to the cheapest available model that meets the task requirements. |
+| **latency** | Route to the fastest responding model. |
+| **quality** | Route to the highest capability model. |
+| **manual** | User explicitly selects the model per task. |

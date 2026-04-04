@@ -1,0 +1,824 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Profiles API"
+description: "Create, manage, test, and import agent profiles with per-runtime overrides, learned context versioning, and AI-assisted generation."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import ParamTable from '../../../components/api/ParamTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Profiles API
+
+Profiles define agent behavior — the system prompt (SKILL.md), allowed tools, MCP servers, and per-runtime overrides. Profiles are stored as YAML + Markdown on disk and support three scopes: built-in (shipped with Stagent), user (`~/.claude/skills/`), and project (`.claude/skills/`). The Profiles API covers CRUD, behavioral testing, learned context management, AI-assisted generation, and GitHub import.
+
+## Quick Start
+
+List available profiles, run behavioral smoke tests against a runtime, and check the results:
+
+<CodeExample ts={`// 1. List profiles to find ones compatible with your runtime
+const profiles: Profile[] = await fetch('/api/profiles?scope=all&projectId=proj-8f3a-4b2c')
+  .then(r => r.json());
+
+const claudeProfiles = profiles.filter(p =>
+  p.supportedRuntimes.includes('claude-code')
+);
+console.log(\`\${claudeProfiles.length} profiles support claude-code\`);
+claudeProfiles.forEach(p => console.log(\`  \${p.name} (\${p.scope}) — \${p.tags.join(', ')}\`));
+
+// 2. Run smoke tests for a profile against claude-code
+const testReport: TestReport = await fetch('/api/profiles/data-analyst/test', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ runtimeId: 'claude-code' }),
+}).then(r => r.json());
+
+// 3. Check test results — each test sends a prompt and checks for expected keywords
+console.log(\`Tests: \${testReport.passed}/\${testReport.total} passed\`);
+testReport.results.forEach(t => {
+  const icon = t.pass ? 'PASS' : 'FAIL';
+  console.log(\`  [\${icon}] \${t.task}\`);
+  if (!t.pass) console.log(\`    Missing: \${t.missingKeywords.join(', ')}\`);
+});
+
+// 4. Retrieve persisted test results later
+const savedResults: TestReport = await fetch(
+  '/api/profiles/data-analyst/test-results?runtimeId=claude-code'
+).then(r => r.json());`} python={`import requests
+
+# 1. List profiles to find ones compatible with your runtime
+response = requests.get(
+    "http://localhost:3000/api/profiles",
+    params={"scope": "all", "projectId": "proj-8f3a-4b2c"},
+)
+profiles = response.json()
+
+claude_profiles = [p for p in profiles if "claude-code" in p["supportedRuntimes"]]
+print(f"{len(claude_profiles)} profiles support claude-code")
+for p in claude_profiles:
+    tags = ", ".join(p["tags"])
+    print(f"  {p['name']} ({p['scope']}) — {tags}")
+
+# 2. Run smoke tests for a profile against claude-code
+report_response = requests.post(
+    "http://localhost:3000/api/profiles/data-analyst/test",
+    json={"runtimeId": "claude-code"},
+)
+test_report = report_response.json()
+
+# 3. Check test results — each test sends a prompt and checks for expected keywords
+print(f"Tests: {test_report['passed']}/{test_report['total']} passed")
+for t in test_report["results"]:
+    icon = "PASS" if t["pass"] else "FAIL"
+    print(f"  [{icon}] {t['task']}")
+    if not t["pass"]:
+        missing = ", ".join(t["missingKeywords"])
+        print(f"    Missing: {missing}")
+
+# 4. Retrieve persisted test results later
+saved_response = requests.get(
+    "http://localhost:3000/api/profiles/data-analyst/test-results",
+    params={"runtimeId": "claude-code"},
+)
+saved_results = saved_response.json()`} />
+
+## Base URL
+
+```
+/api/profiles
+```
+
+## Endpoints
+
+### List Profiles
+
+<EndpointCard method="GET" path="/api/profiles" description="Retrieve profiles with optional scope and project filtering. Default returns user + built-in profiles. Use scope=all with a projectId to include project-scoped profiles.">
+
+<ParamTable params={[
+  { name: 'scope', type: 'enum', required: false, description: 'Filter scope: project (project-only) or all (builtin + user + project)' },
+  { name: 'projectId', type: 'string', required: false, description: 'Project UUID — required when scope is project or all' },
+]} />
+
+**Response** `200` — Array of profile objects sorted by name
+
+<SchemaTable title="Profile Object" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Profile identifier (kebab-case slug)' },
+  { name: 'name', type: 'string', required: true, description: 'Display name' },
+  { name: 'description', type: 'string', required: true, description: 'Brief description of the profile behavior' },
+  { name: 'domain', type: 'enum', required: true, description: 'work or personal' },
+  { name: 'tags', type: 'string[]', required: true, description: 'Categorization tags' },
+  { name: 'skillMd', type: 'string', required: true, description: 'Full SKILL.md content (system prompt + behavioral instructions)' },
+  { name: 'allowedTools', type: 'string[]', required: false, description: 'Tool allowlist for agent execution' },
+  { name: 'mcpServers', type: 'object', required: false, description: 'MCP server configurations' },
+  { name: 'canUseToolPolicy', type: 'object', required: false, description: 'Auto-approve/auto-deny tool policies' },
+  { name: 'maxTurns', type: 'number', required: false, description: 'Maximum agent conversation turns' },
+  { name: 'outputFormat', type: 'string', required: false, description: 'Expected output format' },
+  { name: 'version', type: 'string', required: true, description: 'Semantic version (x.y.z)' },
+  { name: 'author', type: 'string', required: false, description: 'Profile author' },
+  { name: 'source', type: 'string (URL)', required: false, description: 'Source URL' },
+  { name: 'supportedRuntimes', type: 'string[]', required: true, description: 'Compatible agent runtimes' },
+  { name: 'runtimeOverrides', type: 'object', required: false, description: 'Per-runtime instruction, tool, and MCP overrides' },
+  { name: 'isBuiltin', type: 'boolean', required: true, description: 'Whether this is a shipped built-in profile' },
+  { name: 'scope', type: 'enum', required: true, description: 'builtin, user, or project' },
+  { name: 'origin', type: 'enum', required: false, description: 'How created: manual, environment, import, or ai-assist' },
+  { name: 'readOnly', type: 'boolean', required: true, description: 'Whether the profile is read-only (true for project-scoped)' },
+]} />
+
+List all profiles including project-scoped ones — useful for building a profile selector when creating tasks:
+
+<CodeExample ts={`// List profiles and filter by runtime compatibility
+const profiles: Profile[] = await fetch('/api/profiles?scope=all&projectId=proj-8f3a-4b2c')
+  .then(r => r.json());
+
+// Group by scope for display
+const grouped = Object.groupBy(profiles, p => p.scope);
+for (const [scope, items] of Object.entries(grouped)) {
+  console.log(\`\${scope} (\${items.length}):\`);
+  items.forEach(p => console.log(\`  \${p.name} — \${p.description}\`));
+}`} python={`import requests
+from itertools import groupby
+from operator import itemgetter
+
+# List profiles and filter by runtime compatibility
+response = requests.get(
+    "http://localhost:3000/api/profiles",
+    params={"scope": "all", "projectId": "proj-8f3a-4b2c"},
+)
+profiles: list[dict] = response.json()
+
+# Group by scope for display
+sorted_profiles = sorted(profiles, key=itemgetter("scope"))
+for scope, items in groupby(sorted_profiles, key=itemgetter("scope")):
+    items_list = list(items)
+    print(f"{scope} ({len(items_list)}):")
+    for p in items_list:
+        print(f"  {p['name']} — {p['description']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "data-analyst",
+    "name": "Data Analyst",
+    "description": "Statistical analysis with Python, pandas, and visualization best practices",
+    "domain": "work",
+    "tags": ["analysis", "data", "python"],
+    "version": "1.2.0",
+    "supportedRuntimes": ["claude-code", "anthropic-direct"],
+    "isBuiltin": true,
+    "scope": "builtin",
+    "readOnly": true
+  },
+  {
+    "id": "custom-reviewer",
+    "name": "Custom Code Reviewer",
+    "description": "Security-focused code review for the payments service",
+    "domain": "work",
+    "tags": ["code-review", "security"],
+    "version": "1.0.0",
+    "supportedRuntimes": ["claude-code"],
+    "isBuiltin": false,
+    "scope": "user",
+    "origin": "manual",
+    "readOnly": false
+  }
+]
+```
+
+</EndpointCard>
+
+### Create Profile
+
+<EndpointCard method="POST" path="/api/profiles" description="Create a new user profile. The request body must pass Zod validation against ProfileConfigSchema. Provide the SKILL.md content separately.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Profile identifier (must be unique, kebab-case)' },
+  { name: 'name', type: 'string', required: true, description: 'Display name' },
+  { name: 'version', type: 'string', required: true, description: 'Semantic version (x.y.z format)' },
+  { name: 'domain', type: 'enum', required: true, description: 'work or personal' },
+  { name: 'tags', type: 'string[]', required: true, description: 'Categorization tags' },
+  { name: 'skillMd', type: 'string', required: false, description: 'SKILL.md content (system prompt)' },
+  { name: 'allowedTools', type: 'string[]', required: false, description: 'Tool allowlist' },
+  { name: 'mcpServers', type: 'object', required: false, description: 'MCP server configurations' },
+  { name: 'maxTurns', type: 'number', required: false, description: 'Max agent turns' },
+  { name: 'supportedRuntimes', type: 'string[]', required: false, description: 'Compatible runtimes' },
+  { name: 'tests', type: 'ProfileSmokeTest[]', required: false, description: 'Behavioral smoke tests' },
+]} />
+
+**Response** `201 Created` — `{ "ok": true }`
+
+**Errors:** `400` — Zod validation failure or duplicate ID
+
+Create a profile with a system prompt and behavioral smoke tests:
+
+<CodeExample ts={`// Create a profile with smoke tests for verification
+const res: Response = await fetch('/api/profiles', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    id: 'security-reviewer',
+    name: 'Security Reviewer',
+    version: '1.0.0',
+    domain: 'work',
+    tags: ['security', 'code-review', 'owasp'],
+    skillMd: 'You are a security-focused code reviewer. Check every change against the OWASP Top 10. Flag SQL injection, XSS, CSRF, and auth bypass risks. Always suggest remediations.',
+    supportedRuntimes: ['claude-code', 'anthropic-direct'],
+    tests: [
+      {
+        task: 'Review this code for SQL injection: db.query("SELECT * FROM users WHERE id = " + userId)',
+        expectedKeywords: ['SQL injection', 'parameterized', 'prepared statement'],
+      },
+    ],
+  }),
+});
+
+if (res.status === 201) {
+  console.log('Profile created — run /test to verify behavior');
+}`} python={`import requests
+
+# Create a profile with smoke tests for verification
+response = requests.post(
+    "http://localhost:3000/api/profiles",
+    json={
+        "id": "security-reviewer",
+        "name": "Security Reviewer",
+        "version": "1.0.0",
+        "domain": "work",
+        "tags": ["security", "code-review", "owasp"],
+        "skillMd": "You are a security-focused code reviewer. Check every change against the OWASP Top 10. Flag SQL injection, XSS, CSRF, and auth bypass risks. Always suggest remediations.",
+        "supportedRuntimes": ["claude-code", "anthropic-direct"],
+        "tests": [
+            {
+                "task": 'Review this code for SQL injection: db.query("SELECT * FROM users WHERE id = " + userId)',
+                "expectedKeywords": ["SQL injection", "parameterized", "prepared statement"],
+            },
+        ],
+    },
+)
+
+if response.status_code == 201:
+    print("Profile created — run /test to verify behavior")`} />
+
+</EndpointCard>
+
+### Get Profile
+
+<EndpointCard method="GET" path="/api/profiles/{id}" description="Retrieve a single profile with scope and read-only metadata.">
+
+**Response** `200` — Full profile object with `isBuiltin`, `scope`, and `readOnly` fields
+
+**Errors:** `404` — Profile not found
+
+Fetch a profile to inspect its full SKILL.md and configuration before assigning it to a task:
+
+<CodeExample ts={`// Fetch the full profile including SKILL.md content
+const profile: Profile = await fetch('/api/profiles/security-reviewer')
+  .then(r => r.json());
+
+console.log(\`\${profile.name} v\${profile.version} [\${profile.scope}]\`);
+console.log(\`Runtimes: \${profile.supportedRuntimes.join(', ')}\`);
+console.log(\`SKILL.md: \${profile.skillMd.substring(0, 100)}...\`);`} python={`import requests
+
+# Fetch the full profile including SKILL.md content
+response = requests.get("http://localhost:3000/api/profiles/security-reviewer")
+profile: dict = response.json()
+
+print(f"{profile['name']} v{profile['version']} [{profile['scope']}]")
+print(f"Runtimes: {', '.join(profile['supportedRuntimes'])}")
+print(f"SKILL.md: {profile['skillMd'][:100]}...")`} />
+
+</EndpointCard>
+
+### Update Profile
+
+<EndpointCard method="PUT" path="/api/profiles/{id}" description="Replace a user profile's configuration and SKILL.md. Built-in and project-scoped profiles cannot be modified through this endpoint.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'id', type: 'string', required: true, description: 'Profile identifier (must match URL)' },
+  { name: 'name', type: 'string', required: true, description: 'Display name' },
+  { name: 'version', type: 'string', required: true, description: 'Semantic version (x.y.z)' },
+  { name: 'domain', type: 'enum', required: true, description: 'work or personal' },
+  { name: 'tags', type: 'string[]', required: true, description: 'Categorization tags' },
+  { name: 'skillMd', type: 'string', required: false, description: 'Updated SKILL.md content' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Validation failure, `403` — Built-in or project-scoped profile, `404` — Not found
+
+Update a profile's system prompt and bump the version:
+
+<CodeExample ts={`// Update the profile and bump version
+await fetch('/api/profiles/security-reviewer', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    id: 'security-reviewer',
+    name: 'Security Reviewer',
+    version: '1.1.0',
+    domain: 'work',
+    tags: ['security', 'code-review', 'owasp', 'sast'],
+    skillMd: 'You are a senior security reviewer. Check all changes against OWASP Top 10 and CWE Top 25...',
+  }),
+});`} python={`import requests
+
+# Update the profile and bump version
+requests.put(
+    "http://localhost:3000/api/profiles/security-reviewer",
+    json={
+        "id": "security-reviewer",
+        "name": "Security Reviewer",
+        "version": "1.1.0",
+        "domain": "work",
+        "tags": ["security", "code-review", "owasp", "sast"],
+        "skillMd": "You are a senior security reviewer. Check all changes against OWASP Top 10 and CWE Top 25...",
+    },
+)`} />
+
+</EndpointCard>
+
+### Delete Profile
+
+<EndpointCard method="DELETE" path="/api/profiles/{id}" description="Permanently delete a user profile. Built-in and project-scoped profiles cannot be deleted.">
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Deletion failure, `403` — Built-in or project-scoped profile
+
+<CodeExample ts={`// Delete a user profile — built-ins and project profiles are protected
+const res: Response = await fetch('/api/profiles/security-reviewer', { method: 'DELETE' });
+
+if (res.status === 403) {
+  console.log('Cannot delete built-in or project-scoped profiles');
+}`} python={`import requests
+
+# Delete a user profile — built-ins and project profiles are protected
+response = requests.delete("http://localhost:3000/api/profiles/security-reviewer")
+
+if response.status_code == 403:
+    print("Cannot delete built-in or project-scoped profiles")`} />
+
+</EndpointCard>
+
+### Run Profile Tests
+
+<EndpointCard method="POST" path="/api/profiles/{id}/test" description="Execute all behavioral smoke tests for a profile against a specified runtime. Each test sends a task prompt and checks for expected keywords in the response. Results are persisted for later retrieval.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'runtimeId', type: 'enum', required: false, description: 'Agent runtime to test against', default: 'claude-code' },
+]} />
+
+**Response** `200` — Test report with per-test pass/fail results
+
+**Errors:** `400` — Invalid runtime or test execution failure, `429` — Budget limit exceeded
+
+Run all smoke tests for a profile to verify it produces the expected output keywords:
+
+<CodeExample ts={`// Run all profile tests and report results
+const report: TestReport = await fetch('/api/profiles/security-reviewer/test', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ runtimeId: 'claude-code' }),
+}).then(r => r.json());
+
+console.log(\`\${report.passed}/\${report.total} tests passed\`);
+report.results.forEach(t => {
+  console.log(\`  [\${t.pass ? 'PASS' : 'FAIL'}] \${t.task.substring(0, 60)}...\`);
+});`} python={`import requests
+
+# Run all profile tests and report results
+response = requests.post(
+    "http://localhost:3000/api/profiles/security-reviewer/test",
+    json={"runtimeId": "claude-code"},
+)
+report: dict = response.json()
+
+print(f"{report['passed']}/{report['total']} tests passed")
+for t in report["results"]:
+    status = "PASS" if t["pass"] else "FAIL"
+    print(f"  [{status}] {t['task'][:60]}...")`} />
+
+Example response:
+
+```json
+{
+  "profileId": "security-reviewer",
+  "runtimeId": "claude-code",
+  "total": 2,
+  "passed": 2,
+  "results": [
+    {
+      "task": "Review this code for SQL injection: db.query(\"SELECT * FROM users WHERE id = \" + userId)",
+      "pass": true,
+      "matchedKeywords": ["SQL injection", "parameterized", "prepared statement"],
+      "missingKeywords": [],
+      "durationMs": 4200
+    },
+    {
+      "task": "Check this login form for XSS vulnerabilities",
+      "pass": true,
+      "matchedKeywords": ["XSS", "sanitize", "escape"],
+      "missingKeywords": [],
+      "durationMs": 3800
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Run Single Test
+
+<EndpointCard method="POST" path="/api/profiles/{id}/test-single" description="Run a single profile test by index. Used by the client for real-time progress during test execution.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'testIndex', type: 'number', required: true, description: 'Zero-based index of the test to run' },
+  { name: 'runtimeId', type: 'enum', required: false, description: 'Agent runtime to test against', default: 'claude-code' },
+]} />
+
+**Response** `200` — Single test result with pass/fail and keyword matches
+
+**Errors:** `400` — Invalid test index or unsupported runtime, `404` — Profile not found, `429` — Budget limit exceeded
+
+Run a single test for real-time progress feedback in the UI:
+
+<CodeExample ts={`// Run tests one by one for real-time progress display
+const profile: Profile = await fetch('/api/profiles/security-reviewer').then(r => r.json());
+const testCount: number = profile.tests?.length ?? 0;
+
+for (let i = 0; i < testCount; i++) {
+  console.log(\`Running test \${i + 1}/\${testCount}...\`);
+
+  const result: TestResult = await fetch('/api/profiles/security-reviewer/test-single', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ testIndex: i, runtimeId: 'claude-code' }),
+  }).then(r => r.json());
+
+  console.log(\`  [\${result.pass ? 'PASS' : 'FAIL'}] \${result.durationMs}ms\`);
+}`} python={`import requests
+
+# Run tests one by one for real-time progress display
+profile_response = requests.get("http://localhost:3000/api/profiles/security-reviewer")
+profile: dict = profile_response.json()
+test_count: int = len(profile.get("tests", []))
+
+for i in range(test_count):
+    print(f"Running test {i + 1}/{test_count}...")
+
+    response = requests.post(
+        "http://localhost:3000/api/profiles/security-reviewer/test-single",
+        json={"testIndex": i, "runtimeId": "claude-code"},
+    )
+    result: dict = response.json()
+
+    status = "PASS" if result["pass"] else "FAIL"
+    print(f"  [{status}] {result['durationMs']}ms")`} />
+
+</EndpointCard>
+
+### Get Test Results
+
+<EndpointCard method="GET" path="/api/profiles/{id}/test-results" description="Retrieve the most recent persisted test report for a profile and runtime combination.">
+
+<ParamTable params={[
+  { name: 'runtimeId', type: 'enum', required: false, description: 'Runtime to filter results for', default: 'claude-code' },
+]} />
+
+**Response** `200` — Test report object
+
+**Errors:** `404` — No test results found
+
+<CodeExample ts={`// Check saved test results without re-running tests
+const results: TestReport = await fetch(
+  '/api/profiles/security-reviewer/test-results?runtimeId=claude-code'
+).then(r => r.json());
+
+console.log(\`Last tested: \${results.passed}/\${results.total} passed\`);`} python={`import requests
+
+# Check saved test results without re-running tests
+response = requests.get(
+    "http://localhost:3000/api/profiles/security-reviewer/test-results",
+    params={"runtimeId": "claude-code"},
+)
+results: dict = response.json()
+
+print(f"Last tested: {results['passed']}/{results['total']} passed")`} />
+
+</EndpointCard>
+
+### Get Learned Context
+
+<EndpointCard method="GET" path="/api/profiles/{id}/context" description="Retrieve the version history and size info for a profile's learned context. Learned context accumulates facts, preferences, and patterns from agent execution.">
+
+**Response** `200` — Version history and size information
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'history', type: 'object[]', required: true, description: 'Array of context versions with content and metadata' },
+  { name: 'currentSize', type: 'number', required: true, description: 'Current context size in bytes' },
+  { name: 'maxSize', type: 'number', required: true, description: 'Maximum allowed context size' },
+]} />
+
+Check how much learned context a profile has accumulated and view its version history:
+
+<CodeExample ts={`// Check learned context size and version history
+const ctx: ContextInfo = await fetch('/api/profiles/data-analyst/context')
+  .then(r => r.json());
+
+const pct: string = ((ctx.currentSize / ctx.maxSize) * 100).toFixed(1);
+console.log(\`Context: \${ctx.currentSize} / \${ctx.maxSize} bytes (\${pct}%)\`);
+console.log(\`Versions: \${ctx.history.length}\`);`} python={`import requests
+
+# Check learned context size and version history
+response = requests.get("http://localhost:3000/api/profiles/data-analyst/context")
+ctx: dict = response.json()
+
+pct = (ctx["currentSize"] / ctx["maxSize"]) * 100
+print(f"Context: {ctx['currentSize']} / {ctx['maxSize']} bytes ({pct:.1f}%)")
+print(f"Versions: {len(ctx['history'])}")`} />
+
+Example response:
+
+```json
+{
+  "history": [
+    {
+      "version": 3,
+      "content": "- User prefers seaborn over matplotlib\n- Always use pandas for CSV processing\n- Include confidence intervals in reports",
+      "source": "agent",
+      "createdAt": "2026-04-02T16:30:00.000Z"
+    },
+    {
+      "version": 2,
+      "content": "- User prefers seaborn over matplotlib\n- Always use pandas for CSV processing",
+      "source": "operator",
+      "createdAt": "2026-03-28T11:00:00.000Z"
+    }
+  ],
+  "currentSize": 1842,
+  "maxSize": 10240
+}
+```
+
+</EndpointCard>
+
+### Add Learned Context
+
+<EndpointCard method="POST" path="/api/profiles/{id}/context" description="Manually add context content to a profile (operator injection). Creates a new version in the context history.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'additions', type: 'string', required: true, description: 'Context content to add' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Missing or empty additions
+
+Manually inject context into a profile — useful for bootstrapping preferences before the agent learns them naturally:
+
+<CodeExample ts={`// Inject context manually — creates a new version
+await fetch('/api/profiles/data-analyst/context', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    additions: 'Always use pandas for CSV processing. Prefer seaborn for visualizations. Include confidence intervals in statistical reports.',
+  }),
+});`} python={`import requests
+
+# Inject context manually — creates a new version
+requests.post(
+    "http://localhost:3000/api/profiles/data-analyst/context",
+    json={
+        "additions": "Always use pandas for CSV processing. Prefer seaborn for visualizations. Include confidence intervals in statistical reports.",
+    },
+)`} />
+
+</EndpointCard>
+
+### Manage Learned Context
+
+<EndpointCard method="PATCH" path="/api/profiles/{id}/context" description="Approve, reject, or rollback learned context proposals. Approve and reject require a notificationId from a pending context proposal. Rollback requires a target version number.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'action', type: 'enum', required: true, description: 'approve, reject, or rollback' },
+  { name: 'notificationId', type: 'string', required: false, description: 'Notification ID (required for approve/reject)' },
+  { name: 'targetVersion', type: 'number', required: false, description: 'Version number (required for rollback)' },
+  { name: 'editedContent', type: 'string', required: false, description: 'Edited content to replace the proposal (approve only)' },
+]} />
+
+**Response** `200` — `{ "ok": true }`
+
+**Errors:** `400` — Missing required fields or invalid action
+
+Approve an agent's learned context proposal, or rollback to an earlier version if something went wrong:
+
+<CodeExample ts={`// Approve a pending context proposal from the agent
+await fetch('/api/profiles/data-analyst/context', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    action: 'approve',
+    notificationId: 'notif-ctx-789',
+  }),
+});
+
+// Or rollback to a previous version if the latest context is wrong
+await fetch('/api/profiles/data-analyst/context', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    action: 'rollback',
+    targetVersion: 2,
+  }),
+});`} python={`import requests
+
+# Approve a pending context proposal from the agent
+requests.patch(
+    "http://localhost:3000/api/profiles/data-analyst/context",
+    json={
+        "action": "approve",
+        "notificationId": "notif-ctx-789",
+    },
+)
+
+# Or rollback to a previous version if the latest context is wrong
+requests.patch(
+    "http://localhost:3000/api/profiles/data-analyst/context",
+    json={
+        "action": "rollback",
+        "targetVersion": 2,
+    },
+)`} />
+
+</EndpointCard>
+
+### AI Profile Assist
+
+<EndpointCard method="POST" path="/api/profiles/assist" description="Use AI to generate or refine a profile's SKILL.md, tags, and configuration from a natural language goal description. Supports generate mode (new profile) and refine mode (improve existing).">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'goal', type: 'string', required: true, description: 'Natural language description of the desired profile behavior' },
+  { name: 'domain', type: 'enum', required: false, description: 'work or personal' },
+  { name: 'mode', type: 'enum', required: false, description: 'generate (new) or refine (improve existing)', default: 'generate' },
+  { name: 'existingSkillMd', type: 'string', required: false, description: 'Current SKILL.md content (for refine mode)' },
+  { name: 'existingTags', type: 'string[]', required: false, description: 'Current tags (for refine mode)' },
+]} />
+
+**Response** `200` — Generated profile configuration and SKILL.md
+
+**Errors:** `400` — Missing goal, `429` — Budget limit exceeded, `500` — Generation failure
+
+Generate a complete profile from a natural language description — the AI produces a SKILL.md, tags, and configuration:
+
+<CodeExample ts={`// Generate a new profile from a natural language goal
+const generated: GeneratedProfile = await fetch('/api/profiles/assist', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    goal: 'A profile that reviews pull requests for security issues, focusing on OWASP Top 10 and input validation',
+    domain: 'work',
+    mode: 'generate',
+  }),
+}).then(r => r.json());
+
+console.log(\`Suggested name: \${generated.name}\`);
+console.log(\`Tags: \${generated.tags.join(', ')}\`);
+console.log(\`SKILL.md preview: \${generated.skillMd.substring(0, 200)}...\`);
+
+// Use the generated config to create the profile
+await fetch('/api/profiles', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(generated),
+});`} python={`import requests
+
+# Generate a new profile from a natural language goal
+response = requests.post(
+    "http://localhost:3000/api/profiles/assist",
+    json={
+        "goal": "A profile that reviews pull requests for security issues, focusing on OWASP Top 10 and input validation",
+        "domain": "work",
+        "mode": "generate",
+    },
+)
+generated: dict = response.json()
+
+print(f"Suggested name: {generated['name']}")
+print(f"Tags: {', '.join(generated['tags'])}")
+print(f"SKILL.md preview: {generated['skillMd'][:200]}...")
+
+# Use the generated config to create the profile
+requests.post(
+    "http://localhost:3000/api/profiles",
+    json=generated,
+)`} />
+
+Example response:
+
+```json
+{
+  "id": "security-pr-reviewer",
+  "name": "Security PR Reviewer",
+  "version": "1.0.0",
+  "domain": "work",
+  "tags": ["security", "code-review", "owasp", "input-validation"],
+  "skillMd": "You are a security-focused code reviewer specializing in pull request analysis...",
+  "supportedRuntimes": ["claude-code", "anthropic-direct"],
+  "allowedTools": ["Read", "Grep", "Glob", "Bash"]
+}
+```
+
+</EndpointCard>
+
+### Import from URL
+
+<EndpointCard method="POST" path="/api/profiles/import" description="Import a profile from a GitHub URL. Fetches profile.yaml and optionally SKILL.md from the repository. Supports raw GitHub URLs and github.com tree/blob URLs.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'url', type: 'string (URL)', required: true, description: 'GitHub URL to a profile directory or profile.yaml file' },
+]} />
+
+**Response** `201 Created` — `{ "ok": true, "id": "...", "name": "..." }`
+
+**Errors:** `400` — Invalid URL, non-GitHub URL, fetch failure, or invalid profile.yaml
+
+Import a profile from a GitHub repository — fetches the YAML config and SKILL.md:
+
+<CodeExample ts={`// Import a profile from GitHub
+const { id, name }: { id: string; name: string } = await fetch('/api/profiles/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    url: 'https://github.com/acme/stagent-profiles/tree/main/.claude/skills/security-reviewer',
+  }),
+}).then(r => r.json());
+
+console.log(\`Imported "\${name}" as \${id}\`);`} python={`import requests
+
+# Import a profile from GitHub
+response = requests.post(
+    "http://localhost:3000/api/profiles/import",
+    json={"url": "https://github.com/acme/stagent-profiles/tree/main/.claude/skills/security-reviewer"},
+)
+data: dict = response.json()
+
+print(f"Imported \\"{data['name']}\\" as {data['id']}")`} />
+
+</EndpointCard>
+
+### List Repo Imports
+
+<EndpointCard method="GET" path="/api/profiles/import-repo" description="List all repository import records, most recent first.">
+
+**Response** `200` — Array of repo import records with parsed profileIds
+
+<CodeExample ts={`// List all repository imports
+const imports: RepoImport[] = await fetch('/api/profiles/import-repo')
+  .then(r => r.json());
+
+imports.forEach(i => {
+  console.log(\`\${i.url} → \${i.profileIds.join(', ')}\`);
+});`} python={`import requests
+
+# List all repository imports
+response = requests.get("http://localhost:3000/api/profiles/import-repo")
+imports: list[dict] = response.json()
+
+for i in imports:
+    profile_ids = ", ".join(i["profileIds"])
+    print(f"{i['url']} → {profile_ids}")`} />
+
+</EndpointCard>
+
+## Profile Config Schema
+
+Profiles are validated with Zod. The key fields for the `ProfileConfigSchema`:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | Unique kebab-case identifier |
+| name | string | Yes | Display name |
+| version | string (semver) | Yes | Must match `x.y.z` format |
+| domain | enum | Yes | `work` or `personal` |
+| tags | string[] | Yes | Categorization tags |
+| allowedTools | string[] | No | Tool allowlist |
+| mcpServers | object | No | MCP server configurations |
+| canUseToolPolicy | object | No | `{ autoApprove?: string[], autoDeny?: string[] }` |
+| maxTurns | number | No | Maximum agent conversation turns |
+| supportedRuntimes | enum[] | No | Array of runtime IDs |
+| preferredRuntime | enum | No | Preferred runtime for auto-routing |
+| runtimeOverrides | object | No | Per-runtime instruction/tool/MCP overrides |
+| capabilityOverrides | object | No | Per-runtime model, thinking, and server tool overrides |
+| tests | object[] | No | `{ task: string, expectedKeywords: string[] }[]` |
+
+## Supported Runtimes
+
+| Runtime ID | Label |
+|-----------|-------|
+| claude-code | Claude Code |
+| openai-codex-app-server | OpenAI Codex App Server |
+| anthropic-direct | Anthropic Direct API |
+| openai-direct | OpenAI Direct API |
+| ollama | Ollama (Local) |
