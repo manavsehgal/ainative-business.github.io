@@ -3,7 +3,7 @@ layout: ../layouts/ResearchLayout.astro
 title: "AI Transformation Research: Building and Governing AI-Native Businesses"
 description: "How solo founders, agencies, and PE firms are building AI-native businesses with governed agent orchestration. Market analysis, competitive landscape, and practical frameworks."
 datePublished: "2026-03-01"
-dateModified: "2026-04-02"
+dateModified: "2026-04-03"
 author: "Manav"
 readingTime: "22 min read"
 ---
@@ -180,9 +180,9 @@ Stagent fills the gap between autonomous agents and governed business operations
 
 Stagent follows a three-layer local-first architecture:
 
-- **Browser layer** — React 19 with 34 operator surfaces, real-time SSE streaming
+- **Browser layer** — React 19 with 35 operator surfaces, real-time SSE streaming
 - **Server layer** — Next.js 16 with 20 service modules, 114 API endpoints
-- **External layer** — Local SQLite database (WAL mode, 30+ tables), no cloud dependency
+- **External layer** — Local SQLite database (WAL mode, 40+ tables), no cloud dependency
 
 Technology stack: TypeScript (85% of codebase), Tailwind CSS v4, shadcn/ui, Drizzle ORM. Open source under Apache 2.0.
 
@@ -190,7 +190,7 @@ Technology stack: TypeScript (85% of codebase), Tailwind CSS v4, shadcn/ui, Driz
 
 | Capability | Status |
 |-----------|--------|
-| 110 features across 34 operator surfaces | Shipped |
+| 124 features across 35 operator surfaces | Shipped |
 | 52+ specialist agent profiles (incl. 6 business-function profiles) | Shipped |
 | 25 workflow patterns with blueprint catalog | Shipped |
 | 5 AI runtimes (Claude, OpenAI, Ollama, direct APIs) | Shipped |
@@ -205,6 +205,7 @@ Technology stack: TypeScript (85% of codebase), Tailwind CSS v4, shadcn/ui, Driz
 | Async agent-to-agent handoffs with governance gates | Shipped |
 | Provider-agnostic tool layer across all runtimes | Shipped |
 | Living Book (9 chapters, self-regenerating from source code) | Shipped |
+| Structured data tables with spreadsheet editing, charts, triggers, and 12 agent tools | Shipped |
 
 <Figure number={5} caption="Workspace Overview — Active Tasks, Pending Approvals, Live Activity">
   <BrowserFrame src="/screenshots/home-list.png" alt="Home workspace showing summary metrics, tasks needing attention, and live agent activity" />
@@ -215,7 +216,7 @@ Technology stack: TypeScript (85% of codebase), Tailwind CSS v4, shadcn/ui, Driz
 </Figure>
 
 <Figure number={7} caption="Chat — Conversational AI with Multi-Provider Model Selection">
-  <BrowserFrame src="/screenshots/chat-conversation.png" alt="Chat conversation showing multi-turn AI interaction with headline generation and copywriting" />
+  <BrowserFrame src="/screenshots/chat-conversation.png" alt="Chat conversation showing sales operations analysis with deal scoring and coaching notes" />
 </Figure>
 
 <Figure number={8} caption="Cost & Usage — Cross-Runtime Spend Visibility and Budget Controls">
