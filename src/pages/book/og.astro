@@ -1,0 +1,181 @@
+---
+/**
+ * Book OG Image — rendered at 1200×630 then screenshotted to public/book/og-image.png
+ * Standalone page with no layout wrapper, fixed dimensions, no overflow.
+ *
+ * Design: Book cover left + title/subtitle right on dark background with atmospheric glow
+ */
+import "@fontsource/geist-sans/700.css";
+import "@fontsource/geist-sans/400.css";
+import "@fontsource-variable/geist-mono";
+---
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex" />
+  <title>OG Image — AI Native Book</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background: oklch(0.13 0.02 250);
+      color: oklch(0.93 0.01 250);
+    }
+
+    .og {
+      position: relative;
+      width: 1200px;
+      height: 630px;
+      display: flex;
+      align-items: center;
+      padding: 0 80px;
+      gap: 64px;
+    }
+
+    /* Atmospheric glow behind book cover */
+    .og::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 280px;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        oklch(0.55 0.15 230 / 0.20) 0%,
+        oklch(0.55 0.18 260 / 0.08) 40%,
+        transparent 70%
+      );
+      pointer-events: none;
+    }
+
+    .book-cover {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .book-cover img {
+      width: 300px;
+      height: auto;
+      filter: drop-shadow(-8px 12px 32px oklch(0.1 0.04 250 / 0.6))
+              drop-shadow(0 0 48px oklch(0.55 0.18 250 / 0.2));
+      transform: perspective(800px) rotateY(-4deg) rotateX(1deg);
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .label {
+      font-family: "Geist Mono Variable", monospace;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: oklch(0.65 0.15 170);
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-family: "Geist Sans", system-ui, sans-serif;
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, oklch(0.78 0.12 230), oklch(0.65 0.18 250), oklch(0.58 0.18 280));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-family: "Geist Sans", system-ui, sans-serif;
+      font-size: 24px;
+      font-weight: 400;
+      color: oklch(0.7 0.02 250);
+      line-height: 1.4;
+      max-width: 520px;
+      margin-bottom: 28px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      font-family: "Geist Mono Variable", monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: oklch(0.65 0.18 250);
+      border: 1px solid oklch(0.65 0.18 250 / 0.25);
+      background: oklch(0.65 0.18 250 / 0.06);
+      border-radius: 100px;
+      padding: 5px 14px;
+    }
+
+    .url {
+      position: absolute;
+      bottom: 28px;
+      right: 40px;
+      font-family: "Geist Mono Variable", monospace;
+      font-size: 15px;
+      letter-spacing: 0.06em;
+      color: oklch(0.5 0.02 250);
+      z-index: 1;
+    }
+
+    /* Accent line */
+    .accent-line {
+      position: absolute;
+      bottom: 54px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        oklch(0.65 0.18 250 / 0.05),
+        oklch(0.65 0.18 250 / 0.35) 50%,
+        oklch(0.65 0.18 250 / 0.05)
+      );
+      z-index: 3;
+    }
+  </style>
+</head>
+<body>
+  <div class="og">
+    <div class="book-cover">
+      <img src="/book/images/ai-native-book-cover.png" alt="" />
+    </div>
+
+    <div class="content">
+      <div class="label">Free Online Book</div>
+      <div class="title">AI Native</div>
+      <div class="subtitle">Building Autonomous Business Systems with AI Agents</div>
+      <div class="stats">
+        <span class="stat">12 Chapters</span>
+        <span class="stat">4 Parts</span>
+        <span class="stat">~166 Min Read</span>
+        <span class="stat">~136 Pages</span>
+      </div>
+    </div>
+
+    <span class="url">stagent.io</span>
+    <div class="accent-line"></div>
+  </div>
+</body>
+</html>
