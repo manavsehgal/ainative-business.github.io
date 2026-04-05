@@ -145,7 +145,7 @@ function parseContentBlocks(lines: string[]): ContentBlock[] {
     }
 
     // --- Callout blockquote ---
-    const calloutMatch = line.match(/^>\s*\[!(tip|warning|info|lesson|authors-note)\]\s*$/);
+    const calloutMatch = line.match(/^>\s*\[!(tip|warning|info|lesson|authors-note|case-study)\]\s*$/);
     if (calloutMatch) {
       flushText();
       const variant = calloutMatch[1] as CalloutBlock["variant"];

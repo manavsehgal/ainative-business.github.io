@@ -268,6 +268,50 @@ Update these fields:
 - `achievements` — notable milestones if any new ones
 - `description` — if scope has meaningfully changed
 
+### Update Target 10: Standalone Architecture SVG (Product README)
+
+**File:** `/Users/manavsehgal/Developer/stagent/public/readme/architecture.svg`
+
+This is a self-contained SVG (900x520 viewBox) referenced by the product's README.md on GitHub. It mirrors the 3-layer architecture from Target 7 (Browser → Server → External) but uses hardcoded hex colors instead of CSS custom properties. After updating stats in the website SVGs, update this file with the **same stat values** and ensure it uses the **light theme** color scheme so it renders cleanly on GitHub's white background.
+
+**Stats to update:**
+- DB tables: search for text containing `tables · Self-healing bootstrap` — replace the table count with `<DB_TABLES>` (e.g., `<DB_TABLES> tables · Self-healing bootstrap`)
+- Agent profiles: search for text containing `agent profiles` — replace the profile count with `<AGENT_PROFILES>` (e.g., `<AGENT_PROFILES> agent profiles`)
+- Route pills (Browser layer): verify the listed route pills match current operator surfaces from step 6. Add or remove `<rect>`/`<text>` pairs as needed, adjusting x-positions to fit within the 820px row.
+
+**Light theme color scheme — apply these hex replacements throughout the file:**
+
+| Dark Hex | Role | Light Hex |
+|----------|------|-----------|
+| `#0F172A` | Background / card fill | `#F0F1F5` |
+| `#1E293B` | Card fill / gradient end | `#FCFCFD` |
+| `#334155` | Card stroke / border | `#D4D6DE` |
+| `#F8FAFC`, `#F1F5F9` | Bright text (on dark bg) | `#2D3250` |
+| `#94A3B8` | Title / subtitle text | `#656A80` |
+| `#64748B` | Description text | `#7B8099` |
+| `#475569` | Dim labels / footer | `#7B8099` |
+| `#60A5FA` | Route pill text | `#2563EB` |
+| `#22D3EE` | Teal accent / connectors | `#0D7D8C` |
+| `#7C3AED` | Purple accent | `#7233B8` |
+| `#F59E0B` | Orange accent bar | `#A66D0A` |
+| `#10B981` | Green accent bar | `#0D7D5A` |
+| `#EC4899` | Pink accent bar | `#B83D75` |
+| `#EF4444` | Red accent bar | `#C23030` |
+| `#06B6D4` | Cyan accent bar | `#0D7D8C` |
+| `#D97706` | Anthropic icon | `#A66D0A` |
+| `#10A37F` | OpenAI icon | `#0D7D5A` |
+| `#000` (shadow filter) | Drop shadow | `#475569` at `flood-opacity="0.1"` |
+
+**Gradient updates:**
+- `bgGrad`: both stops → `#F0F1F5` (flat light background)
+- `browserGrad`: `#2563EB` → `#0D7D8C`
+- `serverGrad`: `#FCFCFD` → `#F0F1F5`
+- `externalGrad`: `#7233B8` → `#A78BFA`
+
+**Footer text:** update `fill` to `#656A80`.
+
+Light hex values are derived from the website's OKLCH light-theme tokens in `src/styles/global.css` (lines 70-92).
+
 ## Post-Update Verification
 
 ### Build Check

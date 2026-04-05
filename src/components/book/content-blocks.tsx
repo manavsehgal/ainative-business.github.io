@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   BookOpen,
   PenLine,
+  FileText,
   ArrowRight,
   ChevronDown,
   Copy,
@@ -185,6 +186,7 @@ const calloutConfig = {
   info: { icon: Info, className: "book-callout-info" },
   lesson: { icon: BookOpen, className: "book-callout-lesson" },
   "authors-note": { icon: PenLine, className: "book-callout-authors-note" },
+  "case-study": { icon: FileText, className: "book-callout-case-study" },
 };
 
 function CalloutBlockView({
@@ -195,7 +197,7 @@ function CalloutBlockView({
   imageAlt,
   defaultCollapsed,
 }: {
-  variant: "tip" | "warning" | "info" | "lesson" | "authors-note";
+  variant: "tip" | "warning" | "info" | "lesson" | "authors-note" | "case-study";
   title?: string;
   markdown: string;
   imageSrc?: string;

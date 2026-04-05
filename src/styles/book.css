@@ -257,6 +257,13 @@
   color: var(--book-text-muted, var(--color-text-muted));
 }
 
+.book-callout-case-study {
+  border-color: oklch(0.55 0.12 230);
+}
+.book-callout-case-study .book-callout-icon {
+  color: oklch(0.55 0.12 230);
+}
+
 /* ── Quiz ── */
 .book-quiz-correct {
   border-color: oklch(0.55 0.15 170) !important;
