@@ -81,6 +81,7 @@ export interface BookChapter {
   part: BookPart;
   sections: BookSection[];
   readingTime: number;
+  wordCount: number;
   relatedDocs?: string[];
   relatedJourney?: string;
 }
@@ -101,7 +102,7 @@ export interface ReaderPreferences {
 export const DEFAULT_READER_PREFS: ReaderPreferences = {
   fontSize: 17,
   lineHeight: 1.75,
-  fontFamily: "sans",
+  fontFamily: "serif",
   theme: "light",
 };
 

@@ -90,24 +90,35 @@ function SlidePanel({
   title: string;
   children: React.ReactNode;
 }) {
+  const translateValue = open
+    ? "translateX(0)"
+    : side === "left"
+      ? "translateX(-100%)"
+      : "translateX(100%)";
+
   return (
     <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 transition-opacity"
-          onClick={onClose}
-        />
-      )}
       <div
         className={cn(
-          "fixed top-0 z-50 h-full w-80 bg-surface border-border transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto",
-          side === "left" ? "left-0 border-r" : "right-0 border-l",
-          open
-            ? "translate-x-0"
-            : side === "left"
-              ? "-translate-x-full"
-              : "translate-x-full"
+          "fixed inset-0 bg-black/40 z-40",
+          open ? "" : "pointer-events-none"
         )}
+        style={{
+          opacity: open ? 1 : 0,
+          transition: "opacity 350ms cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+        onClick={onClose}
+      />
+      <div
+        className={cn(
+          "fixed top-0 z-50 h-full w-80 bg-surface border-border overflow-y-auto",
+          side === "left" ? "left-0 border-r" : "right-0 border-l",
+        )}
+        style={{
+          transform: translateValue,
+          transition: "transform 350ms cubic-bezier(0.4, 0, 0.2, 1)",
+          willChange: "transform",
+        }}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-sm font-semibold flex items-center gap-2">
@@ -213,7 +224,7 @@ export function BookReader({
       setTocOpen(false);
       // Update URL without full reload
       const slug = `ch-${chapter.number}-${chapter.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "")}`;
-      window.history.replaceState({}, "", `/book/${slug}`);
+      window.history.replaceState({}, "", `/book/${slug}/`);
       if (scrollTo !== undefined && scrollTo > 0) {
         setTimeout(() => {
           contentRef.current?.scrollTo({ top: scrollTo, behavior: "smooth" });
