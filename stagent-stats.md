@@ -283,3 +283,53 @@
 - Massive single-day velocity: +12.7K LOC, +25 commits, +14 features in ~28 hours
 - DB schema grew significantly (+14 tables) suggesting major data model expansion
 - Commits/hour ticked up from 0.35 → 0.38, reflecting sustained acceleration
+
+---
+
+## [2026-04-07 12:30] Metrics Snapshot
+
+| Category | Metric | Value |
+|----------|--------|-------|
+| LOC | TypeScript (production) | 94,127 |
+| LOC | TypeScript (tests) | 9,322 |
+| LOC | **Total** | **118,855** |
+| Tests | Vitest | 487 |
+| Tests | **Total** | **487** |
+| Git | Commits | 294 |
+| Git | Hours elapsed | 753.3 |
+| Git | Commits/hour | 0.39 |
+| Git | LOC/hour | 157.8 |
+| Features | Completed | 137/149 |
+| Infra | API routes | 149 |
+| Infra | DB tables | 45 |
+| Infra | UI components | 286 |
+| Infra | Pages | 39 |
+| Infra | Agent profiles | 52 |
+| Infra | Service modules | 33 |
+| Infra | Workflow patterns | 31 |
+
+### Feature Status
+- 137 completed, 5 in-progress, 1 deferred, 6 planned
+- In-progress: chat-settings-tool, database-snapshot-backup, dynamic-slash-commands, runtime-validation-hardening, profile-environment-sync
+- Deferred: npm-publish-readiness
+- Planned: workflow-document-pool, direct-runtime-prompt-caching, direct-runtime-advanced-capabilities, workflow-run-history, entity-relationship-detail-views, relationship-summary-cards
+- Feature scope expanded from 128 → 149 with new tables/structured-data, PLG monetization, and entity relationship initiatives
+
+### Trend (vs previous snapshot — ~4 days of development)
+- ↑ +7,940 LOC (110,915 → 118,855)
+- ↑ +61 tests (426 → 487)
+- ↑ +43 commits (251 → 294)
+- ↑ +21 features completed (116/128 → 137/149)
+- ↑ +15 API routes (134 → 149)
+- ↑ +1 DB table (44 → 45)
+- ↑ +21 UI components (265 → 286)
+- ↑ +2 pages (37 → 39)
+- → no change agent profiles (52)
+- ↑ +7 service modules (26 → 33)
+- ↑ +6 workflow patterns (25 → 31)
+
+### Notes
+- LOC counted via `tokei` — TypeScript is 87.0% of codebase (TS+TSX code / total code)
+- Steady cadence: 0.39 commits/hour sustained over 753 hours (~31 days)
+- Major scope additions: Tables/Structured Data (14 features) and PLG Monetization (17 features) — product is evolving from local-first OS to commercial PLG platform
+- Test growth (+61) is the strongest in any snapshot, signaling a quality push alongside scope expansion
