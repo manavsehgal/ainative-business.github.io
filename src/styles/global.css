@@ -223,6 +223,18 @@ section {
   50% { opacity: 1; }
 }
 
+/* ── Timeline active marker pulse (positioning-neutral) ── */
+.timeline-marker-active {
+  animation: timeline-marker-pulse 3s ease-in-out infinite;
+}
+@keyframes timeline-marker-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 40%, transparent); }
+  50%      { box-shadow: 0 0 0 10px color-mix(in oklch, var(--color-primary) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-marker-active { animation: none; }
+}
+
 /* ── SVG scroll-reveal animations ── */
 .svg-reveal {
   opacity: 0;
