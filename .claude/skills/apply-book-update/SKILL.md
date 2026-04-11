@@ -5,7 +5,7 @@ description: Sync book content from the Stagent product to the stagent.io websit
 
 # Apply Book Update Skill
 
-Syncs the "AI Native" book content (13 chapter markdown files + images) from the Stagent product repository to the stagent.io marketing website. The book lives as a React island reader at `/book/[chapter-slug]` and content is parsed at Astro build time.
+Syncs the "AI Native" book content (chapter markdown files + images) from the Stagent product repository to the stagent.io marketing website. The book lives as a React island reader at `/book/[chapter-slug]` and content is parsed at Astro build time. The current chapter count is whatever is in the Chapter Manifest below — most counts elsewhere in the codebase are derived dynamically from `CHAPTERS.length`.
 
 ## Source and Target Paths
 
@@ -33,6 +33,7 @@ The website project root is `/Users/manavsehgal/Developer/stagent.github.io/`.
 | ch-11 | `ch-11-the-machine-that-builds-machines.md` | 4 |
 | ch-12 | `ch-12-the-road-ahead.md` | 4 |
 | ch-13 | `ch-13-the-wealth-manager.md` | 4 |
+| ch-14 | `ch-14-the-meta-program.md` | 4 |
 
 ## Complete File Manifest
 
@@ -50,6 +51,9 @@ All files that may need updating during a book sync:
 | 8 | `src/lib/book/reading-paths.ts` | When chapters added/removed |
 | 9 | `src/pages/book/index.astro` | When parts count or description changes |
 | 10 | `src/components/book/book-reader.tsx` | When chapter URL pattern changes |
+| 11 | `src/layouts/BookLayout.astro` | Never — imports `CHAPTERS`/`PARTS`, auto-updates |
+| 12 | `src/components/sections/RuntimeBridge.astro` | Never — imports `CHAPTERS`/`PARTS`, auto-updates |
+| 13 | `src/pages/research/ai-transformation.mdx` | Flag via drift audit only — historical snapshot, update only with user confirmation |
 
 ## 7-Step Workflow
 
@@ -112,7 +116,7 @@ If nothing changed and mode is incremental, report "Book content is up to date" 
 
 ### Step 3: Copy Chapters
 
-**Migration/Fresh mode**: Delete all old chapter files, then copy all 13 new ones:
+**Migration/Fresh mode**: Delete all old chapter files, then copy all new ones:
 
 ```bash
 rm -f src/data/book/chapters/ch-*.md
@@ -128,6 +132,22 @@ cp /path/to/changed/files src/data/book/chapters/
 Delete any stale target files that no longer exist in source.
 
 For each changed chapter, briefly read the diff to understand what changed (new sections, updated content, fixes). This context is useful for the change report.
+
+#### Step 3 Lint: Reader Chrome Leakage Check
+
+After copying, scan the target chapter files for reader chrome that should NOT appear in the markdown body. The `BookReader` component renders its own chapter counter, horizontal rule, and "Explore Related Features" card from frontmatter — any of those in the body will duplicate on screen.
+
+```bash
+for f in src/data/book/chapters/ch-*.md; do
+  if grep -qE '^Chapter [0-9]+ of [0-9]+$|^### Explore Related Features$' "$f"; then
+    echo "⚠️ READER CHROME LEAKED INTO BODY: $(basename "$f")"
+  fi
+done
+```
+
+If any warnings fire, **stop and flag to the user**. Do NOT silently strip the chrome — this is an upstream generator bug that should be fixed in `/Users/manavsehgal/Developer/stagent/book/chapters/` so it doesn't recur on the next sync. Acceptable action: ask the user whether to (a) fix upstream first and re-sync, or (b) strip locally as a one-time hotfix knowing the next sync will re-introduce it.
+
+Historical context: ch-14 shipped with a trailing `---` rule, a "Chapter 14 of 14" line, and a static "### Explore Related Features" block that the reader then rendered a second time. This lint exists to catch that class of drift.
 
 ### Step 4: Copy Changed Images
 
@@ -147,15 +167,15 @@ Update each file as needed:
 
 #### 5a. `src/lib/book/content.ts`
 
-Update `CHAPTER_SLUG_MAP` to map all 13 chapter IDs to their filenames. Update `PARTS` array to 4 parts. Update `CHAPTERS` array with all 13 entries — read frontmatter from each source chapter file to populate `title`, `subtitle`, `readingTime`, `wordCount`, `relatedDocs`, and `relatedJourney`.
+Update `CHAPTER_SLUG_MAP` to map every chapter ID in the Chapter Manifest to its filename. Update `PARTS` array to 4 parts. Update `CHAPTERS` array with one entry per chapter — read frontmatter from each source chapter file to populate `title`, `subtitle`, `readingTime`, `wordCount`, `relatedDocs`, and `relatedJourney`.
 
-For `wordCount`, run `wc -w` on each source chapter file and use the result. This field drives the "X words" and "~Y pages" stats on the landing page.
+For `wordCount`, run `wc -w` on each source chapter file and use the result. This field drives the "X words" and "~Y pages" stats on the landing page. **Run `wc -w` on the target file after any in-repo edits** (e.g., Step 3 chrome-leak hotfixes) so the count reflects what ships, not what was copied.
 
-Part assignments:
+Part assignments (current — update this list when adding/removing chapters):
 - Part 1: ch-1, ch-2
 - Part 2: ch-3, ch-4, ch-5, ch-6
 - Part 3: ch-7, ch-8, ch-9
-- Part 4: ch-10, ch-11, ch-12, ch-13
+- Part 4: ch-10, ch-11, ch-12, ch-13, ch-14
 
 Read the source chapter frontmatter for part titles/descriptions if available, otherwise derive from chapter themes.
 
@@ -200,12 +220,12 @@ Add CSS rules for the new callout variant after the existing callout styles:
 
 #### 5f. `src/lib/book/reading-paths.ts`
 
-Update reading path `chapterIds` arrays to reference the new chapter IDs (ch-1 through ch-13). Redesign paths to match the new chapter themes:
+Update reading path `chapterIds` arrays to reference every current chapter ID. Redesign paths to match the chapter themes:
 
 - **Getting Started**: ch-1, ch-2 (foundation/blueprint chapters)
 - **Personal Use**: ch-3, ch-5, ch-6 (chapters with `relatedJourney: "personal-use"` or `"power-user"`)
 - **Work Use**: ch-4, ch-7, ch-8, ch-9 (chapters with `relatedJourney: "work-use"` or `developer`)
-- **Complete**: ch-1 through ch-13
+- **Complete**: every chapter in order (append any new chapter to this array)
 
 Adjust based on the `relatedJourney` values in chapter frontmatter.
 
@@ -220,7 +240,13 @@ The landing page hero stats are **dynamic** — computed from the CHAPTERS array
 
 The JSON-LD schema uses `numberOfPages: totalPages` for the computed page count.
 
-**No hardcoded stats to update** — just ensure `wordCount` values in content.ts are current (run `wc -w` on each chapter). If chapters are added/removed, update the meta description text.
+**No hardcoded stats to update in the hero** — just ensure `wordCount` values in content.ts are current (run `wc -w` on each chapter). If chapters are added/removed, update the meta description text and the screenshot alt text that mentions chapter count.
+
+**Other files that used to drift are now dynamic:**
+- `src/layouts/BookLayout.astro` imports `CHAPTERS`/`PARTS` and templates the count into its JSON-LD Book description — auto-updates on every sync, no edits needed.
+- `src/components/sections/RuntimeBridge.astro` imports `CHAPTERS`/`PARTS` and templates the count into its feature callout — auto-updates, no edits needed. (This section is currently dormant in the homepage but kept in sync for when it re-activates.)
+
+Only the meta description text and alt text in `index.astro` remain as manual edits. See the drift audit in Step 6b for how to find any new static references that should be refactored or flagged.
 
 **CRITICAL — Trailing slashes on all hrefs:** Every `href` that interpolates `CHAPTER_SLUG_MAP` must append a trailing slash. The map values are bare slugs (no slash), so callers must add it:
 
@@ -247,7 +273,7 @@ npm run build 2>&1 | tail -20
 ```
 
 The build should produce pages under `/book/` for each chapter. Check for:
-- All 13 chapter routes generated
+- Every chapter in the Chapter Manifest has a route generated
 - No build errors
 - Book index page generated at `/book/index.html`
 
@@ -256,6 +282,27 @@ If the build fails, investigate the error. Common issues:
 - New callout type not added to the parser regex, types, or component
 - Missing icon import in `content-blocks.tsx`
 - CSS class not defined for a new callout variant
+
+### Step 6b: Drift Audit — Find Stale "N chapters" Prose
+
+After the build verifies, grep the codebase for any prose that hardcodes a chapter count and doesn't match `CHAPTERS.length`. This catches references that weren't refactored to use dynamic imports.
+
+```bash
+NEW_COUNT=$(grep -c '^  {' src/lib/book/content.ts)  # rough count of CHAPTERS entries
+# Or read more precisely from the CHAPTER_SLUG_MAP length
+grep -rn -E '\b[0-9]+ chapters\b' src/ \
+  --include='*.astro' --include='*.tsx' --include='*.mdx' --include='*.md' \
+  | grep -v -E "\b${NEW_COUNT} chapters\b" \
+  | grep -v '/book/chapters/'   # exclude sourced book body text (fix upstream)
+```
+
+**Triage each hit:**
+- **Site chrome / marketing copy** (e.g., `src/pages/book/index.astro` meta description, alt text, BrowserFrame alts): **update in place** to the new count.
+- **Research papers / dated snapshots** (e.g., `src/pages/research/*.mdx`): **flag for user confirmation** — these may be historical snapshots. Do not auto-update.
+- **Files that could use a dynamic import** (e.g., a new Astro component added since last sync): **suggest refactoring** to `import { CHAPTERS } from '../lib/book/content'` instead of patching the literal. Drift-prone prose should become data-driven at the first opportunity.
+- **Book body prose in `src/data/book/chapters/*.md`**: **do not edit in this repo** — it's sourced from the product repo. Flag to the user with the file path so they can fix upstream.
+
+Report any unresolved hits in the Step 7 change report under a "⚠️ Drift audit" heading.
 
 ### Step 7: Report Changes
 
@@ -280,7 +327,13 @@ Migration / Incremental
 - [etc.]
 
 ### Build Status
-✓ All 13 chapter pages generated successfully
+✓ All chapter pages generated successfully
+
+### ⚠️ Drift Audit
+(Include any unresolved "N chapters" hits from Step 6b, or "none" if clean.)
+
+### ⚠️ Reader Chrome Lint
+(Include any chrome-leak warnings from Step 3 lint, or "none" if clean.)
 ```
 
 ## Content Architecture Notes
@@ -291,7 +344,7 @@ Understanding how the book content flows through the system helps diagnose issue
 2. **At build time**, `src/pages/book/[...slug].astro` reads each file via `fs.readFileSync`
 3. **Frontmatter is parsed** to extract metadata (title, subtitle, chapter number, part, reading time, lastGeneratedBy)
 4. **Body is parsed** by `src/lib/book/markdown-parser.ts` into structured `ContentBlock[]` (text, code, callout blocks)
-5. **All 13 chapters** across **4 parts** are serialized as JSON props to the React `BookReader` component
+5. **All chapters** in the Chapter Manifest (currently across **4 parts**) are serialized as JSON props to the React `BookReader` component
 6. **Images** are referenced as `/book/images/filename.png` in the markdown and served from `public/book/images/`
 
 ## Chapter File Format
