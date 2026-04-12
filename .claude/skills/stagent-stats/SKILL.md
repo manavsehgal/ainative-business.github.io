@@ -1,9 +1,9 @@
 ---
 name: stagent-stats
-description: Collect development metrics (LOC, tests, commits, features, infrastructure) from the Stagent project and write a timestamped report to stagent-stats.md. Then update all stat locations across the marketing website. Use when the user asks to check project stats, update metrics, or track development velocity.
+description: Collect development metrics (LOC, tests, commits, features, infrastructure, velocity, business functionality) from the Stagent project and write a timestamped report to stagent-stats.md and stats/YYYY-MM-DD-HHMM.md. Then update all stat locations across the marketing website. Use when the user asks to check project stats, update metrics, or track development velocity.
 ---
 
-This skill collects comprehensive development metrics from the Stagent project and writes them to `stagent-stats.md` as a timestamped entry. Each run appends a new entry, building a time-series of project velocity. It then propagates the collected stats to all locations across the marketing website.
+This skill collects comprehensive development metrics from the Stagent project and writes them to `stagent-stats.md` as a timestamped entry and saves each snapshot to an individual file in `stats/`. Each run appends a new entry, building a time-series of project velocity with per-day and per-feature efficiency ratios. It then propagates the collected stats to all locations across the marketing website.
 
 ## Target Project
 
@@ -54,6 +54,7 @@ git rev-list --count HEAD
 git log --oneline --since="$(git log --reverse --format='%aI' | head -1)" | wc -l
 git log --reverse --format='%aI' | head -1  # first commit timestamp
 git log -1 --format='%aI'                   # latest commit timestamp
+git log --format='%ad' --date=short | sort -u | wc -l  # active development days
 ```
 
 Compute:
@@ -61,6 +62,18 @@ Compute:
 - Hours elapsed (latest - first commit)
 - Commits per hour (commits / hours)
 - LOC per hour (total LOC / hours)
+- Calendar days elapsed (date diff between first and latest commit, in days)
+- Active development days (unique dates with at least 1 commit)
+- Commits per calendar day (commits / calendar days)
+- Commits per active day (commits / active days)
+- LOC per calendar day (total LOC / calendar days)
+- LOC per active day (total LOC / active days)
+- Features per calendar day (completed features / calendar days) — uses feature count from step 5
+- Features per active day (completed features / active days) — uses feature count from step 5
+- LOC per commit (total LOC / commits)
+- LOC per feature (total LOC / completed features)
+- Tests per feature (total tests / completed features) — uses test count from step 3
+- Hours per feature (hours elapsed / completed features)
 
 ### 5. Feature Status
 
@@ -100,6 +113,71 @@ find /Users/manavsehgal/Developer/stagent/src -path "*/workflows/*" -name "*.ts"
 
 Note TypeScript strict mode and ESLint config status if available.
 
+### 7b. Business Functionality
+
+Count the pre-built business primitives that ship with the product — these represent out-of-the-box value, not just code infrastructure.
+
+```bash
+cd /Users/manavsehgal/Developer/stagent/
+
+# Workflow blueprints (YAML files in builtins)
+find src/lib/workflows/blueprints/builtins -name "*.yaml" 2>/dev/null | wc -l
+
+# Built-in agent profiles (directories in builtins)
+find src/lib/agents/profiles/builtins -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l
+
+# Runtime providers (entries in catalog)
+grep -c "id:" src/lib/agents/runtime/catalog.ts 2>/dev/null || echo 0
+
+# Workflow execution patterns
+grep -c "'" src/lib/workflows/types.ts 2>/dev/null | head -1
+# Better: manually count from the WorkflowPattern union type (sequence, planner-executor, checkpoint, loop, parallel, swarm)
+
+# Channel integrations (adapter files)
+find src/lib/channels -name "*-adapter.ts" 2>/dev/null | wc -l
+
+# Permission presets
+grep -c "id:" src/lib/settings/permission-presets.ts 2>/dev/null || echo 0
+
+# Table templates (pre-built structured data templates)
+grep -c "name:" src/lib/data/seed-data/table-templates.ts 2>/dev/null || echo 0
+
+# Column data types (from constants)
+grep -c "'" src/lib/constants/table-status.ts 2>/dev/null | head -1
+# Better: count entries in the ColumnType enum/union (text, number, date, boolean, select, url, email, relation, computed)
+
+# Notification types
+grep "permission_required\|task_completed\|task_failed\|agent_message\|budget_alert\|context_proposal\|tier_limit" src/lib/db/schema.ts | head -1
+# Better: count distinct notification type values from the schema enum
+
+# Activity/metering types (from usageLedger schema)
+grep "task_run\|task_resume\|workflow_step\|scheduled_firing\|task_assist\|profile_test\|pattern_extraction\|context_summarization\|chat_turn\|profile_assist\|manual_force_bypass" src/lib/db/schema.ts | head -1
+# Better: count distinct activity type values from the schema enum
+
+# Schedule types
+grep -c "scheduled\|heartbeat" src/lib/db/schema.ts 2>/dev/null | head -1
+# Count: scheduled, heartbeat
+
+# Seed data generators (exported create* functions)
+grep -c "export.*function\|export.*const.*create\|export.*const.*seed\|export.*const.*upsert" src/lib/data/seed-data/*.ts 2>/dev/null
+```
+
+Record these business functionality counts:
+
+| Primitive | Description |
+|-----------|-------------|
+| Workflow blueprints | Pre-built YAML workflow templates (e.g., sprint-planning, content-marketing) |
+| Agent profiles (built-in) | Ready-to-use specialist agent configurations |
+| Runtime providers | AI execution backends (Claude, OpenAI, Ollama, etc.) |
+| Workflow patterns | Execution models (sequence, parallel, swarm, loop, etc.) |
+| Channel integrations | Bidirectional messaging adapters (Slack, Telegram, webhook) |
+| Permission presets | Layered approval configurations (read-only, git-safe, full-auto) |
+| Table templates | Pre-built structured data templates across business categories |
+| Column data types | Available data types for user tables |
+| Notification types | Distinct alert/event categories |
+| Activity types | Usage metering classifications |
+| Schedule types | Execution timing models (cron, heartbeat) |
+
 ### 8. Write Report
 
 Read the existing `stagent-stats.md` file if it exists. Append a new timestamped entry in this format:
@@ -118,12 +196,35 @@ Read the existing `stagent-stats.md` file if it exists. Append a new timestamped
 | Git | Hours elapsed | XX.X |
 | Git | Commits/hour | X.X |
 | Git | LOC/hour | XXX |
+| Velocity | Calendar days | XX |
+| Velocity | Active dev days | XX |
+| Velocity | Commits/day (calendar) | X.X |
+| Velocity | Commits/day (active) | X.X |
+| Velocity | LOC/day (calendar) | X,XXX |
+| Velocity | LOC/day (active) | X,XXX |
+| Velocity | Features/day (calendar) | X.X |
+| Velocity | Features/day (active) | X.X |
+| Velocity | LOC/commit | XXX |
+| Velocity | LOC/feature | XXX |
+| Velocity | Tests/feature | X.X |
+| Velocity | Hours/feature | X.X |
 | Features | Completed | XX/XX |
 | Infra | API routes | XX |
 | Infra | DB tables | XX |
 | Infra | UI components | XX |
 | Infra | Pages | XX |
 | Infra | Agent profiles | XX |
+| Business | Workflow blueprints | XX |
+| Business | Built-in agent profiles | XX |
+| Business | Runtime providers | X |
+| Business | Workflow patterns | X |
+| Business | Channel integrations | X |
+| Business | Permission presets | X |
+| Business | Table templates | XX |
+| Business | Column data types | X |
+| Business | Notification types | X |
+| Business | Activity types | XX |
+| Business | Schedule types | X |
 ```
 
 ### 9. Trend Comparison
@@ -132,8 +233,30 @@ If previous entries exist in `stagent-stats.md`, compute and display deltas:
 - LOC: +X,XXX since last snapshot
 - Tests: +XX since last snapshot
 - Commits: +XX since last snapshot
+- Commits/day (active): X.X → X.X
+- Features/day (active): X.X → X.X
+- LOC/commit: XXX → XXX
+- Hours/feature: X.X → X.X
 
-Format deltas with arrows: `↑ +1,234 LOC` or `→ no change`.
+Format deltas with arrows: `↑ +1,234 LOC` or `→ no change`. For rate metrics, show the previous → current value.
+
+### 10. Save Snapshot to `stats/`
+
+After writing the snapshot to `stagent-stats.md`, also save it as an individual timestamped file in the `stats/` directory within this project:
+
+```bash
+mkdir -p stats/
+```
+
+Write the full snapshot content (metrics table, velocity section, trend comparison, feature status, and notes) to:
+
+```
+stats/YYYY-MM-DD-HHMM.md
+```
+
+Example: `stats/2026-04-12-1430.md`
+
+This creates a per-snapshot archive for easy git diffing, individual review, and programmatic consumption. Include the saved file path in the final output summary.
 
 ## Updating the Website
 
@@ -334,7 +457,9 @@ Report any remaining mismatches to the user.
 
 After writing the report and updating the website, summarize:
 1. Key metrics from the latest snapshot
-2. Trend deltas vs previous snapshot
-3. All website files that were updated
-4. Build verification result
-5. Any consistency issues found
+2. Velocity dashboard highlights (commits/day, LOC/day, features/day, hours/feature)
+3. Trend deltas vs previous snapshot (including velocity rate changes)
+4. All website files that were updated
+5. Build verification result
+6. Any consistency issues found
+7. Path to the saved snapshot file in `stats/`

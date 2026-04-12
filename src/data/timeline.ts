@@ -21,8 +21,8 @@ export interface TimelineItem {
 }
 
 export const metrics = [
-  { label: 'Lines of Code', target: 325, suffix: 'K+' },
-  { label: 'AI Agents', target: 52, suffix: '+' },
+  { label: 'Lines of Code', target: 345, suffix: 'K+' },
+  { label: 'AI Agents', target: 56, suffix: '+' },
   { label: 'Production Systems', target: 8, suffix: '' },
   { label: 'Projects', target: 18, suffix: '+' },
   { label: 'Blog Articles', target: 68, suffix: '+' },
@@ -214,13 +214,13 @@ export const timeline: TimelineItem[] = [
     project: 'Stagent',
     role: 'Your business, run by AI',
     description:
-      'Shipped a local-first AI business operating system that orchestrates agents across your entire company — with 5-runtime execution, smart routing, governance, cost controls, chat UI, multi-channel delivery (Slack/Telegram), 31 workflow patterns, 45+ database tables, and a living book documenting the journey.',
+      'Shipped a local-first AI business operating system that orchestrates agents across your entire company — with 6-runtime execution, smart routing, governance, cost controls, chat UI, multi-channel delivery (Slack/Telegram), 37 workflow patterns, 46+ database tables, and a living book documenting the journey.',
     achievements: [
-      'Shipped 137 features across 39 operator surfaces in 31 days — open source, local-first',
-      '5-runtime architecture with smart router, 52+ agent profiles, and 31 workflow patterns',
+      'Shipped 153 features across 42 operator surfaces in 36 days — open source, local-first',
+      '6-runtime architecture with smart router, 56+ agent profiles, and 37 workflow patterns',
       'Full chat system, heartbeat scheduling, multi-channel delivery, and human-in-the-loop governance',
     ],
-    stats: '119K LOC · 487 tests · 137/149 features shipped',
+    stats: '139K LOC · 1,005 tests · 153/198 features shipped',
     techWave: 'The Harness Layer',
     techCategories: [
       { label: 'Frontend', items: ['Next.js 16', 'React 19', 'Tailwind v4', 'shadcn/ui'] },

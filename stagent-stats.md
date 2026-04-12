@@ -333,3 +333,76 @@
 - Steady cadence: 0.39 commits/hour sustained over 753 hours (~31 days)
 - Major scope additions: Tables/Structured Data (14 features) and PLG Monetization (17 features) — product is evolving from local-first OS to commercial PLG platform
 - Test growth (+61) is the strongest in any snapshot, signaling a quality push alongside scope expansion
+
+---
+
+## [2026-04-12 14:30] Metrics Snapshot
+
+| Category | Metric | Value |
+|----------|--------|-------|
+| LOC | TypeScript (production) | 109,233 |
+| LOC | TypeScript (tests) | 14,821 |
+| LOC | **Total** | **139,478** |
+| Tests | Vitest | 1,005 |
+| Tests | **Total** | **1,005** |
+| Git | Commits | 410 |
+| Git | Hours elapsed | 876.0 |
+| Git | Commits/hour | 0.47 |
+| Git | LOC/hour | 159.2 |
+| Velocity | Calendar days | 36 |
+| Velocity | Active dev days | 34 |
+| Velocity | Commits/day (calendar) | 11.4 |
+| Velocity | Commits/day (active) | 12.1 |
+| Velocity | LOC/day (calendar) | 3,874 |
+| Velocity | LOC/day (active) | 4,102 |
+| Velocity | Features/day (calendar) | 4.25 |
+| Velocity | Features/day (active) | 4.50 |
+| Velocity | LOC/commit | 340 |
+| Velocity | LOC/feature | 912 |
+| Velocity | Tests/feature | 6.6 |
+| Velocity | Hours/feature | 5.7 |
+| Features | Completed | 153/198 |
+| Infra | API routes | 173 |
+| Infra | DB tables | 46 |
+| Infra | UI components | 311 |
+| Infra | Pages | 42 |
+| Infra | Agent profiles | 56 |
+| Infra | Service modules | 35 |
+| Infra | Workflow patterns | 37 |
+| Business | Workflow blueprints | 13 |
+| Business | Built-in agent profiles | 21 |
+| Business | Runtime providers | 6 |
+| Business | Workflow patterns | 6 |
+| Business | Channel integrations | 3 |
+| Business | Permission presets | 4 |
+| Business | Table templates | 76 |
+
+### Feature Status
+- 153 completed, 8 in-progress, 1 deferred, 36 planned
+- In-progress: chat-settings-tool, database-snapshot-backup, dynamic-slash-commands, runtime-validation-hardening, profile-environment-sync, fix-exported-bundle-registration, fix-sidebar-reactive-update, fix-sidebar-accordion-behavior
+- Deferred: npm-publish-readiness
+- Planned: 36 features including app-builder suite (app-cli-tools, app-conflict-resolution, etc.), marketplace features, workflow-run-history, upgrade-detection/session, and more
+- Feature scope expanded from 149 → 198 with major app-builder and marketplace initiatives
+
+### Trend (vs previous snapshot — ~5 days of development)
+- ↑ +20,623 LOC (118,855 → 139,478)
+- ↑ +518 tests (487 → 1,005) — **tests more than doubled**
+- ↑ +116 commits (294 → 410)
+- ↑ +16 features completed (137/149 → 153/198)
+- ↑ +24 API routes (149 → 173)
+- ↑ +1 DB table (45 → 46)
+- ↑ +25 UI components (286 → 311)
+- ↑ +3 pages (39 → 42)
+- ↑ +4 agent profiles (52 → 56)
+- ↑ +2 service modules (33 → 35)
+- ↑ +6 workflow patterns (31 → 37)
+- Commits/hour: 0.39 → 0.47 (+20%)
+- LOC/hour: 157.8 → 159.2
+
+### Notes
+- LOC counted via `tokei` — TypeScript is 88.9% of codebase (TS+TSX code / total code)
+- Tests more than doubled (+518) — the largest test growth in any snapshot, indicating a major quality and reliability push
+- Commits/hour jumped 20% (0.39 → 0.47), the highest velocity rate recorded
+- Roadmap scope expanded by 49 features (149 → 198), driven by app-builder and marketplace vision
+- 4 new agent profiles added, growing the built-in catalog to 56
+- Hours/feature dropped to 5.7 (from ~5.5 implied last snapshot), sustaining remarkable efficiency
