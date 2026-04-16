@@ -792,6 +792,439 @@ for i in imports:
 
 </EndpointCard>
 
+## Repository Import
+
+Import entire GitHub repositories of skills in a multi-step flow: scan the repo to discover available skills, preview adaptations with dedup detection, confirm the batch import, then check and apply upstream updates later. Each step feeds into the next.
+
+### Scan Repository
+
+<EndpointCard method="POST" path="/api/profiles/import-repo/scan" description="Scan a GitHub repository to discover importable skill directories. Returns a list of discovered skills with their detected formats (stagent-native or SKILL.md-only).">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'url', type: 'string (URL)', required: true, description: 'GitHub URL of the repository to scan (github.com or raw.githubusercontent.com)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'owner', type: 'string', required: true, description: 'GitHub repository owner' },
+  { name: 'repo', type: 'string', required: true, description: 'Repository name' },
+  { name: 'branch', type: 'string', required: true, description: 'Default branch name' },
+  { name: 'commitSha', type: 'string', required: true, description: 'Current HEAD commit SHA' },
+  { name: 'repoUrl', type: 'string', required: true, description: 'Canonical repository URL' },
+  { name: 'skills', type: 'DiscoveredSkill[]', required: true, description: 'Array of discovered skills with path, name, and format' },
+]} />
+
+Scan a skills repository to see what profiles are available before committing to an import:
+
+<CodeExample ts={`// Step 1: Scan a GitHub repository for importable skills
+interface DiscoveredSkill {
+  path: string;
+  name: string;
+  format: 'stagent' | 'skill-md-only';
+}
+interface ScanResult {
+  owner: string;
+  repo: string;
+  branch: string;
+  commitSha: string;
+  repoUrl: string;
+  skills: DiscoveredSkill[];
+}
+
+const scan: ScanResult = await fetch('/api/profiles/import-repo/scan', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    url: 'https://github.com/acme/stagent-skills',
+  }),
+}).then(r => r.json());
+
+console.log(\`Found \${scan.skills.length} skills in \${scan.owner}/\${scan.repo}@\${scan.branch}\`);
+scan.skills.forEach(s => console.log(\`  \${s.name} (\${s.format}) — \${s.path}\`));`} python={`import requests
+
+# Step 1: Scan a GitHub repository for importable skills
+response = requests.post(
+    "http://localhost:3000/api/profiles/import-repo/scan",
+    json={"url": "https://github.com/acme/stagent-skills"},
+)
+scan: dict = response.json()
+
+print(f"Found {len(scan['skills'])} skills in {scan['owner']}/{scan['repo']}@{scan['branch']}")
+for s in scan["skills"]:
+    print(f"  {s['name']} ({s['format']}) — {s['path']}")`} />
+
+Example response:
+
+```json
+{
+  "owner": "acme",
+  "repo": "stagent-skills",
+  "branch": "main",
+  "commitSha": "a1b2c3d4e5f6789012345678901234567890abcd",
+  "repoUrl": "https://github.com/acme/stagent-skills",
+  "skills": [
+    { "path": ".claude/skills/security-reviewer", "name": "security-reviewer", "format": "stagent" },
+    { "path": ".claude/skills/data-analyst", "name": "data-analyst", "format": "skill-md-only" }
+  ]
+}
+```
+
+**Errors:** `400` — Invalid or missing URL, scan failure
+
+</EndpointCard>
+
+### Preview Repository Import
+
+<EndpointCard method="POST" path="/api/profiles/import-repo/preview" description="Fetch selected skills from a scanned repository, run format adaptation, and check for duplicates against existing profiles. Returns previews with adapted configs and dedup status.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'owner', type: 'string', required: true, description: 'Repository owner from scan result' },
+  { name: 'repo', type: 'string', required: true, description: 'Repository name from scan result' },
+  { name: 'branch', type: 'string', required: true, description: 'Branch name from scan result' },
+  { name: 'commitSha', type: 'string', required: true, description: 'Commit SHA from scan result' },
+  { name: 'repoUrl', type: 'string', required: true, description: 'Repository URL from scan result' },
+  { name: 'repoReadme', type: 'string', required: false, description: 'Repository README content for enrichment context' },
+  { name: 'skills', type: 'DiscoveredSkill[]', required: true, description: 'Skills to preview (subset of discovered skills)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'previews', type: 'object[]', required: true, description: 'Per-skill preview with adapted config, SKILL.md, and dedup result' },
+  { name: 'previews[].skill', type: 'object', required: true, description: 'Original discovered skill metadata' },
+  { name: 'previews[].config', type: 'object | null', required: true, description: 'Adapted profile config (null on fetch error)' },
+  { name: 'previews[].skillMd', type: 'string | null', required: true, description: 'Adapted SKILL.md content' },
+  { name: 'previews[].dedup', type: 'object | null', required: true, description: 'Dedup result: status (new/duplicate/similar), matchReason, similarity, matchedProfileId' },
+  { name: 'previews[].error', type: 'string | null', required: true, description: 'Error message if fetch/adaptation failed' },
+]} />
+
+Preview skills before importing — inspect dedup warnings and adapted configs to decide which to import:
+
+<CodeExample ts={`// Step 2: Preview selected skills with dedup detection
+interface Preview {
+  skill: { name: string; path: string };
+  config: { id: string; name: string } | null;
+  dedup: { status: string; similarity?: number; matchedProfileId?: string } | null;
+  error: string | null;
+}
+
+const { previews }: { previews: Preview[] } = await fetch('/api/profiles/import-repo/preview', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    owner: scan.owner,
+    repo: scan.repo,
+    branch: scan.branch,
+    commitSha: scan.commitSha,
+    repoUrl: scan.repoUrl,
+    skills: scan.skills,
+  }),
+}).then(r => r.json());
+
+previews.forEach(p => {
+  if (p.error) {
+    console.log(\`  [ERROR] \${p.skill.name}: \${p.error}\`);
+  } else if (p.dedup?.status === 'duplicate') {
+    console.log(\`  [SKIP] \${p.config?.id} — duplicate of \${p.dedup.matchedProfileId}\`);
+  } else if (p.dedup?.status === 'similar') {
+    console.log(\`  [WARN] \${p.config?.id} — \${p.dedup.similarity?.toFixed(0)}% similar to \${p.dedup.matchedProfileId}\`);
+  } else {
+    console.log(\`  [NEW] \${p.config?.id}\`);
+  }
+});`} python={`import requests
+
+# Step 2: Preview selected skills with dedup detection
+response = requests.post(
+    "http://localhost:3000/api/profiles/import-repo/preview",
+    json={
+        "owner": scan["owner"],
+        "repo": scan["repo"],
+        "branch": scan["branch"],
+        "commitSha": scan["commitSha"],
+        "repoUrl": scan["repoUrl"],
+        "skills": scan["skills"],
+    },
+)
+previews: list[dict] = response.json()["previews"]
+
+for p in previews:
+    if p["error"]:
+        print(f"  [ERROR] {p['skill']['name']}: {p['error']}")
+    elif p["dedup"] and p["dedup"]["status"] == "duplicate":
+        print(f"  [SKIP] {p['config']['id']} — duplicate of {p['dedup']['matchedProfileId']}")
+    elif p["dedup"] and p["dedup"]["status"] == "similar":
+        sim = p["dedup"]["similarity"]
+        print(f"  [WARN] {p['config']['id']} — {sim:.0f}% similar to {p['dedup']['matchedProfileId']}")
+    else:
+        print(f"  [NEW] {p['config']['id']}")`} />
+
+**Errors:** `400` — Missing required fields or preview failure
+
+</EndpointCard>
+
+### Confirm Repository Import
+
+<EndpointCard method="POST" path="/api/profiles/import-repo/confirm" description="Execute a batch import of previewed profiles. Each item specifies an action: import (create new), replace (overwrite existing), or skip. Records a repo import entry in the database. Returns counts and any per-profile errors.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'repoUrl', type: 'string', required: true, description: 'Repository URL' },
+  { name: 'owner', type: 'string', required: true, description: 'Repository owner' },
+  { name: 'repo', type: 'string', required: true, description: 'Repository name' },
+  { name: 'branch', type: 'string', required: true, description: 'Branch name' },
+  { name: 'commitSha', type: 'string', required: true, description: 'Commit SHA at import time' },
+  { name: 'imports', type: 'ImportItem[]', required: true, description: 'Array of import items with config, skillMd, and action' },
+  { name: 'imports[].config', type: 'ProfileConfig', required: true, description: 'Adapted profile config from preview' },
+  { name: 'imports[].skillMd', type: 'string', required: true, description: 'Adapted SKILL.md content from preview' },
+  { name: 'imports[].action', type: 'enum', required: true, description: 'import (create new), replace (overwrite existing), or skip' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'ok', type: 'boolean', required: true, description: 'Overall success indicator' },
+  { name: 'imported', type: 'number', required: true, description: 'Number of newly created profiles' },
+  { name: 'replaced', type: 'number', required: true, description: 'Number of replaced profiles' },
+  { name: 'skipped', type: 'number', required: true, description: 'Number of skipped profiles' },
+  { name: 'profileIds', type: 'string[]', required: true, description: 'IDs of successfully imported/replaced profiles' },
+  { name: 'errors', type: 'string[]', required: false, description: 'Per-profile error messages (omitted if none)' },
+]} />
+
+Confirm the import after reviewing previews — decide the action for each profile:
+
+<CodeExample ts={`// Step 3: Confirm the import with per-profile actions
+interface ImportResult {
+  ok: boolean;
+  imported: number;
+  replaced: number;
+  skipped: number;
+  profileIds: string[];
+  errors?: string[];
+}
+
+const result: ImportResult = await fetch('/api/profiles/import-repo/confirm', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    repoUrl: 'https://github.com/acme/stagent-skills',
+    owner: 'acme',
+    repo: 'stagent-skills',
+    branch: 'main',
+    commitSha: 'a1b2c3d4e5f6789012345678901234567890abcd',
+    imports: previews
+      .filter(p => p.config && !p.error)
+      .map(p => ({
+        config: p.config,
+        skillMd: p.skillMd,
+        // Skip duplicates, replace similar, import new
+        action: p.dedup?.status === 'duplicate' ? 'skip'
+              : p.dedup?.status === 'similar'    ? 'replace'
+              : 'import',
+      })),
+  }),
+}).then(r => r.json());
+
+console.log(\`Imported: \${result.imported}, Replaced: \${result.replaced}, Skipped: \${result.skipped}\`);
+console.log(\`Profile IDs: \${result.profileIds.join(', ')}\`);
+if (result.errors?.length) {
+  console.error(\`Errors: \${result.errors.join(', ')}\`);
+}`} python={`import requests
+
+# Step 3: Confirm the import with per-profile actions
+def action_for(p):
+    if p["dedup"] and p["dedup"]["status"] == "duplicate":
+        return "skip"
+    if p["dedup"] and p["dedup"]["status"] == "similar":
+        return "replace"
+    return "import"
+
+imports = [
+    {"config": p["config"], "skillMd": p["skillMd"], "action": action_for(p)}
+    for p in previews if p["config"] and not p["error"]
+]
+
+result = requests.post(
+    "http://localhost:3000/api/profiles/import-repo/confirm",
+    json={
+        "repoUrl": "https://github.com/acme/stagent-skills",
+        "owner": "acme",
+        "repo": "stagent-skills",
+        "branch": "main",
+        "commitSha": "a1b2c3d4e5f6789012345678901234567890abcd",
+        "imports": imports,
+    },
+).json()
+
+print(f"Imported: {result['imported']}, Replaced: {result['replaced']}, Skipped: {result['skipped']}")
+print(f"Profile IDs: {', '.join(result['profileIds'])}")
+if result.get("errors"):
+    print(f"Errors: {', '.join(result['errors'])}")`} />
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "imported": 2,
+  "replaced": 0,
+  "skipped": 1,
+  "profileIds": ["acme-security-reviewer", "acme-data-analyst"]
+}
+```
+
+**Errors:** `400` — Missing required fields or validation failure
+
+</EndpointCard>
+
+### Check for Updates
+
+<EndpointCard method="POST" path="/api/profiles/import-repo/check-updates" description="Check whether imported profiles have new versions available in their source repositories. Compares local content hashes against the current remote SKILL.md. Groups profiles by repo to minimize GitHub API calls.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'repoImportId', type: 'string', required: false, description: 'Check all profiles from a specific repo import record' },
+  { name: 'profileId', type: 'string', required: false, description: 'Check a single profile by ID (requires importMeta)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'hasUpdates', type: 'boolean', required: true, description: 'True if any profile has an available update' },
+  { name: 'updates', type: 'object[]', required: true, description: 'Per-profile update status' },
+  { name: 'updates[].profileId', type: 'string', required: true, description: 'Profile identifier' },
+  { name: 'updates[].profileName', type: 'string', required: true, description: 'Profile display name' },
+  { name: 'updates[].localHash', type: 'string', required: true, description: 'Content hash of the locally stored SKILL.md' },
+  { name: 'updates[].remoteHash', type: 'string', required: true, description: 'Content hash of the remote SKILL.md (or "unknown"/"fetch-error")' },
+  { name: 'updates[].hasUpdate', type: 'boolean', required: true, description: 'True if remote hash differs from local hash' },
+]} />
+
+Check for updates after a repo import — useful for a periodic "keep profiles fresh" workflow:
+
+<CodeExample ts={`// Step 4: Check if any imported profiles have updates available
+interface UpdateCheck {
+  profileId: string;
+  profileName: string;
+  localHash: string;
+  remoteHash: string;
+  hasUpdate: boolean;
+}
+
+const { hasUpdates, updates }: { hasUpdates: boolean; updates: UpdateCheck[] } =
+  await fetch('/api/profiles/import-repo/check-updates', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoImportId: 'reimport-uuid-here' }),
+  }).then(r => r.json());
+
+if (!hasUpdates) {
+  console.log('All profiles are up to date');
+} else {
+  updates.filter(u => u.hasUpdate).forEach(u => {
+    console.log(\`\${u.profileName} — update available\`);
+    console.log(\`  Local:  \${u.localHash}\`);
+    console.log(\`  Remote: \${u.remoteHash}\`);
+  });
+}`} python={`import requests
+
+# Step 4: Check if any imported profiles have updates available
+response = requests.post(
+    "http://localhost:3000/api/profiles/import-repo/check-updates",
+    json={"repoImportId": "reimport-uuid-here"},
+)
+data: dict = response.json()
+
+if not data["hasUpdates"]:
+    print("All profiles are up to date")
+else:
+    for u in data["updates"]:
+        if u["hasUpdate"]:
+            print(f"{u['profileName']} — update available")
+            print(f"  Local:  {u['localHash']}")
+            print(f"  Remote: {u['remoteHash']}")`} />
+
+Example response:
+
+```json
+{
+  "hasUpdates": true,
+  "updates": [
+    {
+      "profileId": "acme-security-reviewer",
+      "profileName": "Acme Security Reviewer",
+      "localHash": "sha256-abc123",
+      "remoteHash": "sha256-def456",
+      "hasUpdate": true
+    },
+    {
+      "profileId": "acme-data-analyst",
+      "profileName": "Acme Data Analyst",
+      "localHash": "sha256-789xyz",
+      "remoteHash": "sha256-789xyz",
+      "hasUpdate": false
+    }
+  ]
+}
+```
+
+**Errors:** `400` — Neither `repoImportId` nor `profileId` provided, or profile has no import metadata, `404` — Repo import record not found
+
+</EndpointCard>
+
+### Apply Updates
+
+<EndpointCard method="POST" path="/api/profiles/import-repo/apply-updates" description="Apply accepted updates to imported profiles. Fetches the latest SKILL.md from the source repository, re-runs format enrichment, updates the local profile, and refreshes the content hash. Profiles where accept is false are skipped without modification.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'updates', type: 'object[]', required: true, description: 'Array of update decisions' },
+  { name: 'updates[].profileId', type: 'string', required: true, description: 'Profile ID to update' },
+  { name: 'updates[].accept', type: 'boolean', required: true, description: 'Whether to apply this update (false = skip)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'ok', type: 'boolean', required: true, description: 'Overall success indicator' },
+  { name: 'applied', type: 'number', required: true, description: 'Number of profiles successfully updated' },
+  { name: 'skipped', type: 'number', required: true, description: 'Number of profiles skipped (accept: false)' },
+  { name: 'errors', type: 'string[]', required: false, description: 'Per-profile error messages (omitted if none)' },
+]} />
+
+Apply updates for profiles where updates are available — selectively accept or decline each update:
+
+<CodeExample ts={`// Step 5: Apply accepted updates, skip declined ones
+interface ApplyResult {
+  ok: boolean;
+  applied: number;
+  skipped: number;
+  errors?: string[];
+}
+
+// Only apply updates for profiles where hasUpdate is true
+const updateDecisions = updates.map(u => ({
+  profileId: u.profileId,
+  accept: u.hasUpdate,  // accept available updates, skip unchanged
+}));
+
+const result: ApplyResult = await fetch('/api/profiles/import-repo/apply-updates', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ updates: updateDecisions }),
+}).then(r => r.json());
+
+console.log(\`Applied: \${result.applied}, Skipped: \${result.skipped}\`);
+if (result.errors?.length) {
+  console.error(\`Errors: \${result.errors.join(', ')}\`);
+}`} python={`import requests
+
+# Step 5: Apply accepted updates, skip declined ones
+# Only apply updates for profiles where hasUpdate is true
+update_decisions = [
+    {"profileId": u["profileId"], "accept": u["hasUpdate"]}
+    for u in updates
+]
+
+result = requests.post(
+    "http://localhost:3000/api/profiles/import-repo/apply-updates",
+    json={"updates": update_decisions},
+).json()
+
+print(f"Applied: {result['applied']}, Skipped: {result['skipped']}")
+if result.get("errors"):
+    print(f"Errors: {', '.join(result['errors'])}")`} />
+
+**Errors:** `400` — No updates provided or missing import metadata on a profile
+
+</EndpointCard>
+
 ## Profile Config Schema
 
 Profiles are validated with Zod. The key fields for the `ProfileConfigSchema`:

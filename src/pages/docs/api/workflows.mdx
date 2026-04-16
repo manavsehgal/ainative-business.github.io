@@ -717,6 +717,320 @@ Example response:
 
 </EndpointCard>
 
+### Get Debug Info
+
+<EndpointCard method="GET" path="/api/workflows/{id}/debug" description="Analyze a failed workflow and return a structured debug report with root cause classification, event timeline, per-step errors, and tiered fix suggestions.">
+
+**Response** `200` — `DebugAnalysis` object
+
+<SchemaTable title="DebugAnalysis Object" fields={[
+  { name: 'rootCause.type', type: 'enum', required: true, description: 'Failure category: budget_exceeded, timeout, transient, or unknown' },
+  { name: 'rootCause.summary', type: 'string', required: true, description: 'Human-readable summary of the root cause' },
+  { name: 'timeline', type: 'TimelineEvent[]', required: true, description: 'Ordered list of agent log events with severity tagging' },
+  { name: 'suggestions', type: 'FixSuggestion[]', required: true, description: 'Tiered remediation suggestions (quick, better, best)' },
+  { name: 'stepErrors', type: 'object[]', required: true, description: 'Per-step errors extracted from workflow state' },
+]} />
+
+<SchemaTable title="TimelineEvent" fields={[
+  { name: 'timestamp', type: 'ISO 8601', required: true, description: 'When the event occurred' },
+  { name: 'event', type: 'string', required: true, description: 'Event type from agent logs' },
+  { name: 'severity', type: 'enum', required: true, description: 'success, warning, or error' },
+  { name: 'details', type: 'string', required: true, description: 'Error message, result snippet, or step name' },
+  { name: 'stepId', type: 'string', required: false, description: 'Step associated with this event (if any)' },
+]} />
+
+<SchemaTable title="FixSuggestion" fields={[
+  { name: 'tier', type: 'enum', required: true, description: 'Effort level: quick, better, or best' },
+  { name: 'title', type: 'string', required: true, description: 'Short suggestion title' },
+  { name: 'description', type: 'string', required: true, description: 'Detailed description of the fix' },
+  { name: 'action', type: 'string', required: false, description: 'Machine-readable action identifier (e.g. raise_budget, reduce_docs)' },
+]} />
+
+**Errors:** `500` — Workflow not found or analysis failed
+
+Fetch debug info after a workflow fails — use the root cause type and suggestions to build a guided recovery UI:
+
+<CodeExample ts={`// Fetch debug analysis for a failed workflow
+interface DebugAnalysis {
+  rootCause: { type: string; summary: string };
+  timeline: { timestamp: string; event: string; severity: string; details: string; stepId?: string }[];
+  suggestions: { tier: string; title: string; description: string; action?: string }[];
+  stepErrors: { stepId: string; stepName: string; error: string }[];
+}
+
+const response: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/debug");
+const debug: DebugAnalysis = await response.json();
+
+console.log(\`Root cause: \${debug.rootCause.type}\`);
+console.log(\`Summary: \${debug.rootCause.summary}\`);
+
+// Show step-level errors
+debug.stepErrors.forEach((e) => {
+  console.log(\`  Step "\${e.stepName}" failed: \${e.error}\`);
+});
+
+// Show the quickest fix
+const quickFix = debug.suggestions.find((s) => s.tier === "quick");
+if (quickFix) {
+  console.log(\`Quick fix: \${quickFix.title} — \${quickFix.description}\`);
+}`} python={`import requests
+
+# Fetch debug analysis for a failed workflow
+response = requests.get("http://localhost:3000/api/workflows/wf-4a7c-e2d1/debug")
+debug: dict = response.json()
+
+print(f"Root cause: {debug['rootCause']['type']}")
+print(f"Summary: {debug['rootCause']['summary']}")
+
+# Show step-level errors
+for e in debug["stepErrors"]:
+    print(f"  Step \"{e['stepName']}\" failed: {e['error']}")
+
+# Show the quickest fix
+quick_fix = next((s for s in debug["suggestions"] if s["tier"] == "quick"), None)
+if quick_fix:
+    print(f"Quick fix: {quick_fix['title']} — {quick_fix['description']}")`} />
+
+Example response for a budget-exceeded failure:
+
+```json
+{
+  "rootCause": {
+    "type": "budget_exceeded",
+    "summary": "The workflow exceeded its allocated budget before completing all steps."
+  },
+  "timeline": [
+    {
+      "timestamp": "2026-04-03T10:01:00.000Z",
+      "event": "step_started",
+      "severity": "warning",
+      "details": "research",
+      "stepId": "research"
+    },
+    {
+      "timestamp": "2026-04-03T10:04:11.000Z",
+      "event": "step_failed",
+      "severity": "error",
+      "details": "Budget exceeded: $5.00 limit reached",
+      "stepId": "research"
+    }
+  ],
+  "suggestions": [
+    {
+      "tier": "quick",
+      "title": "Raise budget to $10",
+      "description": "Increase the per-step or workflow budget cap to allow the agent more room to finish.",
+      "action": "raise_budget"
+    },
+    {
+      "tier": "better",
+      "title": "Reduce document context per step",
+      "description": "Attach fewer or smaller documents to each step so the agent consumes less budget on context.",
+      "action": "reduce_docs"
+    },
+    {
+      "tier": "best",
+      "title": "Split into smaller workflows",
+      "description": "Break the workflow into focused sub-workflows that each stay within budget.",
+      "action": "restructure"
+    }
+  ],
+  "stepErrors": [
+    {
+      "stepId": "research",
+      "stepName": "Research",
+      "error": "Budget exceeded: $5.00 limit reached"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Resume Workflow
+
+<EndpointCard method="POST" path="/api/workflows/{id}/resume" description="Manually resume a paused workflow, skipping any remaining delay. Returns 202 immediately and runs the resume asynchronously. The scheduler also resumes workflows automatically when their delay window expires.">
+
+**Response** `202 Accepted` — `{ "status": "resuming", "workflowId": "..." }`
+
+Resume is safe to call concurrently with the scheduler tick — the internal status transition is atomic, so a racing scheduler resume will complete silently without duplicating execution.
+
+**Errors:**
+- `404` — Workflow not found
+- `409` — Workflow is not in paused state (already resumed or was never paused)
+
+Resume a paused workflow immediately without waiting for the delay window to expire:
+
+<CodeExample ts={`// Resume a paused workflow — skips remaining delay
+const res: Response = await fetch("http://localhost:3000/api/workflows/wf-4a7c-e2d1/resume", {
+  method: "POST",
+});
+
+if (res.status === 202) {
+  const { workflowId }: { workflowId: string } = await res.json();
+  console.log(\`Workflow \${workflowId} is resuming\`);
+} else if (res.status === 409) {
+  const { status }: { error: string; status: string } = await res.json();
+  console.log(\`Cannot resume — current status: \${status}\`);
+}`} python={`import requests
+
+# Resume a paused workflow — skips remaining delay
+res = requests.post("http://localhost:3000/api/workflows/wf-4a7c-e2d1/resume")
+
+if res.status_code == 202:
+    data: dict = res.json()
+    print(f"Workflow {data['workflowId']} is resuming")
+elif res.status_code == 409:
+    data = res.json()
+    print(f"Cannot resume — current status: {data['status']}")`} />
+
+Example response:
+
+```json
+{
+  "status": "resuming",
+  "workflowId": "wf-4a7c-e2d1"
+}
+```
+
+</EndpointCard>
+
+### Optimize Workflow
+
+<EndpointCard method="POST" path="/api/workflows/optimize" description="Analyze a workflow definition and return data-driven optimization suggestions covering document binding efficiency, budget estimates, runtime recommendations, and pattern insights. Each sub-analysis is independent — partial results are returned even if one analysis fails.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'definition', type: 'WorkflowDefinition', required: true, description: 'The workflow definition to analyze (same shape as the definition field in Create Workflow)' },
+  { name: 'workflowId', type: 'string (UUID)', required: false, description: 'Existing workflow ID — enables budget estimates using historical execution data' },
+]} />
+
+**Response** `200` — `{ "suggestions": OptimizationSuggestion[] }`
+
+<SchemaTable title="OptimizationSuggestion" fields={[
+  { name: 'type', type: 'enum', required: true, description: 'Suggestion category: document_binding, budget_estimate, runtime_recommendation, or pattern_insight' },
+  { name: 'title', type: 'string', required: true, description: 'Short suggestion headline' },
+  { name: 'description', type: 'string', required: true, description: 'Detailed explanation with concrete numbers where available' },
+  { name: 'data', type: 'object', required: true, description: 'Analysis data backing the suggestion (shape varies by type)' },
+  { name: 'action.label', type: 'string', required: false, description: 'Human-readable label for the suggested action' },
+  { name: 'action.type', type: 'string', required: false, description: 'Machine-readable action identifier (e.g. set_runtime, change_pattern)' },
+  { name: 'action.payload', type: 'object', required: false, description: 'Payload to apply the action (e.g. { runtimeId: "claude-code" })' },
+]} />
+
+**Errors:** `400` — `definition` missing
+
+Analyze a workflow definition before executing it to catch efficiency issues early:
+
+<CodeExample ts={`// Analyze a workflow definition for optimization opportunities
+interface OptimizationSuggestion {
+  type: string;
+  title: string;
+  description: string;
+  data: Record<string, unknown>;
+  action?: { label: string; type: string; payload: Record<string, unknown> };
+}
+
+const response: Response = await fetch("http://localhost:3000/api/workflows/optimize", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    workflowId: "wf-4a7c-e2d1",
+    definition: {
+      pattern: "sequence",
+      steps: [
+        { id: "research", name: "Research", prompt: "Research competitor pricing pages" },
+        { id: "draft", name: "Draft", prompt: "Write pricing page draft", documentIds: ["doc-1", "doc-2", "doc-3", "doc-4"] },
+        { id: "review", name: "Review", prompt: "Review the draft for clarity", documentIds: ["doc-1", "doc-2", "doc-3", "doc-4"] },
+      ],
+    },
+  }),
+});
+const { suggestions }: { suggestions: OptimizationSuggestion[] } = await response.json();
+
+suggestions.forEach((s) => {
+  console.log(\`[\${s.type}] \${s.title}\`);
+  console.log(\`  \${s.description}\`);
+  if (s.action) {
+    console.log(\`  → \${s.action.label} (action: \${s.action.type})\`);
+  }
+});`} python={`import requests
+
+# Analyze a workflow definition for optimization opportunities
+response = requests.post("http://localhost:3000/api/workflows/optimize", json={
+    "workflowId": "wf-4a7c-e2d1",
+    "definition": {
+        "pattern": "sequence",
+        "steps": [
+            {"id": "research", "name": "Research", "prompt": "Research competitor pricing pages"},
+            {"id": "draft", "name": "Draft", "prompt": "Write pricing page draft", "documentIds": ["doc-1", "doc-2", "doc-3", "doc-4"]},
+            {"id": "review", "name": "Review", "prompt": "Review the draft for clarity", "documentIds": ["doc-1", "doc-2", "doc-3", "doc-4"]},
+        ],
+    },
+})
+data: dict = response.json()
+
+for s in data["suggestions"]:
+    print(f"[{s['type']}] {s['title']}")
+    print(f"  {s['description']}")
+    if s.get("action"):
+        print(f"  → {s['action']['label']} (action: {s['action']['type']})")`} />
+
+Example response:
+
+```json
+{
+  "suggestions": [
+    {
+      "type": "document_binding",
+      "title": "Reduce document injections with per-step binding",
+      "description": "4 docs × 3 steps = 12 injections → only 5 needed with per-step binding",
+      "data": {
+        "globalDocCount": 4,
+        "stepCount": 3,
+        "totalInjections": 12,
+        "perStepInjections": 5
+      },
+      "action": {
+        "label": "Enable per-step docs",
+        "type": "set_per_step_docs",
+        "payload": { "strategy": "per-step" }
+      }
+    },
+    {
+      "type": "budget_estimate",
+      "title": "Estimated cost: $0.3240",
+      "description": "Within budget cap of $15.00",
+      "data": {
+        "totalEstimatedCostUsd": 0.324,
+        "totalBudgetCapUsd": 15.0,
+        "overBudget": false,
+        "perStepBreakdown": [
+          { "name": "Research", "estimatedCostUsd": 0.085, "budgetCapUsd": 5.0 },
+          { "name": "Draft", "estimatedCostUsd": 0.142, "budgetCapUsd": 5.0 },
+          { "name": "Review", "estimatedCostUsd": 0.097, "budgetCapUsd": 5.0 }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "type": "runtime_recommendation",
+      "title": "Recommended runtime: claude-code",
+      "description": "Based on 24 similar runs with 92% success rate",
+      "data": {
+        "runtimeId": "claude-code",
+        "similarWorkflowStats": { "sampleCount": 24, "successRate": 0.92 }
+      },
+      "action": {
+        "label": "Use this runtime",
+        "type": "set_runtime",
+        "payload": { "runtimeId": "claude-code" }
+      }
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
 ## Workflow Statuses
 
 | Status | Description |

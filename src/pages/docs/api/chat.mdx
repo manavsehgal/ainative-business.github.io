@@ -571,6 +571,214 @@ requests.post(
 
 </EndpointCard>
 
+### Activate Skill
+
+<EndpointCard method="POST" path="/api/chat/conversations/{id}/skills/activate" description="Activate a skill for a conversation. By default uses replace mode, which swaps out any currently active skill. Add mode stacks the new skill alongside active ones. Returns a conflict object when replacing would cause tool-name collisions and force is not set.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'skillId', type: 'string', required: true, description: 'ID of the skill to activate' },
+  { name: 'mode', type: 'enum', required: false, description: 'replace (default) — swap current skill, or add — stack alongside existing skills' },
+  { name: 'force', type: 'boolean', required: false, description: 'Activate even when tool-name conflicts exist (default false)' },
+]} />
+
+<SchemaTable title="Success Response (200)" fields={[
+  { name: 'activatedSkillId', type: 'string', required: true, description: 'The skill that is now active' },
+  { name: 'activeSkillIds', type: 'string[]', required: true, description: 'Full list of currently active skill IDs' },
+  { name: 'skillName', type: 'string', required: true, description: 'Display name of the activated skill' },
+  { name: 'note', type: 'string', required: false, description: 'Optional informational note' },
+]} />
+
+<SchemaTable title="Conflict Response (200 — requiresConfirmation)" fields={[
+  { name: 'requiresConfirmation', type: 'boolean', required: true, description: 'Always true when conflicts are returned' },
+  { name: 'conflicts', type: 'Array', required: true, description: 'List of conflicting tool names' },
+  { name: 'hint', type: 'string', required: false, description: 'Suggested resolution message' },
+]} />
+
+Activate a skill in replace mode — if a skill is already active it will be swapped out:
+
+<CodeExample ts={`// Activate a skill for a conversation
+const result = await fetch('/api/chat/conversations/conv-d4e2-7b1a/skills/activate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ skillId: 'data-analyst', mode: 'replace' }),
+}).then((r) => r.json());
+
+if (result.requiresConfirmation) {
+  console.log('Conflicts detected:', result.conflicts);
+  // Re-send with force: true to override
+} else {
+  console.log(\`Active skill: \${result.skillName}\`);
+  console.log(\`Active skill IDs: \${result.activeSkillIds.join(', ')}\`);
+}`} python={`import requests
+
+# Activate a skill for a conversation
+response = requests.post(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/skills/activate",
+    json={"skillId": "data-analyst", "mode": "replace"},
+)
+result: dict = response.json()
+
+if result.get("requiresConfirmation"):
+    print("Conflicts detected:", result["conflicts"])
+    # Re-send with force=True to override
+else:
+    print(f"Active skill: {result['skillName']}")
+    print(f"Active skill IDs: {', '.join(result['activeSkillIds'])}")`} />
+
+Example success response:
+
+```json
+{
+  "activatedSkillId": "data-analyst",
+  "activeSkillIds": ["data-analyst"],
+  "skillName": "Data Analyst"
+}
+```
+
+**Errors:** `400` — Validation failure or logic error (e.g. unknown skill), `404` — Conversation or skill not found
+
+</EndpointCard>
+
+### Deactivate Skill
+
+<EndpointCard method="POST" path="/api/chat/conversations/{id}/skills/deactivate" description="Deactivate all skills for a conversation. Clears both the active skill and the full active skill list. Idempotent — safe to call when no skill is active.">
+
+**Response** `200` — `{ "previousSkillId": string | null }`
+
+The `previousSkillId` field returns the skill that was active before deactivation, or `null` if none was active.
+
+**Errors:** `404` — Conversation not found
+
+<CodeExample ts={`// Deactivate all skills for a conversation
+const result: { previousSkillId: string | null } = await fetch(
+  '/api/chat/conversations/conv-d4e2-7b1a/skills/deactivate',
+  { method: 'POST' }
+).then((r) => r.json());
+
+if (result.previousSkillId) {
+  console.log(\`Deactivated: \${result.previousSkillId}\`);
+} else {
+  console.log('No skill was active');
+}`} python={`import requests
+
+# Deactivate all skills for a conversation
+response = requests.post(
+    "http://localhost:3000/api/chat/conversations/conv-d4e2-7b1a/skills/deactivate"
+)
+result: dict = response.json()
+
+if result["previousSkillId"]:
+    print(f"Deactivated: {result['previousSkillId']}")
+else:
+    print("No skill was active")`} />
+
+</EndpointCard>
+
+### Export Conversation
+
+<EndpointCard method="POST" path="/api/chat/export" description="Export a conversation as a Markdown document. The document is saved to disk and registered in the documents table so it can be referenced in future messages or downloaded. Returns the new document ID and filename.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'title', type: 'string', required: true, description: 'Document title (1-200 chars)' },
+  { name: 'markdown', type: 'string', required: true, description: 'Full conversation content in Markdown format' },
+  { name: 'conversationId', type: 'string | null', required: false, description: 'Conversation to associate with the exported document' },
+]} />
+
+**Response** `201 Created` — `{ "id": string, "filename": string }`
+
+**Errors:** `400` — Missing or invalid title or markdown
+
+Export a rendered conversation to a reusable document — the returned `id` can be attached to future tasks or messages as context:
+
+<CodeExample ts={`// Export the current conversation as a Markdown document
+const result: { id: string; filename: string } = await fetch('/api/chat/export', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'Auth Debug Session — 2026-04-03',
+    markdown: '# Auth Debug Session\\n\\nWe investigated the 403 error on /login...\\n\\n## Root Cause\\n...',
+    conversationId: 'conv-d4e2-7b1a',
+  }),
+}).then((r) => r.json());
+
+console.log(\`Document ID: \${result.id}\`);
+console.log(\`Filename: \${result.filename}\`);`} python={`import requests
+
+# Export the current conversation as a Markdown document
+response = requests.post(
+    "http://localhost:3000/api/chat/export",
+    json={
+        "title": "Auth Debug Session — 2026-04-03",
+        "markdown": "# Auth Debug Session\n\nWe investigated the 403 error on /login...\n\n## Root Cause\n...",
+        "conversationId": "conv-d4e2-7b1a",
+    },
+)
+result: dict = response.json()
+
+print(f"Document ID: {result['id']}")
+print(f"Filename: {result['filename']}")`} />
+
+Example response:
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "filename": "1743674400000-Auth_Debug_Session___2026-04-03.md"
+}
+```
+
+</EndpointCard>
+
+### Search Files
+
+<EndpointCard method="GET" path="/api/chat/files/search" description="Search files in the active project's working directory for @-file mention autocomplete. Results are filtered using git ls-files to respect .gitignore. The working directory is resolved server-side from the projectId — clients never supply a path directly.">
+
+<ParamTable params={[
+  { name: 'q', type: 'string', required: false, description: 'File name or path fragment to search for. Empty returns recent files.' },
+  { name: 'projectId', type: 'string', required: false, description: 'Project ID — resolves the search root to the project working directory' },
+  { name: 'limit', type: 'number', required: false, description: 'Maximum results to return (1-50, default 20)' },
+]} />
+
+**Response** `200` — `{ "results": FileResult[] }`
+
+<SchemaTable title="FileResult" fields={[
+  { name: 'path', type: 'string', required: true, description: 'File path relative to the working directory' },
+  { name: 'name', type: 'string', required: true, description: 'File name (basename)' },
+]} />
+
+Search for files to power @-file mention autocomplete in the chat input:
+
+<CodeExample ts={`// Power @-file mention autocomplete
+const { results }: { results: Array<{ path: string; name: string }> } = await fetch(
+  '/api/chat/files/search?q=auth&projectId=proj-8f3a-4b2c&limit=10'
+).then((r) => r.json());
+
+results.forEach((f) => console.log(\`@\${f.path}\`));`} python={`import requests
+
+# Power @-file mention autocomplete
+response = requests.get(
+    "http://localhost:3000/api/chat/files/search",
+    params={"q": "auth", "projectId": "proj-8f3a-4b2c", "limit": 10},
+)
+data: dict = response.json()
+
+for f in data["results"]:
+    print(f"@{f['path']}")`} />
+
+Example response:
+
+```json
+{
+  "results": [
+    { "path": "src/auth/login.ts", "name": "login.ts" },
+    { "path": "src/auth/middleware.ts", "name": "middleware.ts" },
+    { "path": "tests/auth.test.ts", "name": "auth.test.ts" }
+  ]
+}
+```
+
+</EndpointCard>
+
 ### Search Entities
 
 <EndpointCard method="GET" path="/api/chat/entities/search" description="Search across all entity types (projects, tasks, workflows, documents, schedules, tables, profiles) for @-mention autocomplete. Returns results from all types in parallel, capped per type.">

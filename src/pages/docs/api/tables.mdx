@@ -1185,6 +1185,229 @@ print(f"Template saved: {template['id']}")`} />
 
 </EndpointCard>
 
+---
+
+## Enrichment
+
+AI-powered enrichment fills a target column by running an agent workflow for each eligible row. Use the plan endpoint to preview the strategy before committing, the execute endpoint to kick off the workflow, and the runs endpoint to check recent results.
+
+### Preview Enrichment Plan
+
+<EndpointCard method="POST" path="/api/tables/{id}/enrich/plan" description="Preview the enrichment strategy the agent will use before executing. Returns the inferred plan including strategy type, agent profile, step list, target column contract, and eligible row count.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'targetColumn', type: 'string', required: true, description: 'Column name to populate (1-128 chars)' },
+  { name: 'promptMode', type: 'enum', required: false, description: 'auto (default) or custom' },
+  { name: 'prompt', type: 'string', required: false, description: 'Custom prompt (required when promptMode is custom, max 8192 chars)' },
+  { name: 'filter', type: 'FilterSpec', required: false, description: 'Restrict enrichment to a subset of rows' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Override the default agent profile (1-128 chars)' },
+  { name: 'batchSize', type: 'number', required: false, description: 'Rows to process per workflow step (max 200)' },
+]} />
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'promptMode', type: 'enum', required: true, description: 'auto or custom' },
+  { name: 'strategy', type: 'enum', required: true, description: 'single-pass-lookup, single-pass-classify, or research-and-synthesize' },
+  { name: 'agentProfile', type: 'string', required: true, description: 'Agent profile that will execute the enrichment' },
+  { name: 'reasoning', type: 'string', required: true, description: 'Explanation of why this strategy was chosen' },
+  { name: 'steps', type: 'Array', required: true, description: 'Ordered list of enrichment steps with id, name, purpose, and prompt' },
+  { name: 'targetContract', type: 'object', required: true, description: 'Expected output shape: columnName, columnLabel, dataType, allowedOptions' },
+  { name: 'eligibleRowCount', type: 'number', required: true, description: 'Rows that will be processed (already-populated rows excluded)' },
+  { name: 'sampleBindings', type: 'Array', required: true, description: 'Sample row data used to build the plan' },
+]} />
+
+Preview the enrichment plan before committing — inspect the chosen strategy and eligible row count, then pass the plan directly to the execute endpoint:
+
+<CodeExample ts={`// Preview enrichment plan for a "sentiment" column
+const plan = await fetch('/api/tables/tbl-6c1d-9e7f/enrich/plan', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    targetColumn: 'sentiment',
+    promptMode: 'auto',
+    filter: { column: 'status', operator: 'eq', value: 'open' },
+  }),
+}).then((r) => r.json());
+
+console.log(\`Strategy: \${plan.strategy}\`);
+console.log(\`Eligible rows: \${plan.eligibleRowCount}\`);
+console.log(\`Steps: \${plan.steps.length}\`);`} python={`import requests
+
+# Preview enrichment plan for a "sentiment" column
+response = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/enrich/plan",
+    json={
+        "targetColumn": "sentiment",
+        "promptMode": "auto",
+        "filter": {"column": "status", "operator": "eq", "value": "open"},
+    },
+)
+plan: dict = response.json()
+
+print(f"Strategy: {plan['strategy']}")
+print(f"Eligible rows: {plan['eligibleRowCount']}")
+print(f"Steps: {len(plan['steps'])}")`} />
+
+Example response:
+
+```json
+{
+  "promptMode": "auto",
+  "strategy": "single-pass-classify",
+  "agentProfile": "data-analyst",
+  "reasoning": "Classifying feedback sentiment is a straightforward single-pass task with a fixed set of output labels.",
+  "steps": [
+    {
+      "id": "step-1",
+      "name": "Classify Sentiment",
+      "purpose": "Assign a sentiment label to each feedback entry",
+      "prompt": "Classify the following customer feedback as positive, neutral, or negative."
+    }
+  ],
+  "targetContract": {
+    "columnName": "sentiment",
+    "columnLabel": "Sentiment",
+    "dataType": "select",
+    "allowedOptions": ["positive", "neutral", "negative"]
+  },
+  "eligibleRowCount": 38,
+  "sampleBindings": [
+    { "customer": "Acme Corp", "feedback": "Excellent support and fast resolution" }
+  ]
+}
+```
+
+**Errors:** `400` — Validation failure or unknown column, `404` — Table not found
+
+</EndpointCard>
+
+### Execute Enrichment
+
+<EndpointCard method="POST" path="/api/tables/{id}/enrich" description="Start an AI enrichment workflow that fills a target column for all eligible rows. Returns 202 immediately — the workflow runs fire-and-forget in the background. Already-populated rows are skipped automatically for idempotency. Pass a plan from the /enrich/plan endpoint to skip re-planning.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'targetColumn', type: 'string', required: true, description: 'Column name to populate (1-128 chars)' },
+  { name: 'promptMode', type: 'enum', required: false, description: 'auto (default) or custom' },
+  { name: 'prompt', type: 'string', required: false, description: 'Custom enrichment prompt (required when promptMode is custom)' },
+  { name: 'filter', type: 'FilterSpec', required: false, description: 'Restrict enrichment to a row subset' },
+  { name: 'agentProfile', type: 'string', required: false, description: 'Override the agent profile (1-128 chars)' },
+  { name: 'batchSize', type: 'number', required: false, description: 'Rows per workflow step (max 200, clamped automatically)' },
+  { name: 'projectId', type: 'string | null', required: false, description: 'Associate the enrichment workflow with a project' },
+  { name: 'workflowName', type: 'string', required: false, description: 'Custom name for the enrichment workflow (1-256 chars)' },
+  { name: 'plan', type: 'object', required: false, description: 'Pre-built plan from /enrich/plan — skips the planning phase' },
+]} />
+
+<SchemaTable title="Response Body (202)" fields={[
+  { name: 'workflowId', type: 'string', required: true, description: 'ID of the created enrichment workflow' },
+  { name: 'rowsQueued', type: 'number', required: true, description: 'Number of rows that will be processed' },
+]} />
+
+Execute enrichment with a pre-built plan — preview first, then pass the plan to avoid re-planning latency:
+
+<CodeExample ts={`// 1. Get a plan first (reuse from preview step)
+const plan = await fetch('/api/tables/tbl-6c1d-9e7f/enrich/plan', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ targetColumn: 'sentiment', promptMode: 'auto' }),
+}).then((r) => r.json());
+
+// 2. Execute using the pre-built plan
+const result: { workflowId: string; rowsQueued: number } = await fetch(
+  '/api/tables/tbl-6c1d-9e7f/enrich',
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      targetColumn: 'sentiment',
+      promptMode: 'auto',
+      plan,
+    }),
+  }
+).then((r) => r.json());
+
+console.log(\`Workflow: \${result.workflowId}\`);
+console.log(\`Rows queued: \${result.rowsQueued}\`);`} python={`import requests
+
+# 1. Get a plan first (reuse from preview step)
+plan_res = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/enrich/plan",
+    json={"targetColumn": "sentiment", "promptMode": "auto"},
+)
+plan: dict = plan_res.json()
+
+# 2. Execute using the pre-built plan
+result_res = requests.post(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/enrich",
+    json={
+        "targetColumn": "sentiment",
+        "promptMode": "auto",
+        "plan": plan,
+    },
+)
+result: dict = result_res.json()
+
+print(f"Workflow: {result['workflowId']}")
+print(f"Rows queued: {result['rowsQueued']}")`} />
+
+Example response:
+
+```json
+{
+  "workflowId": "wf-3b1a-5c2d",
+  "rowsQueued": 38
+}
+```
+
+**Errors:** `400` — Validation failure, unknown column, or unsupported data type, `404` — Table not found
+
+</EndpointCard>
+
+### List Enrichment Runs
+
+<EndpointCard method="GET" path="/api/tables/{id}/enrich/runs" description="List the most recent enrichment workflow runs for a table. Useful for showing enrichment history and status in the UI.">
+
+<ParamTable title="Query Parameters" params={[
+  { name: 'limit', type: 'number', description: 'Max runs to return (1-10, default 5)' },
+]} />
+
+Fetch recent enrichment runs to show history alongside a table:
+
+<CodeExample ts={`// Show recent enrichment runs for a table
+const runs: Array<{ workflowId: string; status: string; rowsQueued: number; createdAt: string }> =
+  await fetch('/api/tables/tbl-6c1d-9e7f/enrich/runs?limit=5').then((r) => r.json());
+
+runs.forEach((run) => {
+  console.log(\`\${run.workflowId} [\${run.status}] — \${run.rowsQueued} rows — \${run.createdAt}\`);
+});`} python={`import requests
+
+# Show recent enrichment runs for a table
+response = requests.get(
+    "http://localhost:3000/api/tables/tbl-6c1d-9e7f/enrich/runs",
+    params={"limit": 5},
+)
+runs: list[dict] = response.json()
+
+for run in runs:
+    print(f"{run['workflowId']} [{run['status']}] — {run['rowsQueued']} rows — {run['createdAt']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "workflowId": "wf-3b1a-5c2d",
+    "status": "completed",
+    "targetColumn": "sentiment",
+    "rowsQueued": 38,
+    "rowsCompleted": 38,
+    "createdAt": "2026-04-03T11:00:00.000Z"
+  }
+]
+```
+
+</EndpointCard>
+
+---
+
 ## Column Config Reference
 
 | Config Field | Applies To | Description |

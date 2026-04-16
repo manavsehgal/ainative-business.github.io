@@ -260,6 +260,66 @@ Example response:
 
 </EndpointCard>
 
+### Fix Data Directory
+
+<EndpointCard method="POST" path="/api/workspace/fix-data-dir" description="Fix a data-directory mismatch for domain-cloned Stagent instances. Derives the correct STAGENT_DATA_DIR from the folder name, writes it to .env.local alongside STAGENT_CLOUD_DISABLED=true, and bootstraps a fresh SQLite database at that path. A server restart is required to take effect.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'success', type: 'boolean', required: true, description: 'Whether the fix was applied' },
+  { name: 'dataDir', type: 'string', required: true, description: 'The derived data directory path (e.g. ~/.stagent-wealth)' },
+  { name: 'envLocalPath', type: 'string', required: true, description: 'Absolute path to the .env.local file that was updated' },
+  { name: 'needsRestart', type: 'boolean', required: true, description: 'Always true — the server must be restarted to load the new database path' },
+]} />
+
+**Errors:**
+- `400` — The main dev repo does not need a fix, or `STAGENT_DATA_DIR` is already set to a non-default path
+
+Use this endpoint once after cloning Stagent to a new folder name (e.g. `stagent-wealth`) to isolate its database from the main instance:
+
+<CodeExample ts={`// Apply data-dir isolation for a domain clone — run once after cloning
+const res: Response = await fetch('http://localhost:3000/api/workspace/fix-data-dir', {
+  method: 'POST',
+});
+
+if (res.ok) {
+  const result: { success: boolean; dataDir: string; envLocalPath: string; needsRestart: boolean } =
+    await res.json();
+  console.log(\`Data dir set to: \${result.dataDir}\`);
+  console.log(\`Updated: \${result.envLocalPath}\`);
+  if (result.needsRestart) {
+    console.log('Restart the dev server to activate the new database path');
+  }
+} else {
+  const { error }: { error: string } = await res.json();
+  console.error(\`Fix not needed: \${error}\`);
+}`} python={`import requests
+
+# Apply data-dir isolation for a domain clone — run once after cloning
+res: requests.Response = requests.post("http://localhost:3000/api/workspace/fix-data-dir")
+
+if res.ok:
+    result: dict = res.json()
+    print(f"Data dir set to: {result['dataDir']}")
+    print(f"Updated: {result['envLocalPath']}")
+    if result["needsRestart"]:
+        print("Restart the dev server to activate the new database path")
+else:
+    error_data: dict = res.json()
+    print(f"Fix not needed: {error_data['error']}")`} />
+
+Example response:
+
+```json
+{
+  "success": true,
+  "dataDir": "~/.stagent-wealth",
+  "envLocalPath": "/Users/team/Developer/stagent-wealth/.env.local",
+  "needsRestart": true
+}
+```
+
+</EndpointCard>
+
 ### Import Projects (SSE)
 
 <EndpointCard method="SSE" path="/api/workspace/import" description="Bulk-import discovered projects into Stagent. Each project is created with an automatic environment scan. Progress is streamed via Server-Sent Events so the UI can update in real time.">

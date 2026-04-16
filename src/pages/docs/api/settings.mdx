@@ -847,6 +847,403 @@ Example response:
 
 </EndpointCard>
 
+## Chat Pins
+
+Pinned entities appear at the top of the chat mention popover so frequently-used tasks, projects, documents, and profiles are always one click away. Pins store a denormalized label and status snapshot so the popover renders without a round-trip — the canonical entity is still resolved by ID when selected.
+
+### Get Chat Pins
+
+<EndpointCard method="GET" path="/api/settings/chat/pins" description="Return the current list of pinned chat mention entries.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'pins', type: 'object[]', required: true, description: 'Array of pinned entity entries' },
+  { name: 'pins[].id', type: 'string', required: true, description: 'Entity UUID' },
+  { name: 'pins[].type', type: 'enum', required: true, description: 'Entity type: task, project, workflow, document, schedule, table, or profile' },
+  { name: 'pins[].label', type: 'string', required: true, description: 'Display label (denormalized from the entity at pin time)' },
+  { name: 'pins[].description', type: 'string', required: false, description: 'Short description snapshot' },
+  { name: 'pins[].status', type: 'string', required: false, description: 'Entity status snapshot' },
+  { name: 'pins[].pinnedAt', type: 'ISO 8601', required: true, description: 'Timestamp when the entity was pinned' },
+]} />
+
+<CodeExample ts={`// Load pinned entities to pre-populate the mention popover
+const res: Response = await fetch('http://localhost:3000/api/settings/chat/pins');
+const { pins }: { pins: Array<{ id: string; type: string; label: string; pinnedAt: string }> } = await res.json();
+
+console.log(\`\${pins.length} pinned entities\`);
+pins.forEach((p) => console.log(\`  [\${p.type}] \${p.label}\`));`} python={`import requests
+
+# Load pinned entities to pre-populate the mention popover
+res: requests.Response = requests.get("http://localhost:3000/api/settings/chat/pins")
+data: dict = res.json()
+
+print(f"{len(data['pins'])} pinned entities")
+for p in data["pins"]:
+    print(f"  [{p['type']}] {p['label']}")`} />
+
+Example response:
+
+```json
+{
+  "pins": [
+    {
+      "id": "task-9d4e-a1b2",
+      "type": "task",
+      "label": "Analyze Q4 revenue trends",
+      "status": "completed",
+      "pinnedAt": "2026-04-10T09:00:00.000Z"
+    },
+    {
+      "id": "proj-8f3a-4b2c",
+      "type": "project",
+      "label": "Marketing Analysis",
+      "description": "Quarterly marketing data review",
+      "pinnedAt": "2026-04-08T14:30:00.000Z"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Update Chat Pins
+
+<EndpointCard method="PUT" path="/api/settings/chat/pins" description="Replace the full list of pinned chat mention entries. The client is the source of truth — read-modify-write on the client side, then PUT the updated array. Duplicate IDs are de-duplicated server-side (last write wins for pinnedAt).">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'pins', type: 'object[]', required: true, description: 'Complete replacement list of pinned entries' },
+  { name: 'pins[].id', type: 'string', required: true, description: 'Entity UUID' },
+  { name: 'pins[].type', type: 'enum', required: true, description: 'Entity type: task, project, workflow, document, schedule, table, or profile' },
+  { name: 'pins[].label', type: 'string', required: true, description: 'Display label' },
+  { name: 'pins[].description', type: 'string', required: false, description: 'Short description' },
+  { name: 'pins[].status', type: 'string', required: false, description: 'Entity status' },
+  { name: 'pins[].pinnedAt', type: 'ISO 8601', required: true, description: 'Pin timestamp' },
+]} />
+
+**Response** `200` — De-duplicated pins array
+
+Add a new task to the pinned list — fetch current pins first, append, then PUT:
+
+<CodeExample ts={`// Pin a new task: read → append → write
+const existing = await fetch('http://localhost:3000/api/settings/chat/pins')
+  .then((r: Response) => r.json());
+
+const updated = [
+  ...existing.pins,
+  {
+    id: 'task-c3d4-e5f6',
+    type: 'task',
+    label: 'Deploy v2.1 release',
+    status: 'queued',
+    pinnedAt: new Date().toISOString(),
+  },
+];
+
+await fetch('http://localhost:3000/api/settings/chat/pins', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ pins: updated }),
+});`} python={`import requests
+from datetime import datetime, timezone
+
+# Pin a new task: read → append → write
+existing: dict = requests.get("http://localhost:3000/api/settings/chat/pins").json()
+
+updated = existing["pins"] + [{
+    "id": "task-c3d4-e5f6",
+    "type": "task",
+    "label": "Deploy v2.1 release",
+    "status": "queued",
+    "pinnedAt": datetime.now(timezone.utc).isoformat(),
+}]
+
+requests.put(
+    "http://localhost:3000/api/settings/chat/pins",
+    json={"pins": updated},
+)`} />
+
+**Errors:** `400` — Invalid JSON body or Zod validation failure
+
+</EndpointCard>
+
+## Chat Saved Searches
+
+Saved searches let users store named filter combinations for the chat popover and ⌘K palette. Each search is scoped to a surface (task, project, workflow, etc.) and stores the raw filter input string so it can be replayed instantly.
+
+### Get Saved Searches
+
+<EndpointCard method="GET" path="/api/settings/chat/saved-searches" description="Return the current list of saved search filter combinations.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'searches', type: 'object[]', required: true, description: 'Array of saved search entries' },
+  { name: 'searches[].id', type: 'string', required: true, description: 'Search entry UUID' },
+  { name: 'searches[].surface', type: 'enum', required: true, description: 'Search surface: task, project, workflow, document, skill, or profile' },
+  { name: 'searches[].label', type: 'string', required: true, description: 'Display name for the saved search (max 120 chars)' },
+  { name: 'searches[].filterInput', type: 'string', required: true, description: 'Stored filter string to replay (max 500 chars)' },
+  { name: 'searches[].createdAt', type: 'ISO 8601', required: true, description: 'Timestamp when the search was saved' },
+]} />
+
+<CodeExample ts={`// Load saved searches for the ⌘K palette
+const res: Response = await fetch('http://localhost:3000/api/settings/chat/saved-searches');
+const { searches }: { searches: Array<{ id: string; surface: string; label: string; filterInput: string }> } = await res.json();
+
+console.log(\`\${searches.length} saved searches\`);
+searches.forEach((s) => console.log(\`  [\${s.surface}] \${s.label}: "\${s.filterInput}"\`));`} python={`import requests
+
+# Load saved searches for the ⌘K palette
+res: requests.Response = requests.get("http://localhost:3000/api/settings/chat/saved-searches")
+data: dict = res.json()
+
+print(f"{len(data['searches'])} saved searches")
+for s in data["searches"]:
+    print(f"  [{s['surface']}] {s['label']}: \"{s['filterInput']}\"")`} />
+
+Example response:
+
+```json
+{
+  "searches": [
+    {
+      "id": "srch-1a2b-3c4d",
+      "surface": "task",
+      "label": "Running tasks",
+      "filterInput": "status:running",
+      "createdAt": "2026-04-09T11:00:00.000Z"
+    },
+    {
+      "id": "srch-5e6f-7g8h",
+      "surface": "document",
+      "label": "Design specs",
+      "filterInput": "design spec",
+      "createdAt": "2026-04-07T16:45:00.000Z"
+    }
+  ]
+}
+```
+
+</EndpointCard>
+
+### Update Saved Searches
+
+<EndpointCard method="PUT" path="/api/settings/chat/saved-searches" description="Replace the full list of saved searches. Duplicate IDs are de-duplicated server-side. Malformed stored values recover to an empty list rather than erroring.">
+
+<SchemaTable title="Request Body" fields={[
+  { name: 'searches', type: 'object[]', required: true, description: 'Complete replacement list of saved searches' },
+  { name: 'searches[].id', type: 'string', required: true, description: 'Search entry UUID' },
+  { name: 'searches[].surface', type: 'enum', required: true, description: 'Surface: task, project, workflow, document, skill, or profile' },
+  { name: 'searches[].label', type: 'string', required: true, description: 'Display name (max 120 chars)' },
+  { name: 'searches[].filterInput', type: 'string', required: true, description: 'Filter string (max 500 chars)' },
+  { name: 'searches[].createdAt', type: 'ISO 8601', required: true, description: 'Creation timestamp' },
+]} />
+
+**Response** `200` — De-duplicated searches array
+
+Save a new filter combination — read first, append the new search, then PUT:
+
+<CodeExample ts={`import { v4 as uuidv4 } from 'uuid';
+
+// Save a new search: read → append → write
+const existing = await fetch('http://localhost:3000/api/settings/chat/saved-searches')
+  .then((r: Response) => r.json());
+
+const updated = [
+  ...existing.searches,
+  {
+    id: uuidv4(),
+    surface: 'task',
+    label: 'P0 tasks this week',
+    filterInput: 'priority:0 status:queued',
+    createdAt: new Date().toISOString(),
+  },
+];
+
+await fetch('http://localhost:3000/api/settings/chat/saved-searches', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ searches: updated }),
+});`} python={`import requests
+import uuid
+from datetime import datetime, timezone
+
+# Save a new search: read → append → write
+existing: dict = requests.get("http://localhost:3000/api/settings/chat/saved-searches").json()
+
+updated = existing["searches"] + [{
+    "id": str(uuid.uuid4()),
+    "surface": "task",
+    "label": "P0 tasks this week",
+    "filterInput": "priority:0 status:queued",
+    "createdAt": datetime.now(timezone.utc).isoformat(),
+}]
+
+requests.put(
+    "http://localhost:3000/api/settings/chat/saved-searches",
+    json={"searches": updated},
+)`} />
+
+**Errors:** `400` — Invalid JSON body or Zod validation failure
+
+</EndpointCard>
+
+## OpenAI OAuth
+
+Stagent supports both API-key and OAuth authentication for OpenAI. The login/logout routes manage the OAuth browser-based flow for the ChatGPT/Codex App Server integration.
+
+### Get OpenAI Login State
+
+<EndpointCard method="GET" path="/api/settings/openai/login" description="Return the current OpenAI OAuth login state — useful for polling until the browser-based flow completes.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'status', type: 'enum', required: true, description: 'Login state: idle, pending, success, or error' },
+  { name: 'loginUrl', type: 'string', required: false, description: 'OAuth URL to open in a browser (present while pending)' },
+  { name: 'error', type: 'string', required: false, description: 'Error message if the flow failed' },
+]} />
+
+<CodeExample ts={`// Poll the login state while the browser flow is in progress
+const res: Response = await fetch('http://localhost:3000/api/settings/openai/login');
+const state: { status: string; loginUrl?: string; error?: string } = await res.json();
+
+if (state.status === 'pending' && state.loginUrl) {
+  console.log(\`Open in browser: \${state.loginUrl}\`);
+} else if (state.status === 'success') {
+  console.log('OpenAI OAuth login complete');
+} else if (state.status === 'error') {
+  console.error(\`Login failed: \${state.error}\`);
+}`} python={`import requests
+
+# Poll the login state while the browser flow is in progress
+res: requests.Response = requests.get("http://localhost:3000/api/settings/openai/login")
+state: dict = res.json()
+
+if state["status"] == "pending" and state.get("loginUrl"):
+    print(f"Open in browser: {state['loginUrl']}")
+elif state["status"] == "success":
+    print("OpenAI OAuth login complete")
+elif state["status"] == "error":
+    print(f"Login failed: {state.get('error')}")`} />
+
+</EndpointCard>
+
+### Start OpenAI OAuth Login
+
+<EndpointCard method="POST" path="/api/settings/openai/login" description="Initiate the OpenAI ChatGPT OAuth browser flow. Sets the auth method to 'oauth' and returns a login URL to open in a browser. Poll GET /api/settings/openai/login to track completion.">
+
+**Response** `200` — Login state object with `loginUrl`
+
+<CodeExample ts={`// Kick off the OAuth flow — open the returned URL in a browser
+const res: Response = await fetch('http://localhost:3000/api/settings/openai/login', {
+  method: 'POST',
+});
+const state: { status: string; loginUrl?: string } = await res.json();
+
+if (state.loginUrl) {
+  // Open the URL in the user's default browser
+  console.log(\`Navigate to: \${state.loginUrl}\`);
+  // Then poll GET /api/settings/openai/login until status === "success"
+}`} python={`import requests
+
+# Kick off the OAuth flow — open the returned URL in a browser
+res: requests.Response = requests.post("http://localhost:3000/api/settings/openai/login")
+state: dict = res.json()
+
+if state.get("loginUrl"):
+    print(f"Navigate to: {state['loginUrl']}")
+    # Then poll GET /api/settings/openai/login until status == "success"`} />
+
+</EndpointCard>
+
+### Cancel OpenAI OAuth Login
+
+<EndpointCard method="DELETE" path="/api/settings/openai/login" description="Cancel an in-progress OpenAI OAuth login flow and reset the login state to idle.">
+
+**Response** `200` — Updated login state object with `status: "idle"`
+
+<CodeExample ts={`// Cancel the pending OAuth flow (e.g. user closed the dialog)
+const res: Response = await fetch('http://localhost:3000/api/settings/openai/login', {
+  method: 'DELETE',
+});
+const state: { status: string } = await res.json();
+console.log(\`Login state: \${state.status}\`); // "idle"`} python={`import requests
+
+# Cancel the pending OAuth flow (e.g. user closed the dialog)
+res: requests.Response = requests.delete("http://localhost:3000/api/settings/openai/login")
+state: dict = res.json()
+print(f"Login state: {state['status']}")  # "idle"`} />
+
+</EndpointCard>
+
+### Logout OpenAI (Codex)
+
+<EndpointCard method="POST" path="/api/settings/openai/logout" description="Log out of the OpenAI Codex App Server session and clear stored Codex credentials.">
+
+**Response** `200` — `{ "success": true }`
+
+<CodeExample ts={`// Sign out of the Codex App Server session
+await fetch('http://localhost:3000/api/settings/openai/logout', { method: 'POST' });
+console.log('Codex session cleared');`} python={`import requests
+
+# Sign out of the Codex App Server session
+requests.post("http://localhost:3000/api/settings/openai/logout")
+print("Codex session cleared")`} />
+
+</EndpointCard>
+
+## Environment Settings
+
+### Get Environment Settings
+
+<EndpointCard method="GET" path="/api/settings/environment" description="Read environment-level settings such as the auto-promote skills flag.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'autoPromoteSkills', type: 'boolean', required: true, description: 'Whether agent-generated skills are automatically promoted to the skills library' },
+]} />
+
+<CodeExample ts={`// Check whether auto-promote is enabled
+const res: Response = await fetch('http://localhost:3000/api/settings/environment');
+const { autoPromoteSkills }: { autoPromoteSkills: boolean } = await res.json();
+console.log(\`Auto-promote skills: \${autoPromoteSkills ? 'on' : 'off'}\`);`} python={`import requests
+
+# Check whether auto-promote is enabled
+res: requests.Response = requests.get("http://localhost:3000/api/settings/environment")
+data: dict = res.json()
+print(f"Auto-promote skills: {'on' if data['autoPromoteSkills'] else 'off'}")`} />
+
+Example response:
+
+```json
+{
+  "autoPromoteSkills": false
+}
+```
+
+</EndpointCard>
+
+### Update Environment Settings
+
+<EndpointCard method="POST" path="/api/settings/environment" description="Update environment-level settings. Only provided fields are updated.">
+
+<SchemaTable title="Request Body (all optional)" fields={[
+  { name: 'autoPromoteSkills', type: 'boolean', required: false, description: 'Toggle automatic skill promotion' },
+]} />
+
+**Response** `200` — Updated environment settings object
+
+Enable automatic skill promotion so agents can contribute reusable skills without manual approval:
+
+<CodeExample ts={`// Enable auto-promote so agent-generated skills are added to the library automatically
+await fetch('http://localhost:3000/api/settings/environment', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ autoPromoteSkills: true }),
+});`} python={`import requests
+
+# Enable auto-promote so agent-generated skills are added to the library automatically
+requests.post(
+    "http://localhost:3000/api/settings/environment",
+    json={"autoPromoteSkills": True},
+)`} />
+
+</EndpointCard>
+
 ## Routing Preferences
 
 | Value | Description |

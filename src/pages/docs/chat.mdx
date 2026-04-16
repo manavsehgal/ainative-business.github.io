@@ -20,6 +20,11 @@ The chat surface is an AI-powered command center for the workspace. Instead of a
 - **Bidirectional Channel Conversations** — Chat with Stagent agents directly from Slack or Telegram. Channel conversations use the same engine with full tool access and permission handling, and appear in the sidebar alongside in-app chats.
 - **Quick Access Navigation** — When the assistant mentions an entity, navigation pills appear at the bottom of the response for one-click deep linking to that project, task, or workflow.
 - **Entity CRUD via Chat** — Create, update, and delete projects, tasks, and workflows through natural language without navigating to their respective surfaces.
+- **Slash Command Popover** — Type `/` to open a tabbed popover with four views: Actions (session commands like clear, compact, export), Skills (composable behavior stacks), Tools (browser and workspace tools), and Entities (@ reference picker).
+- **Skill Composition** — Stack specialized behaviors onto a conversation from the Skills tab. Add or replace skills with conflict detection, prompt-budget eviction, and capability gating per runtime.
+- **Conversation Templates** — Start conversations from saved blueprints via the empty-state button, `/new-from-template` slash command, or the `⌘K` Templates group.
+- **Saved Searches & Filters** — Pin frequently used filter + query combinations and reuse them from the `⌘K` palette or the `@` popover. Filter by namespace using `#scope:`, `#type:`, and other qualifiers.
+- **@ Mentions with Context Injection** — Type `@` for a fuzzy-search autocomplete showing pinned items, projects, tasks, and documents with live status badges. Selected entities inject their full context into the conversation.
 
 ## How It Works
 
@@ -46,6 +51,32 @@ The empty state displays context-aware prompt suggestions organized into tabbed 
 After asking about a workspace entity, Quick Access pills at the bottom of the response let you jump directly to the relevant detail page in one click.
 
 <BrowserFrame src="/screenshots/chat-quick-access.png" alt="Chat response with Quick Access navigation pill linking to a created task" />
+
+### Slash Commands & Composer
+
+Type `/` in the composer to open a tabbed popover organizing every in-chat action. The Actions tab lists session commands — start a new conversation, compact history, export to a document, or create a task without leaving the chat. A `#key:value` filter tip lets you narrow results across any tab.
+
+<BrowserFrame src="/screenshots/chat-actions-tab.png" alt="Slash command popover with Actions tab showing session commands: clear, compact, export, help, settings, and new-task" />
+
+### Skill Composition
+
+Switch to the Skills tab to layer specialized behaviors onto the current conversation. Each skill card shows its health status, scope tags, and an **+ Add** button. Active skills display a badge with a remove control, and a counter reads "N of M active" so you always know your stack against the runtime's cap.
+
+<BrowserFrame src="/screenshots/chat-skills-tab.png" alt="Skills tab in slash popover showing architect skill active, with atlas, book-updater, and brainstorming skills available to add" />
+
+### Tool Browser
+
+The Tools tab exposes every tool available to the agent — browser automation, workspace operations, and MCP server tools. Each entry shows its parameter signature so you know what inputs are accepted before invoking.
+
+<BrowserFrame src="/screenshots/chat-tools-tab.png" alt="Tools tab in slash popover listing browser tools: take_screenshot, navigate_page, click, get_page_text, fill, and take_snapshot with parameter hints" />
+
+### @ Mentions & Entity Picker
+
+Type `@` to trigger a fuzzy-search autocomplete that groups results into Pinned, Projects, Tasks, and Documents. Each result shows a live status badge — completed, active, running — so you can quickly gauge what you're referencing. You can also reach this from the Entities tab in the slash popover.
+
+<BrowserFrame src="/screenshots/chat-mentions-popover.png" alt="@ mentions autocomplete showing pinned items, active projects, and running tasks with status badges" />
+
+<BrowserFrame src="/screenshots/chat-entities-tab.png" alt="Entities tab in slash popover with instructions to type @ to reference projects, tasks, documents, or files" />
 
 ---
 

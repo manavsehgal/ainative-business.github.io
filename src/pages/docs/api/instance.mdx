@@ -1,0 +1,449 @@
+---
+layout: ../../../layouts/ApiDocsLayout.astro
+title: "Instance API"
+description: "Manage Stagent instance lifecycle — read configuration and guardrails, run initialization, detect and apply upstream upgrades, and poll upgrade availability."
+---
+
+import EndpointCard from '../../../components/api/EndpointCard.astro'
+import SchemaTable from '../../../components/api/SchemaTable.astro'
+import CodeExample from '../../../components/api/CodeExample.astro'
+
+# Instance API
+
+The Instance API manages the Stagent process lifecycle on a self-hosted installation. It exposes instance configuration (branch name, data directory, guardrails), idempotent initialization, and the full upgrade detection + application flow. The upgrade system uses a background poller that compares the local branch against `origin/main`; when commits are available, the operator spawns an `upgrade-assistant` task that performs a guided git merge.
+
+When running on the canonical Stagent development repository (`STAGENT_DEV_MODE=true` or the `.git/stagent-dev-mode` sentinel), all endpoints return safe synthetic responses so that dev-environment state never bleeds into production UIs.
+
+## Quick Start
+
+Check for available upgrades, trigger the upgrade if one is found, and poll until the task completes:
+
+<CodeExample ts={`// 1. Read current instance config and upgrade state
+interface InstanceConfig {
+  branchName: string;
+  dataDir: string;
+  createdAt: string;
+}
+interface UpgradeState {
+  upgradeAvailable: boolean;
+  commitsBehind: number;
+  lastPolledAt: number | null;
+  lastUpgradeTaskId: string | null;
+}
+interface ConfigResponse {
+  devMode: boolean;
+  config: InstanceConfig | null;
+  guardrails: object | null;
+  upgrade: UpgradeState | null;
+}
+
+const { devMode, config, upgrade }: ConfigResponse =
+  await fetch('/api/instance/config').then((r: Response) => r.json());
+
+if (devMode) {
+  console.log('Running in dev mode — upgrade flow disabled');
+} else if (!config) {
+  // 2. Initialize if not yet bootstrapped
+  await fetch('/api/instance/init', { method: 'POST' });
+  console.log('Instance initialized');
+} else {
+  console.log(\`Branch: \${config.branchName}\`);
+  console.log(\`Upgrade available: \${upgrade?.upgradeAvailable}\`);
+  console.log(\`Commits behind: \${upgrade?.commitsBehind}\`);
+}
+
+// 3. Force-check for new upstream commits
+const { ok, state }: { ok: boolean; state?: UpgradeState } =
+  await fetch('/api/instance/upgrade/check', { method: 'POST' }).then((r: Response) => r.json());
+
+if (ok && state?.upgradeAvailable) {
+  // 4. Spawn the upgrade task
+  const { taskId }: { taskId: string } =
+    await fetch('/api/instance/upgrade', { method: 'POST' }).then((r: Response) => r.json());
+
+  console.log(\`Upgrade task spawned: \${taskId}\`);
+  console.log('Navigate to the task view to watch streaming progress');
+}`} python={`import requests
+
+# 1. Read current instance config and upgrade state
+config_res = requests.get("http://localhost:3000/api/instance/config")
+data: dict = config_res.json()
+
+if data["devMode"]:
+    print("Running in dev mode — upgrade flow disabled")
+elif not data["config"]:
+    # 2. Initialize if not yet bootstrapped
+    requests.post("http://localhost:3000/api/instance/init")
+    print("Instance initialized")
+else:
+    config: dict = data["config"]
+    upgrade: dict = data["upgrade"]
+    print(f"Branch: {config['branchName']}")
+    print(f"Upgrade available: {upgrade['upgradeAvailable']}")
+    print(f"Commits behind: {upgrade['commitsBehind']}")
+
+# 3. Force-check for new upstream commits
+check_res = requests.post("http://localhost:3000/api/instance/upgrade/check")
+check: dict = check_res.json()
+
+if check["ok"] and check.get("state", {}).get("upgradeAvailable"):
+    # 4. Spawn the upgrade task
+    upgrade_res = requests.post("http://localhost:3000/api/instance/upgrade")
+    task_id: str = upgrade_res.json()["taskId"]
+    print(f"Upgrade task spawned: {task_id}")
+    print("Navigate to the task view to watch streaming progress")`} />
+
+## Base URL
+
+```
+/api/instance
+```
+
+## Endpoints
+
+### Get Instance Config
+
+<EndpointCard method="GET" path="/api/instance/config" description="Return the full instance state in a single response: config, guardrails, and upgrade state. Used by the Settings → Instance section and the upgrade pre-flight modal. In dev mode returns null payloads to prevent test state from surfacing in the UI.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'devMode', type: 'boolean', required: true, description: 'True when running on the canonical dev repo — all other fields will be null' },
+  { name: 'config', type: 'object | null', required: true, description: 'Instance configuration record' },
+  { name: 'config.branchName', type: 'string', required: false, description: 'Git branch this instance is tracking' },
+  { name: 'config.dataDir', type: 'string', required: false, description: 'Data directory path' },
+  { name: 'config.createdAt', type: 'ISO 8601', required: false, description: 'Timestamp when the instance was first initialized' },
+  { name: 'guardrails', type: 'object | null', required: true, description: 'Active guardrail settings (budget caps, tool restrictions)' },
+  { name: 'upgrade', type: 'UpgradeState | null', required: true, description: 'Current upgrade state (see Upgrade State schema below)' },
+]} />
+
+Read instance state to populate a settings screen or pre-flight modal:
+
+<CodeExample ts={`// Read instance state — single round-trip for config + guardrails + upgrade
+const res: Response = await fetch('/api/instance/config');
+const { devMode, config, guardrails, upgrade }: {
+  devMode: boolean;
+  config: { branchName: string; dataDir: string; createdAt: string } | null;
+  guardrails: object | null;
+  upgrade: { upgradeAvailable: boolean; commitsBehind: number } | null;
+} = await res.json();
+
+if (devMode) {
+  console.log('Dev mode — instance config unavailable');
+} else if (config) {
+  console.log(\`Instance on branch: \${config.branchName}\`);
+  console.log(\`Data dir: \${config.dataDir}\`);
+  if (upgrade?.upgradeAvailable) {
+    console.log(\`\${upgrade.commitsBehind} upstream commit(s) available\`);
+  }
+}`} python={`import requests
+
+# Read instance state — single round-trip for config + guardrails + upgrade
+response = requests.get("http://localhost:3000/api/instance/config")
+data: dict = response.json()
+
+if data["devMode"]:
+    print("Dev mode — instance config unavailable")
+elif data["config"]:
+    config: dict = data["config"]
+    print(f"Instance on branch: {config['branchName']}")
+    print(f"Data dir: {config['dataDir']}")
+    upgrade: dict = data.get("upgrade") or {}
+    if upgrade.get("upgradeAvailable"):
+        print(f"{upgrade['commitsBehind']} upstream commit(s) available")`} />
+
+Example response:
+
+```json
+{
+  "devMode": false,
+  "config": {
+    "branchName": "instance/team-prod",
+    "dataDir": "/Users/team/.stagent",
+    "createdAt": "2026-03-01T09:00:00.000Z"
+  },
+  "guardrails": {
+    "maxBudgetUsd": 10.00,
+    "allowedRuntimes": ["claude-code", "anthropic-direct"]
+  },
+  "upgrade": {
+    "upgradeAvailable": true,
+    "commitsBehind": 4,
+    "lastPolledAt": 1744800000,
+    "lastSuccessfulUpgradeAt": 1743500000,
+    "lastUpgradeTaskId": null,
+    "pollFailureCount": 0,
+    "lastPollError": null
+  }
+}
+```
+
+</EndpointCard>
+
+### Initialize Instance
+
+<EndpointCard method="POST" path="/api/instance/init" description="Idempotent manual re-run of the instance bootstrap. Useful when the initial boot-time run failed (permission error, git not installed), or when the user wants to re-apply guardrails after changing consent settings. Returns the refreshed instance state after re-running bootstrap.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'ensureResult', type: 'object', required: true, description: 'Bootstrap result from ensureInstance()' },
+  { name: 'config', type: 'object | null', required: true, description: 'Instance configuration after bootstrap' },
+  { name: 'guardrails', type: 'object | null', required: true, description: 'Guardrail settings after bootstrap' },
+  { name: 'upgrade', type: 'object | null', required: true, description: 'Upgrade state after bootstrap' },
+]} />
+
+Re-run bootstrap to recover from a failed initialization or re-apply changed consent settings:
+
+<CodeExample ts={`// Re-run instance bootstrap — safe to call multiple times
+const res: Response = await fetch('/api/instance/init', { method: 'POST' });
+
+if (res.ok) {
+  const { ensureResult, config }: {
+    ensureResult: { created: boolean };
+    config: { branchName: string } | null;
+  } = await res.json();
+
+  if (ensureResult.created) {
+    console.log(\`Instance bootstrapped on branch: \${config?.branchName}\`);
+  } else {
+    console.log('Instance already initialized — guardrails re-applied');
+  }
+} else {
+  const { error }: { error: string } = await res.json();
+  console.error(\`Bootstrap failed: \${error}\`);
+}`} python={`import requests
+
+# Re-run instance bootstrap — safe to call multiple times
+response = requests.post("http://localhost:3000/api/instance/init")
+
+if response.ok:
+    data: dict = response.json()
+    if data["ensureResult"].get("created"):
+        branch = (data.get("config") or {}).get("branchName", "unknown")
+        print(f"Instance bootstrapped on branch: {branch}")
+    else:
+        print("Instance already initialized — guardrails re-applied")
+else:
+    print(f"Bootstrap failed: {response.json()['error']}")`} />
+
+**Errors:** `500` — Bootstrap failure (check logs for permission or git errors)
+
+</EndpointCard>
+
+### Spawn Upgrade Task
+
+<EndpointCard method="POST" path="/api/instance/upgrade" description="Spawn an upgrade-assistant task that performs a guided git merge of upstream commits. Returns 202 Accepted with the task ID immediately — the merge runs asynchronously. Requires upgradeAvailable to be true. Rejects with 409 if the instance is not initialized or no upgrade is available.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'taskId', type: 'string (UUID)', required: true, description: 'ID of the spawned upgrade task — navigate to this task to watch progress' },
+]} />
+
+The upgrade task uses the `upgrade-assistant` agent profile. The task description contains the branch name, number of commits behind, and data directory as context variables that the profile's SKILL.md references. The task runs the standard merge flow: fetch upstream, merge, handle conflicts interactively, and rollback on any failure.
+
+<CodeExample ts={`// Spawn the upgrade task — navigate to the task view for streaming progress
+const res: Response = await fetch('/api/instance/upgrade', { method: 'POST' });
+
+if (res.status === 202) {
+  const { taskId }: { taskId: string } = await res.json();
+  console.log(\`Upgrade task: \${taskId}\`);
+  // Navigate to /tasks/\${taskId} to watch the merge progress
+} else if (res.status === 409) {
+  const { error }: { error: string } = await res.json();
+  console.log(\`Cannot upgrade: \${error}\`);
+}`} python={`import requests
+
+# Spawn the upgrade task — navigate to the task view for streaming progress
+response = requests.post("http://localhost:3000/api/instance/upgrade")
+
+if response.status_code == 202:
+    task_id: str = response.json()["taskId"]
+    print(f"Upgrade task: {task_id}")
+    # Navigate to /tasks/{task_id} to watch the merge progress
+elif response.status_code == 409:
+    print(f"Cannot upgrade: {response.json()['error']}")`} />
+
+Example response:
+
+```json
+{ "taskId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890" }
+```
+
+**Errors:**
+- `409` — Instance not initialized (call `POST /api/instance/init` first) or `upgradeAvailable` is false
+- `500` — Internal failure persisting the task or upgrade state
+
+</EndpointCard>
+
+### Check for Upgrades
+
+<EndpointCard method="POST" path="/api/instance/upgrade/check" description="Force-run the upgrade availability poller. Rate-limited to one run per ~5 minutes via a shared lock file. Compares the local branch HEAD against origin/main using git rev-list. Returns the updated UpgradeState on success, or a skipped reason if the lock was held or dev mode was active.">
+
+<SchemaTable title="Response Body (200 — poller ran)" fields={[
+  { name: 'ok', type: 'boolean', required: true, description: 'True — poller ran successfully' },
+  { name: 'state', type: 'UpgradeState', required: true, description: 'Fresh upgrade state after the poll' },
+]} />
+
+<SchemaTable title="Response Body (202 — poller skipped)" fields={[
+  { name: 'ok', type: 'boolean', required: true, description: 'False — poller was skipped' },
+  { name: 'skipped', type: 'string', required: false, description: 'Reason: "lock-held", "dev-mode", or "rate-limited"' },
+  { name: 'error', type: 'string', required: false, description: 'Error message if the poller threw' },
+]} />
+
+Trigger an immediate upgrade check — useful after the user clicks "Check now" in the settings UI:
+
+<CodeExample ts={`// Force an upgrade check and display the result
+interface UpgradeState {
+  upgradeAvailable: boolean;
+  commitsBehind: number;
+  lastPolledAt: number | null;
+  pollFailureCount: number;
+}
+
+const res: Response = await fetch('/api/instance/upgrade/check', { method: 'POST' });
+const body: { ok: boolean; state?: UpgradeState; skipped?: string } = await res.json();
+
+if (body.ok && body.state) {
+  if (body.state.upgradeAvailable) {
+    console.log(\`Upgrade available — \${body.state.commitsBehind} commit(s) behind origin/main\`);
+  } else {
+    console.log('Up to date');
+  }
+} else {
+  console.log(\`Check skipped: \${body.skipped ?? 'unknown'}\`);
+}`} python={`import requests
+
+# Force an upgrade check and display the result
+response = requests.post("http://localhost:3000/api/instance/upgrade/check")
+body: dict = response.json()
+
+if body["ok"] and body.get("state"):
+    state: dict = body["state"]
+    if state["upgradeAvailable"]:
+        print(f"Upgrade available — {state['commitsBehind']} commit(s) behind origin/main")
+    else:
+        print("Up to date")
+else:
+    print(f"Check skipped: {body.get('skipped', 'unknown')}")`} />
+
+Example responses:
+
+```json
+{
+  "ok": true,
+  "state": {
+    "upgradeAvailable": true,
+    "commitsBehind": 4,
+    "lastPolledAt": 1744803600,
+    "lastSuccessfulUpgradeAt": 1743500000,
+    "lastUpgradeTaskId": null,
+    "pollFailureCount": 0,
+    "lastPollError": null
+  }
+}
+```
+
+```json
+{ "ok": false, "skipped": "rate-limited" }
+```
+
+**Errors:** `500` — Unexpected poller failure
+
+</EndpointCard>
+
+### Get Upgrade Status
+
+<EndpointCard method="GET" path="/api/instance/upgrade/status" description="Return the current UpgradeState for client components that need to poll (e.g. the upgrade modal pre-flight). In dev mode returns a synthetic state with upgradeAvailable: false so the upgrade button never renders on the dev repo.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'devMode', type: 'boolean', required: true, description: 'True when running on the canonical dev repo' },
+  { name: 'upgradeAvailable', type: 'boolean', required: true, description: 'Whether a new upstream version is available' },
+  { name: 'commitsBehind', type: 'number', required: true, description: 'Number of commits local branch is behind origin/main' },
+  { name: 'lastPolledAt', type: 'number | null', required: true, description: 'Unix timestamp of the last successful poll' },
+  { name: 'lastSuccessfulUpgradeAt', type: 'number | null', required: true, description: 'Unix timestamp of the last applied upgrade' },
+  { name: 'lastUpgradeTaskId', type: 'string | null', required: true, description: 'Task ID of the most recent upgrade task' },
+  { name: 'pollFailureCount', type: 'number', required: true, description: 'Consecutive poll failures (resets to 0 on success)' },
+  { name: 'lastPollError', type: 'string | null', required: true, description: 'Most recent poll error message, if any' },
+]} />
+
+Poll upgrade status from a client component — e.g. to show a badge or refresh the pre-flight modal:
+
+<CodeExample ts={`// Poll upgrade status from a client component
+interface UpgradeStatus {
+  devMode: boolean;
+  upgradeAvailable: boolean;
+  commitsBehind: number;
+  lastPolledAt: number | null;
+  lastUpgradeTaskId: string | null;
+  pollFailureCount: number;
+}
+
+const status: UpgradeStatus = await fetch('/api/instance/upgrade/status')
+  .then((r: Response) => r.json());
+
+if (status.devMode) {
+  console.log('Dev mode — upgrade status suppressed');
+} else if (status.upgradeAvailable) {
+  console.log(\`Upgrade available: \${status.commitsBehind} commits behind\`);
+  if (status.lastUpgradeTaskId) {
+    console.log(\`Previous upgrade task: \${status.lastUpgradeTaskId}\`);
+  }
+} else {
+  const lastPoll = status.lastPolledAt
+    ? new Date(status.lastPolledAt * 1000).toLocaleString()
+    : 'never';
+  console.log(\`Up to date. Last checked: \${lastPoll}\`);
+}`} python={`import requests
+from datetime import datetime
+
+# Poll upgrade status from a client component
+response = requests.get("http://localhost:3000/api/instance/upgrade/status")
+status: dict = response.json()
+
+if status["devMode"]:
+    print("Dev mode — upgrade status suppressed")
+elif status["upgradeAvailable"]:
+    print(f"Upgrade available: {status['commitsBehind']} commits behind")
+    if status["lastUpgradeTaskId"]:
+        print(f"Previous upgrade task: {status['lastUpgradeTaskId']}")
+else:
+    if status["lastPolledAt"]:
+        last_poll = datetime.fromtimestamp(status["lastPolledAt"]).strftime("%Y-%m-%d %H:%M")
+    else:
+        last_poll = "never"
+    print(f"Up to date. Last checked: {last_poll}")`} />
+
+Example response:
+
+```json
+{
+  "devMode": false,
+  "upgradeAvailable": false,
+  "commitsBehind": 0,
+  "lastPolledAt": 1744803600,
+  "lastSuccessfulUpgradeAt": 1744800000,
+  "lastUpgradeTaskId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "pollFailureCount": 0,
+  "lastPollError": null
+}
+```
+
+</EndpointCard>
+
+## Upgrade State Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| upgradeAvailable | boolean | True when `commitsBehind > 0` and last poll succeeded |
+| commitsBehind | number | Commits local branch is behind `origin/main` |
+| lastPolledAt | number \| null | Unix timestamp of last successful `git rev-list` check |
+| lastSuccessfulUpgradeAt | number \| null | Unix timestamp of last completed upgrade |
+| lastUpgradeTaskId | string \| null | UUID of the most recently spawned upgrade task |
+| pollFailureCount | number | Consecutive poll failures — resets to 0 on success |
+| lastPollError | string \| null | Error message from the most recent failed poll |
+
+## Dev Mode
+
+When `STAGENT_DEV_MODE=true` is set in the environment or the `.git/stagent-dev-mode` sentinel file is present, the Instance API operates in dev mode:
+
+- `GET /api/instance/config` — returns `{ devMode: true, config: null, guardrails: null, upgrade: null }`
+- `GET /api/instance/upgrade/status` — returns a synthetic state with `upgradeAvailable: false`
+- `POST /api/instance/upgrade` and `POST /api/instance/upgrade/check` — are not blocked but return early without writing state
+
+This prevents stale instance rows written during local testing from surfacing in production UIs when the dev repo is opened.

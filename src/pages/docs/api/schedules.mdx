@@ -410,6 +410,82 @@ requests.delete("http://localhost:3000/api/schedules/sched-e7b2-1f4a")`} />
 
 </EndpointCard>
 
+### Execute Schedule
+
+<EndpointCard method="POST" path="/api/schedules/{id}/execute" description="Manually fire a schedule immediately, bypassing its cron cadence. Creates a task, claims a concurrency slot, and starts execution. Supports an optional force flag to bypass the global concurrency cap, which is audit-logged to the usage ledger.">
+
+<ParamTable params={[
+  { name: 'force', type: 'boolean', required: false, description: 'Query param — bypass the global concurrency cap. Every force bypass is permanently audit-logged.', example: 'true' },
+]} />
+
+**Response** `200` — `{ "taskId": "...", "forced": false }`
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'taskId', type: 'string (UUID)', required: true, description: 'ID of the task created for this manual firing' },
+  { name: 'forced', type: 'boolean', required: true, description: 'Whether the force flag was used to bypass capacity' },
+]} />
+
+**Errors:**
+- `404` — Schedule not found
+- `429` — Concurrency cap is full. Retry after `slotEtaSec` seconds or add `?force=true`
+
+Manually trigger a schedule on-demand — useful for testing a new schedule or firing it outside its normal window:
+
+<CodeExample ts={`// Manually fire a schedule — starts a task immediately
+const res: Response = await fetch("http://localhost:3000/api/schedules/sched-e7b2-1f4a/execute", {
+  method: "POST",
+});
+const { taskId, forced }: { taskId: string; forced: boolean } = await res.json();
+
+console.log(\`Task created: \${taskId}\`);
+console.log(\`Forced: \${forced}\`);
+
+// If capacity is full, retry with force
+if (res.status === 429) {
+  const err: { error: string; slotEtaSec: number } = await res.json();
+  console.log(\`Capacity full. Retry in \${err.slotEtaSec}s or use ?force=true\`);
+}`} python={`import requests
+
+# Manually fire a schedule — starts a task immediately
+res = requests.post("http://localhost:3000/api/schedules/sched-e7b2-1f4a/execute")
+
+if res.status_code == 200:
+    data: dict = res.json()
+    print(f"Task created: {data['taskId']}")
+    print(f"Forced: {data['forced']}")
+elif res.status_code == 429:
+    err: dict = res.json()
+    slot_eta = err.get("slotEtaSec", 60)
+    print(f"Capacity full. Retry in {slot_eta}s or use ?force=true")
+
+# Force-bypass capacity (audit-logged permanently)
+res_forced = requests.post(
+    "http://localhost:3000/api/schedules/sched-e7b2-1f4a/execute",
+    params={"force": "true"},
+)
+data_forced: dict = res_forced.json()
+print(f"Forced task: {data_forced['taskId']}")`} />
+
+Example response:
+
+```json
+{
+  "taskId": "a3f7b2c1-8d4e-4b1f-9a2c-e5d7f3b8c012",
+  "forced": false
+}
+```
+
+Force-bypass response (same shape, `forced: true` — audit entry written to usage ledger):
+
+```json
+{
+  "taskId": "b9e1a4d2-3c7f-4a8e-b5d1-f2e6c9a7d034",
+  "forced": true
+}
+```
+
+</EndpointCard>
+
 ### Parse Interval
 
 <EndpointCard method="POST" path="/api/schedules/parse" description="Preview how an interval expression will be parsed. Returns the resolved cron expression, human-readable description, next 3 fire times, and confidence score. Useful for validating expressions before creating a schedule.">

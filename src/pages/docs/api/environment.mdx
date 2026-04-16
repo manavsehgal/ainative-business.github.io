@@ -107,6 +107,38 @@ print(f"{len(suggestions['curated'])} curated + {len(suggestions['discovered'])}
 
 ## Scanning
 
+### Rescan If Stale
+
+<EndpointCard method="POST" path="/api/environment/rescan-if-stale" description="Fire-and-forget rescan for chat session activation. Checks whether the last scan is fresh (under 5 minutes). Returns immediately without blocking — the scan runs in the background. Never returns 500; environment issues are logged but never surface to the caller.">
+
+<SchemaTable title="Response Body" fields={[
+  { name: 'scanned', type: 'boolean', required: true, description: 'True if a new scan was triggered; false if the last scan was fresh enough' },
+]} />
+
+Call this at chat session start to keep the environment scan fresh without blocking the UI:
+
+<CodeExample ts={`// Trigger a background rescan on chat session activation
+const { scanned }: { scanned: boolean } = await fetch('/api/environment/rescan-if-stale', {
+  method: 'POST',
+}).then((r: Response) => r.json());
+
+if (scanned) {
+  console.log('Background rescan triggered — environment data will refresh shortly');
+} else {
+  console.log('Scan is fresh — no rescan needed');
+}`} python={`import requests
+
+# Trigger a background rescan on chat session activation
+response = requests.post("http://localhost:3000/api/environment/rescan-if-stale")
+data: dict = response.json()
+
+if data["scanned"]:
+    print("Background rescan triggered — environment data will refresh shortly")
+else:
+    print("Scan is fresh — no rescan needed")`} />
+
+</EndpointCard>
+
 ### Trigger Environment Scan
 
 <EndpointCard method="POST" path="/api/environment/scan" description="Run a new environment scan against a project directory. Discovers artifacts, tools, and framework personas.">
@@ -328,6 +360,68 @@ artifact: dict = response.json()["artifact"]
 print(f"{artifact['name']} ({artifact['tool']}) at {artifact['filePath']}")`} />
 
 **Errors:** `404` — Artifact not found
+
+</EndpointCard>
+
+## Skills
+
+### List Skills
+
+<EndpointCard method="GET" path="/api/environment/skills" description="List all available skills enriched with environment scan context. Returns skills discovered from the current project directory scan, providing a unified view of what agent profiles are active in the environment.">
+
+**Response** `200` — Array of enriched skill objects
+
+<CodeExample ts={`// List all skills enriched with environment context
+interface EnrichedSkill {
+  id: string;
+  name: string;
+  description: string;
+  filePath: string;
+  scope: string;
+}
+
+const skills: EnrichedSkill[] = await fetch('/api/environment/skills')
+  .then((r: Response) => r.json());
+
+console.log(\`\${skills.length} skills in environment:\`);
+skills.forEach((s: EnrichedSkill) => {
+  console.log(\`  \${s.name} [\${s.scope}] — \${s.filePath}\`);
+});`} python={`import requests
+
+# List all skills enriched with environment context
+response = requests.get("http://localhost:3000/api/environment/skills")
+skills: list[dict] = response.json()
+
+print(f"{len(skills)} skills in environment:")
+for s in skills:
+    print(f"  {s['name']} [{s['scope']}] — {s['filePath']}")`} />
+
+Example response:
+
+```json
+[
+  {
+    "id": "data-analyst",
+    "name": "Data Analyst",
+    "description": "Statistical analysis with Python, pandas, and visualization best practices",
+    "filePath": "/Users/team/.claude/skills/data-analyst",
+    "scope": "user",
+    "tags": ["analysis", "data", "python"],
+    "version": "1.2.0"
+  },
+  {
+    "id": "project-security-reviewer",
+    "name": "Project Security Reviewer",
+    "description": "OWASP-focused review for the payments service",
+    "filePath": "/Users/team/my-app/.claude/skills/project-security-reviewer",
+    "scope": "project",
+    "tags": ["security", "code-review"],
+    "version": "1.0.0"
+  }
+]
+```
+
+**Errors:** `500` — Scan or enrichment failure
 
 </EndpointCard>
 
