@@ -7,6 +7,20 @@ description: Sync book content from the Stagent product to the stagent.io websit
 
 Syncs the "AI Native" book content (chapter markdown files + images) from the Stagent product repository to the stagent.io marketing website. The book lives as a React island reader at `/book/[chapter-slug]` and content is parsed at Astro build time. The current chapter count is whatever is in the Chapter Manifest below — most counts elsewhere in the codebase are derived dynamically from `CHAPTERS.length`.
 
+## Attribution & License Architecture
+
+**The book is a personal research project by Manav Sehgal, licensed CC BY-NC 4.0.** Several attribution artifacts live in the website codebase — not in the source chapter markdown — so they must survive every sync.
+
+| Artifact | Lives in | Rebuilt how |
+|----------|----------|-------------|
+| Per-chapter "by Manav Sehgal" byline | `src/components/book/book-reader.tsx` (chapter header) and `src/pages/book/print.astro` | Hardcoded, not from frontmatter |
+| Chapter 1 CC BY-NC 4.0 preface | Conditional render in `book-reader.tsx` when `chapter.number === 1`, plus `print.astro` | Hardcoded, not from frontmatter |
+| CC BY-NC 4.0 in Book JSON-LD | `src/layouts/BookLayout.astro` + `src/pages/book/index.astro` (`license` field) | Static |
+| `/ai-native.pdf` download | Generated post-build by `scripts/generate-book-pdf.ts` → `dist/ai-native.pdf` | `npm run build:pdf` |
+| Print route | `src/pages/book/print.astro` (concatenates all chapters with cover page) | Rebuilt on `npm run build` |
+
+**Do not add an `author` frontmatter field to chapter markdown** — attribution is intentionally centralized in the reader template so the product repo can stay author-agnostic and we don't have to replicate the byline 14× in markdown.
+
 ## Source and Target Paths
 
 | Content | Source | Target |
@@ -304,6 +318,74 @@ grep -rn -E '\b[0-9]+ chapters\b' src/ \
 
 Report any unresolved hits in the Step 7 change report under a "⚠️ Drift audit" heading.
 
+### Step 6c: Commercial Framing Drift Audit
+
+Stagent.io is positioned as a personal research project, not a commercial funnel. Any re-introduction of "founding member" language, Maven/LinkedIn links, or Stage 2 "Orionfold LLC" references must fail the sync. Run this audit after every chapter sync — even if the product repo changed only markdown, a copy-paste could leak commercial framing back in.
+
+```bash
+cd /Users/manavsehgal/Developer/stagent.github.io
+FORBIDDEN=(
+  'founding member'
+  'founding-hero'
+  'founding-footer'
+  'Become a Member'
+  'Join as a founding'
+  'shape the roadmap'
+  'direct access to the team'
+  "be first for what's next"
+  'maven\.com'
+  'linkedin\.com/in/manavsehgal'
+  'Orionfold'
+  '\bLLC\b'
+)
+for pattern in "${FORBIDDEN[@]}"; do
+  hits=$(grep -rEin "$pattern" src/ public/ supabase/ .github/ 2>/dev/null \
+    | grep -v 'node_modules' \
+    | grep -v '\.git/' \
+    || true)
+  if [ -n "$hits" ]; then
+    echo "❌ FORBIDDEN PATTERN '$pattern':"
+    echo "$hits"
+  fi
+done
+```
+
+False-positive allowlist:
+- `src/data/seo.ts` has `foundingDate: '2026'` — this is the schema.org `Organization.foundingDate` property, unrelated to "founding member" framing. Do not flag.
+
+If any pattern hits (outside the allowlist), **stop and flag to the user** — do not silently auto-remove, because the re-introduction is a signal that the upstream product or a copy-paste action reopened commercial framing that should be dealt with at the source.
+
+### Step 6d: Attribution Render Check
+
+Confirm the chapter byline and Chapter 1 copyright preface still render. Because these live in React components rendered client-side, the static HTML grep only catches the JSON-LD license — not the UI attribution. After the build, open a chapter page in the browser (or use a headless check) and verify:
+
+- Chapter title header shows "by Manav Sehgal" in small muted type beneath the subtitle.
+- Chapter 1 body starts with a "© 2026 Manav Sehgal. Licensed under Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)." preface.
+- `dist/book/<chapter>/index.html` contains `"license":"https://creativecommons.org/licenses/by-nc/4.0/"` in the JSON-LD block.
+- `dist/book/print/index.html` exists and contains "by Manav Sehgal" 14+ times (one per chapter plus the cover page).
+
+Quick grep check:
+```bash
+grep -c '"license":"https://creativecommons.org/licenses/by-nc/4.0/"' dist/book/index.html
+grep -c 'by Manav Sehgal' dist/book/print/index.html
+```
+
+If these counts are 0 or the UI doesn't render the attribution, the reader template was inadvertently reverted — restore from git.
+
+### Step 6e: Regenerate Book PDF
+
+The book ships as both a web reader and a downloadable PDF at `/ai-native.pdf`. After a content sync, the PDF must be regenerated so readers who download it get the current chapters.
+
+```bash
+npm run build:pdf
+```
+
+The script starts a static server against `dist/`, drives headless Chrome to `/book/print/`, and writes `dist/ai-native.pdf`. Expected size is ~1–2 MB — if it balloons past 10 MB something is leaking site CSS/backgrounds into the print route and needs fixing in `src/pages/book/print.astro`.
+
+Requires a local Chrome/Chromium executable. On macOS the script looks at standard Application paths; on CI, the deploy workflow installs Chrome via `browser-actions/setup-chrome@v1` and passes the path via `CHROME_PATH`.
+
+Note: `npm run build` already invokes `build:pdf` as a post-build step. A standalone `build:pdf` run is useful when iterating on the print route without a full Astro rebuild.
+
 ### Step 7: Report Changes
 
 Summarize what was updated in a clear report:
@@ -328,9 +410,16 @@ Migration / Incremental
 
 ### Build Status
 ✓ All chapter pages generated successfully
+✓ PDF regenerated — dist/ai-native.pdf (~X MB, Y pages)
 
 ### ⚠️ Drift Audit
 (Include any unresolved "N chapters" hits from Step 6b, or "none" if clean.)
+
+### ⚠️ Commercial Framing Drift
+(Include any forbidden-pattern hits from Step 6c, or "none" if clean.)
+
+### ⚠️ Attribution Render
+(Per Step 6d — confirm "by Manav Sehgal" byline and CC BY-NC 4.0 preface render on a chapter page. Flag if either is missing.)
 
 ### ⚠️ Reader Chrome Lint
 (Include any chrome-leak warnings from Step 3 lint, or "none" if clean.)
