@@ -18,12 +18,17 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'Book',
     name: 'AI Native: Building Autonomous Business Systems with AI Agents',
+    author: {
+      '@type': 'Person',
+      name: 'Manav Sehgal',
+    },
     description: `A practical guide to building AI-native applications — ${CHAPTERS.length} chapters across ${PARTS.length} parts, from organizational design to autonomous business systems built with AI agents.`,
     publisher: PUBLISHER,
     url: new URL(Astro.url.pathname, SITE.url).toString(),
     inLanguage: 'en',
     accessMode: 'textual',
     isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by-nc/4.0/',
   },
   {
     '@context': 'https://schema.org',

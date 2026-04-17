@@ -5,6 +5,7 @@ import {
   BookmarkMinus,
   ChevronLeft,
   ChevronRight,
+  Download,
   List,
   Settings2,
   Clock,
@@ -429,6 +430,15 @@ export function BookReader({
             )}
           </button>
 
+          <a
+            href="/ai-native.pdf"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-surface-raised transition-colors cursor-pointer text-text-muted hover:text-text no-underline"
+            title="Download PDF"
+            aria-label="Download PDF"
+          >
+            <Download className="h-4 w-4" />
+          </a>
+
           <button
             onClick={() => setSettingsOpen(true)}
             className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-surface-raised transition-colors cursor-pointer"
@@ -691,6 +701,9 @@ export function BookReader({
               Chapter {currentChapter.number}: {currentChapter.title}
             </h1>
             <p className="text-lg text-text-muted">{currentChapter.subtitle}</p>
+            <p className="mt-2 font-mono text-xs text-text-muted/70 tracking-wide">
+              by Manav Sehgal
+            </p>
             <div className="flex items-center gap-4 mt-4 text-sm text-text-muted">
               <span className="inline-flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" />
@@ -707,6 +720,22 @@ export function BookReader({
             </div>
             <hr className="mt-8 border-border/50" />
           </header>
+
+          {/* Chapter 1 copyright preface */}
+          {currentChapter.number === 1 && (
+            <aside className="mb-10 rounded-lg border border-border/60 bg-surface-raised/60 px-5 py-4 text-sm leading-relaxed text-text-muted">
+              © 2026 Manav Sehgal. Licensed under{" "}
+              <a
+                href="https://creativecommons.org/licenses/by-nc/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)
+              </a>
+              .
+            </aside>
+          )}
 
           {/* Sections */}
           {currentChapter.sections.length > 0 ? (
