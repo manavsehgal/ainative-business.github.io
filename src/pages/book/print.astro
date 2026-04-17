@@ -93,6 +93,16 @@ const generatedAt = new Date().toISOString().slice(0, 10);
         margin: 0 0 16px;
       }
 
+      .cover-image {
+        display: block;
+        max-width: 260px;
+        width: 100%;
+        height: auto;
+        margin: 0 0 24px;
+        border-radius: 8px;
+        box-shadow: 0 20px 40px -20px rgba(15, 23, 42, 0.35);
+      }
+
       .cover-title {
         font-size: 34pt;
         line-height: 1.1;
@@ -321,6 +331,11 @@ const generatedAt = new Date().toISOString().slice(0, 10);
       <section class="cover">
         <div class="cover-top">
           <p class="eyebrow">Stagent · AI Native Research</p>
+          <img
+            class="cover-image"
+            src="/book/images/ai-native-book-manav-sehgal.png"
+            alt="AI Native — Building Autonomous Business Systems with AI Agents"
+          />
           <h1 class="cover-title">AI Native</h1>
           <p class="cover-subtitle">Building Autonomous Business Systems with AI Agents.</p>
           <p class="cover-author">by Manav Sehgal</p>

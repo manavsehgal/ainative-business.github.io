@@ -2,7 +2,7 @@ export const SITE = {
   name: 'Stagent',
   url: 'https://stagent.io',
   description:
-    'The operating system for the agentic economy. A personal research project by Manav Sehgal exploring what AI-native organizations look like — open source, local-first, and free.',
+    'AI Native for everyone. A personal research by Manav Sehgal into building and working with AI agents — open source, local-first, and free.',
   logo: 'https://stagent.io/stagent-s-128.png',
   ogImage: 'https://stagent.io/og-image.png',
   themeColor: '#0f172a',

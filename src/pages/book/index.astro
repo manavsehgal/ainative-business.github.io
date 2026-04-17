@@ -102,7 +102,7 @@ const jsonLd = [
         <!-- Right column: Book cover -->
         <div data-animate class="book-cover-float flex items-center justify-center" style="transition-delay: 200ms">
           <img
-            src="/book/images/ai-native-book-cover.png"
+            src="/book/images/ai-native-book-manav-sehgal.png"
             alt="AI Native book cover — Building Autonomous Business Systems with AI Agents"
             width="1024"
             height="1536"
@@ -118,7 +118,7 @@ const jsonLd = [
 
     <!-- Parts Grid -->
     <section class="max-w-5xl mx-auto px-6 mb-20" data-animate>
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid md:grid-cols-2 gap-6">
         {PARTS.map((part) => {
           const partChapters = CHAPTERS.filter((ch) => ch.part.number === part.number);
           return (
@@ -132,16 +132,17 @@ const jsonLd = [
                 {partChapters.map((ch) => (
                   <a
                     href={`/book/${CHAPTER_SLUG_MAP[ch.id]}/`}
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-overlay transition-colors group no-underline"
+                    class="flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-surface-overlay transition-colors group no-underline"
                   >
-                    <span class="w-6 h-6 rounded-md bg-primary-dim text-primary text-xs font-semibold flex items-center justify-center shrink-0">
+                    <span class="w-6 h-6 rounded-md bg-primary-dim text-primary text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
                       {ch.number}
                     </span>
-                    <div class="min-w-0">
-                      <p class="text-sm font-medium group-hover:text-primary transition-colors truncate">
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm font-medium group-hover:text-primary transition-colors">
                         {ch.title}
                       </p>
-                      <p class="text-xs text-text-muted">{ch.readingTime} min</p>
+                      <p class="text-xs text-text-muted leading-snug mt-0.5">{ch.subtitle}</p>
+                      <p class="text-[11px] text-text-dim mt-1 font-mono">{ch.readingTime} min</p>
                     </div>
                   </a>
                 ))}
@@ -213,7 +214,7 @@ const jsonLd = [
         <h2 class="text-2xl font-bold mb-3">Ready to build AI-native?</h2>
         <p class="text-text-muted mb-6 max-w-lg mx-auto">
           Start with Chapter 1 and trace the journey from hierarchy to
-          intelligence — every pattern built with working code.
+          intelligence. Every pattern built with working code.
         </p>
         <a
           href={`/book/${CHAPTER_SLUG_MAP['ch-1']}/`}
