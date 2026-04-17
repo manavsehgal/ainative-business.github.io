@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS='--max-http-header-size=32768' astro dev",
-    "build": "astro build && node scripts/generate-slashless-duplicates.mjs",
+    "build": "astro build && node scripts/generate-slashless-duplicates.mjs && npm run build:pdf",
+    "build:pdf": "tsx scripts/generate-book-pdf.ts",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -26,5 +27,9 @@
     "remark-gfm": "^4.0.1",
     "sugar-high": "^1.0.0",
     "tailwindcss": "^4"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.41.0",
+    "tsx": "^4.21.0"
   }
 }

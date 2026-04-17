@@ -30,7 +30,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Chrome (for book PDF generation)
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       - name: Build site
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: npm run build
 
       - name: Upload artifact

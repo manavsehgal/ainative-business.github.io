@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 
 const distDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 
-const EXCLUDED_PATH_SEGMENTS = ['/confirmed', '/og'];
+const EXCLUDED_PATH_SEGMENTS = ['/confirmed', '/og', '/book/print'];
 
 let created = 0;
 let skipped = 0;

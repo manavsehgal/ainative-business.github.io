@@ -1,0 +1,362 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { PrintBlock } from '../../components/book/print-content';
+import { CHAPTERS, CHAPTER_SLUG_MAP, PARTS } from '../../lib/book/content';
+import { parseMarkdownChapter } from '../../lib/book/markdown-parser';
+import type { BookChapter } from '../../lib/book/types';
+
+const allChapters: BookChapter[] = CHAPTERS.map((chapterStub) => {
+  const fileSlug = CHAPTER_SLUG_MAP[chapterStub.id];
+  if (!fileSlug) return chapterStub;
+
+  const filePath = path.join(process.cwd(), 'src', 'data', 'book', 'chapters', `${fileSlug}.md`);
+  if (!fs.existsSync(filePath)) return chapterStub;
+
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  const fmRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+  const fmMatch = content.match(fmRegex);
+  const fmBlock = fmMatch ? fmMatch[1] : '';
+  const body = fmMatch ? fmMatch[2] : content;
+
+  const fm: Record<string, unknown> = {};
+  for (const line of fmBlock.split('\n')) {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+    const key = line.slice(0, colonIdx).trim();
+    let value: unknown = line.slice(colonIdx + 1).trim();
+    if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+      value = value.slice(1, -1);
+    }
+    fm[key] = value;
+  }
+
+  const { sections } = parseMarkdownChapter(body, chapterStub.id);
+  const partNum = Number(fm.part) || chapterStub.part.number;
+
+  return {
+    ...chapterStub,
+    title: (fm.title as string) || chapterStub.title,
+    subtitle: (fm.subtitle as string) || chapterStub.subtitle,
+    readingTime: Number(fm.readingTime) || chapterStub.readingTime,
+    part: PARTS[partNum - 1] || chapterStub.part,
+    sections,
+  };
+});
+
+const generatedAt = new Date().toISOString().slice(0, 10);
+---
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>AI Native — Print Edition</title>
+    <link rel="preload" href="/fonts/geist-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/geist-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        background: #ffffff;
+        color: #0f172a;
+        font-family: var(--font-sans, 'Geist Sans', system-ui, sans-serif);
+        font-size: 11pt;
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      .print-container {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 48px 56px;
+      }
+
+      .cover {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        page-break-after: always;
+      }
+
+      .cover-top .eyebrow {
+        font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+        font-size: 10pt;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin: 0 0 16px;
+      }
+
+      .cover-title {
+        font-size: 34pt;
+        line-height: 1.1;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 14px;
+      }
+
+      .cover-subtitle {
+        font-size: 14pt;
+        line-height: 1.45;
+        color: #334155;
+        margin: 0 0 28px;
+        max-width: 36em;
+      }
+
+      .cover-author {
+        font-size: 13pt;
+        color: #0f172a;
+        margin: 0 0 8px;
+      }
+
+      .cover-meta {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 18px;
+        font-size: 10pt;
+        color: #475569;
+      }
+
+      .cover-meta p {
+        margin: 0 0 6px;
+      }
+
+      .cover-meta a {
+        color: #0f172a;
+        text-decoration: underline;
+      }
+
+      .chapter {
+        page-break-before: always;
+      }
+
+      .chapter:first-of-type {
+        page-break-before: auto;
+      }
+
+      .chapter-eyebrow {
+        font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+        font-size: 9pt;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin: 0 0 10px;
+      }
+
+      .chapter-title {
+        font-size: 22pt;
+        line-height: 1.15;
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+
+      .chapter-subtitle {
+        font-size: 13pt;
+        line-height: 1.4;
+        color: #475569;
+        margin: 0 0 6px;
+      }
+
+      .chapter-author {
+        font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+        font-size: 9pt;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin: 0 0 24px;
+      }
+
+      .ch1-preface {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 14px 18px;
+        font-size: 10pt;
+        color: #334155;
+        margin: 0 0 28px;
+      }
+
+      .ch1-preface a {
+        color: #0f172a;
+        text-decoration: underline;
+      }
+
+      .chapter section {
+        margin-top: 24px;
+        break-inside: avoid-page;
+      }
+
+      .chapter section h2 {
+        font-size: 15pt;
+        font-weight: 700;
+        margin: 18px 0 10px;
+      }
+
+      .book-prose p {
+        margin: 0 0 12px;
+      }
+
+      .book-prose pre,
+      pre {
+        font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+        font-size: 9pt;
+        line-height: 1.45;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px 14px;
+        overflow: hidden;
+        white-space: pre-wrap;
+        word-break: break-word;
+        page-break-inside: avoid;
+      }
+
+      .book-prose img,
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .book-prose blockquote {
+        border-left: 3px solid #cbd5e1;
+        padding-left: 14px;
+        color: #334155;
+        margin: 12px 0;
+      }
+
+      .book-prose ul,
+      .book-prose ol {
+        padding-left: 24px;
+        margin: 0 0 12px;
+      }
+
+      .book-prose li {
+        margin-bottom: 4px;
+      }
+
+      .print-code {
+        margin: 16px 0;
+      }
+
+      .print-code-label {
+        font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+        font-size: 8.5pt;
+        color: #64748b;
+        margin: 0 0 4px;
+      }
+
+      .print-code pre {
+        margin: 0;
+      }
+
+      .print-image {
+        margin: 16px 0;
+        text-align: center;
+      }
+
+      .print-caption {
+        font-size: 9pt;
+        color: #64748b;
+        font-style: italic;
+        margin-top: 6px;
+        text-align: center;
+      }
+
+      .print-callout {
+        border: 1px solid #e2e8f0;
+        border-left-width: 3px;
+        border-left-color: #94a3b8;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin: 16px 0;
+        break-inside: avoid;
+      }
+
+      .print-callout-title {
+        font-weight: 600;
+        font-size: 10pt;
+        margin: 0 0 8px;
+      }
+
+      .print-callout-tip { border-left-color: #0ea5e9; }
+      .print-callout-warning { border-left-color: #f59e0b; }
+      .print-callout-info { border-left-color: #64748b; }
+      .print-callout-lesson { border-left-color: #22c55e; }
+      .print-callout-authors-note { border-left-color: #a855f7; }
+      .print-callout-case-study { border-left-color: #ec4899; }
+
+      .print-interactive {
+        font-size: 10pt;
+        color: #475569;
+        border-left: 2px solid #cbd5e1;
+        padding-left: 12px;
+        margin: 12px 0;
+      }
+
+      @media print {
+        body {
+          font-size: 10.5pt;
+        }
+
+        .print-container {
+          padding: 0;
+        }
+
+        .chapter {
+          padding-top: 8pt;
+        }
+
+        a {
+          color: inherit;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="print-container">
+      <section class="cover">
+        <div class="cover-top">
+          <p class="eyebrow">Stagent · AI Native Research</p>
+          <h1 class="cover-title">AI Native</h1>
+          <p class="cover-subtitle">Building Autonomous Business Systems with AI Agents.</p>
+          <p class="cover-author">by Manav Sehgal</p>
+          <p style="font-size: 10pt; color: #64748b; margin: 0;">14 chapters · 4 parts</p>
+        </div>
+
+        <div class="cover-meta">
+          <p>© 2026 Manav Sehgal. Licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)</a>.</p>
+          <p>Generated by Stagent's document-writer agent · {generatedAt}</p>
+          <p>Read online at <a href="https://stagent.io/book/">stagent.io/book</a>.</p>
+        </div>
+      </section>
+
+      {allChapters.map((chapter) => (
+        <article class="chapter">
+          <p class="chapter-eyebrow">Part {chapter.part.number}: {chapter.part.title}</p>
+          <h1 class="chapter-title">Chapter {chapter.number}: {chapter.title}</h1>
+          <p class="chapter-subtitle">{chapter.subtitle}</p>
+          <p class="chapter-author">by Manav Sehgal</p>
+
+          {chapter.number === 1 && (
+            <div class="ch1-preface">
+              © 2026 Manav Sehgal. Licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)</a>.
+            </div>
+          )}
+
+          {chapter.sections.map((section) => (
+            <section id={section.id}>
+              <h2>{section.title}</h2>
+              {section.content.map((block) => (
+                <PrintBlock block={block} />
+              ))}
+            </section>
+          ))}
+        </article>
+      ))}
+    </div>
+  </body>
+</html>

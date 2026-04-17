@@ -18,7 +18,7 @@ export default defineConfig({
   },
   integrations: [mdx(), sitemap({
     filter: (page) =>
-      !page.includes('/confirmed') && !page.includes('/og'),
+      !page.includes('/confirmed') && !page.includes('/og') && !page.includes('/book/print'),
   }), react()],
   vite: {
     plugins: [tailwindcss()],
