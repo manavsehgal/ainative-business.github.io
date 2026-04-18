@@ -711,22 +711,6 @@ export function BookReader({
             <hr className="mt-8 border-border/50" />
           </header>
 
-          {/* Chapter 1 copyright preface */}
-          {currentChapter.number === 1 && (
-            <aside className="mb-10 rounded-lg border border-border/60 bg-surface-raised/60 px-5 py-4 text-sm leading-relaxed text-text-muted">
-              © 2026 Manav Sehgal. Licensed under{" "}
-              <a
-                href="https://creativecommons.org/licenses/by-nc/4.0/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80 transition-colors"
-              >
-                Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)
-              </a>
-              .
-            </aside>
-          )}
-
           {/* Sections */}
           {currentChapter.sections.length > 0 ? (
             currentChapter.sections.map((section) => (
@@ -805,6 +789,25 @@ export function BookReader({
               <div />
             )}
           </nav>
+
+          {/* Chapter 1 copyright (bottom of page) */}
+          {currentChapter.number === 1 && (
+            <aside className="mt-10 rounded-lg border border-border/60 bg-surface-raised/60 px-5 py-4 text-sm leading-relaxed text-text-muted">
+              <p>&copy; 2026 Manav Sehgal.</p>
+              <p>
+                Licensed under{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by-nc/4.0/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 transition-colors"
+                >
+                  Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)
+                </a>
+                .
+              </p>
+            </aside>
+          )}
         </article>
       </div>
 
