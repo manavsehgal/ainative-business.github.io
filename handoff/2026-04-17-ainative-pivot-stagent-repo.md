@@ -66,6 +66,37 @@ These were settled during the website-repo brainstorm. Inherit them; do not re-o
 
 - Logo files in the repo (favicons, banners) named `stagent-*.png` → `ainative-*.png`. Update README image references. (The website repo handles its own logo assets separately.)
 
+### 7. **REQUIRED — User-facing surface renames the docs already promise**
+
+The website's docs subsite has been rewritten and now documents these renames as fact. **The product code MUST match these or the docs will be wrong on day one of deploy.** This is not optional.
+
+- **Workspace/data directory paths:**
+  - `~/.stagent/` → `~/.ainative/`
+  - `~/.stagent-wealth` → `~/.ainative-wealth`
+  - Any other `~/.stagent*` paths the runtime creates or reads.
+- **Environment variables (uppercase):**
+  - `STAGENT_DEV_MODE` → `AINATIVE_DEV_MODE`
+  - `STAGENT_DATA_DIR` → `AINATIVE_DATA_DIR`
+  - `STAGENT_CLOUD_DISABLED` → `AINATIVE_CLOUD_DISABLED`
+  - Any other `STAGENT_*` env vars the runtime reads.
+- **Filesystem sentinels:**
+  - `.git/stagent-dev-mode` → `.git/ainative-dev-mode`
+- **Git tag prefix for checkpoints:**
+  - `stagent-cp-*` → `ainative-cp-*`
+- **HTTP header names** (e.g., for Telegram poll auth or other internal channel sentinels):
+  - `x-stagent-internal` → `x-ainative-internal`
+  - Any other `x-stagent-*` headers.
+- **API enum literal values** (the wire format the API actually returns):
+  - In profile-format responses: `"format": "stagent"` → `"format": "ainative"` (and any matching TypeScript type literals).
+- **GitHub repo URLs in example/seed content** (e.g., default templates pointing at `acme/stagent-blueprints`, `acme/stagent-profiles`, `acme/stagent-skills`) → rename to `acme/ainative-blueprints` etc., or remove if those example repos don't exist.
+
+**Migration concern:** existing users of `stagent` will have data in `~/.stagent/` and config in `STAGENT_DEV_MODE`. The atomic rename means their data appears to vanish on upgrade. Decide:
+- (a) One-shot migration on first launch under the new name (read old paths if new ones are empty, write to new paths going forward, optionally delete old after confirmation).
+- (b) Document the manual migration step in the upgrade notes (`mv ~/.stagent ~/.ainative`).
+- (c) Accept the loss for pre-alpha — at 30 days old with near-zero installed base, this is genuinely acceptable.
+
+The website docs do NOT mention any migration path because the spec marked migration as out of scope. If you choose (a) or (b), update the website's docs in a follow-up PR after the product code lands.
+
 ## Cross-repo coordination
 
 The two pivots have to land within a tight window so visitors don't see a mid-pivot site that links to a non-existent GitHub repo.
